@@ -145,7 +145,7 @@
             -webkit-backdrop-filter: blur(10px);
             z-index: 100;
             padding: 16px 0;
-            margin-top: -24px; /* Компенсация padding страницы */
+            margin-top: -24px; 
             margin-bottom: 24px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -324,7 +324,7 @@
     <!-- ГЛАВНЫЙ ЭКРАН -->
     <div id="main-page" class="page active">
         <header class="mb-10 mt-4 text-center">
-            <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none">Навигация</h1>
+            <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none cursor-pointer">Навигация</h1>
             <p id="nav-subheader" class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
         </header>
 
@@ -590,17 +590,18 @@
             else tg.openLink(url);
         }
 
-        // --- ADMIN LOGIC ---
+        // --- ADMIN ENTRANCE LOGIC ---
         let tapCount = 0;
         let tapTimer;
-        document.getElementById('nav-header').addEventListener('click', () => {
+        // Восстановлен вход по клику на заголовок
+        document.getElementById('nav-header').addEventListener('click', (e) => {
             tapCount++;
             clearTimeout(tapTimer);
-            tapTimer = setTimeout(() => tapCount = 0, 1000);
+            tapTimer = setTimeout(() => { tapCount = 0; }, 1000);
             if (tapCount >= 5) {
+                tapCount = 0;
                 const password = prompt('ROOT_ACCESS_PASSWORD:');
                 if (password === ADMIN_PASSWORD) openAdmin();
-                tapCount = 0;
             }
         });
 
@@ -628,7 +629,6 @@
                     ? `<input type="text" class="admin-input mt-2" value="${btn.directLink || ''}" placeholder="URL" onchange="tempAppData.mainMenu[${index}].directLink = this.value">`
                     : `<button onclick="editSubList(${index})" class="btn-edit-list uppercase tracking-tighter font-bold">Manage List (${(btn.items || []).length}) ›</button>`;
 
-                // Добавлены кнопки сортировки
                 div.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
                         <div class="flex items-center gap-2">
@@ -683,7 +683,6 @@
             tempAppData.mainMenu[currentEditingIndex].items.forEach((item, i) => {
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
-                // Добавлены кнопки сортировки для подпунктов
                 div.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
                         <div class="flex items-center gap-2">
