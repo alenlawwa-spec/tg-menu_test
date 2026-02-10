@@ -294,84 +294,15 @@
     <div id="main-page" class="page active">
         <header class="mb-10 mt-4 text-center">
             <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none">Навигация</h1>
-            <p class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
+            <p id="nav-subheader" class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
         </header>
 
-        <div class="grid gap-4">
-            <!-- КНОПКА: ВСЕ ГАЙДЫ -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="showGuides()">
-                <div class="icon-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-semibold text-white">Все гайды</h3>
-                    <p class="text-gray-400 text-xs">Собрано самое важное</p>
-                </div>
-                <div class="opacity-30 text-xl">›</div>
-            </div>
-
-            <!-- КНОПКА: МОИ УСЛУГИ -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="openDynamicLink('service')">
-                <div class="icon-box" style="border: 1px solid rgba(0, 242, 255, 0.2)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-400">
-                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h3 id="display-service-title" class="font-semibold text-white">Мои услуги</h3>
-                    <p class="text-gray-400 text-xs text-white/60">Лучшее качество здесь</p>
-                </div>
-                <div class="opacity-30 text-xl">›</div>
-            </div>
-
-            <!-- КНОПКА: ОБУЧЕНИЕ -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="tg.HapticFeedback.notificationOccurred('warning')">
-                <div class="icon-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-purple-400">
-                        <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                        <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-semibold text-white">Обучение</h3>
-                    <div class="badge-dev">в разработке...</div>
-                </div>
-                <div class="opacity-30 text-xl">›</div>
-            </div>
-
-            <!-- КНОПКА: СВЯЗЬ СО МНОЙ -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_username')">
-                <div class="icon-box">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-green-400">
-                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h3 class="font-semibold text-white">Связь со мной</h3>
-                    <p class="text-gray-400 text-xs">Отвечаю лично</p>
-                </div>
-                <div class="opacity-30 text-xl">›</div>
-            </div>
-
-            <!-- КНОПКА: ОТЗЫВЫ -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="openDynamicLink('reviews')">
-                <div class="icon-box" style="border: 1px solid rgba(255, 0, 122, 0.2)">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-pink-500">
-                        <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                    </svg>
-                </div>
-                <div class="flex-1">
-                    <h3 id="display-reviews-title" class="font-semibold text-pink-500">Отзывы</h3>
-                    <p class="text-gray-400 text-xs text-white/60">Что говорят подписчики</p>
-                </div>
-                <div class="opacity-30 text-xl">›</div>
-            </div>
+        <div id="main-menu-container" class="grid gap-4">
+            <!-- Кнопки рендерятся динамически из appData.mainMenu -->
         </div>
 
         <footer class="mt-auto pt-16 pb-8 text-center">
-            <p class="text-[9px] uppercase tracking-[0.3em] text-gray-600 opacity-50">Visual Experience v1.5</p>
+            <p class="text-[10px] text-gray-600 opacity-50">Developed by Elena Sotnikova</p>
         </footer>
     </div>
 
@@ -396,44 +327,48 @@
         </header>
 
         <div id="admin-content">
-            <!-- Блок основных кнопок -->
+            <!-- Секция: Заголовки -->
             <div class="admin-card">
                 <div class="admin-section-title">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778zM12 12l.663-3.646a1 1 0 0 1 1.341-.772l1.378.494a1 1 0 0 0 1.258-.57l1-2.52"/></svg>
-                    Основные кнопки
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Заголовки
                 </div>
-                
-                <div class="mb-4">
-                    <label class="admin-label">Кнопка «Сервисы»</label>
-                    <input type="text" id="admin-service-title" class="admin-input" placeholder="Название">
-                    <input type="text" id="admin-service-link" class="admin-input" placeholder="Ссылка (https://...)">
+                <div class="mb-2">
+                    <label class="admin-label">Главный заголовок</label>
+                    <input type="text" id="admin-header-title" class="admin-input">
                 </div>
-
                 <div>
-                    <label class="admin-label">Кнопка «Отзывы»</label>
-                    <input type="text" id="admin-reviews-title" class="admin-input" placeholder="Название">
-                    <input type="text" id="admin-reviews-link" class="admin-input" placeholder="Ссылка (https://...)">
+                    <label class="admin-label">Подзаголовок</label>
+                    <input type="text" id="admin-header-subtitle" class="admin-input">
                 </div>
             </div>
 
-            <!-- Блок библиотеки -->
+            <!-- Секция: Кнопки главного экрана -->
+            <div class="admin-card">
+                <div class="admin-section-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Кнопки главного экрана
+                </div>
+                <div id="admin-main-menu-list" class="space-y-4"></div>
+                <button onclick="addNewMainMenuButton()" class="btn-add-cyber mt-4">
+                    <span>+</span> Добавить кнопку
+                </button>
+            </div>
+
+            <!-- Секция: Библиотека гайдов -->
             <div class="admin-card">
                 <div class="admin-section-title">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V5A2.5 2.5 0 0 1 6.5 2.5H20v14H6.5a2.5 2.5 0 0 0-2.5 2.5z"/></svg>
                     Библиотека гайдов
                 </div>
-                
-                <div id="admin-guides-list" class="space-y-4">
-                    <!-- Гайды рендерятся тут -->
-                </div>
-
+                <div id="admin-guides-list" class="space-y-4"></div>
                 <button onclick="addNewGuide()" class="btn-add-cyber mt-4">
-                    <span>+</span> Добавить новый блок
+                    <span>+</span> Добавить новый гайд
                 </button>
             </div>
 
             <button onclick="saveAdminData()" class="btn-save-cyber">
-                Применить изменения
+                Сохранить все изменения
             </button>
             <div id="save-status" class="text-center text-xs text-cyan-400 mt-4 opacity-0 transition-opacity font-mono">DATABASE_SYNC_COMPLETE...</div>
         </div>
@@ -459,12 +394,59 @@
             appId: "1:754545603793:web:a466fd9b21a298a69d41f0"
         };
 
-        const configDocId = "main_nav";
+        const configDocId = "main_nav_v3"; // Версия 3 для полного обновления структуры
         let db, auth;
         let isOnline = false;
-        let appData = {
-            service: { title: 'Мои услуги', link: 'https://t.me/your_link_2' },
-            reviews: { title: 'Отзывы', link: 'https://t.me/your_link_5' },
+
+        // --- ДЕФОЛТНЫЕ ДАННЫЕ (ТОЧНАЯ КОПИЯ ДИЗАЙНА) ---
+        const defaultData = {
+            headerTitle: "Навигация",
+            headerSubtitle: "Твой проводник по контенту",
+            mainMenu: [
+                {
+                    id: "guides",
+                    title: "Все гайды",
+                    subtitle: "Собрано самое важное",
+                    iconContent: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>',
+                    iconColor: "text-blue-400",
+                    link: "action:guides"
+                },
+                {
+                    id: "service",
+                    title: "Мои услуги",
+                    subtitle: "Лучшее качество здесь",
+                    iconContent: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>',
+                    iconColor: "text-cyan-400",
+                    border: "1px solid rgba(0, 242, 255, 0.2)",
+                    link: "https://t.me/your_link_2"
+                },
+                {
+                    id: "dev",
+                    title: "Обучение",
+                    subtitle: "в разработке...",
+                    isBadge: true,
+                    iconContent: '<path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path>',
+                    iconColor: "text-purple-400",
+                    link: "action:warning"
+                },
+                {
+                    id: "contact",
+                    title: "Связь со мной",
+                    subtitle: "Отвечаю лично",
+                    iconContent: '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>',
+                    iconColor: "text-green-400",
+                    link: "https://t.me/your_username"
+                },
+                {
+                    id: "reviews",
+                    title: "Отзывы",
+                    subtitle: "Что говорят подписчики",
+                    iconContent: '<path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>',
+                    iconColor: "text-pink-500",
+                    border: "1px solid rgba(255, 0, 122, 0.2)",
+                    link: "https://t.me/your_link_5"
+                }
+            ],
             guides: [
                 { title: 'Топ-10 секретов успеха', link: 'https://t.me/your_link_guide1', icon: '🔥' },
                 { title: 'Как вырасти в доходе', link: 'https://t.me/your_link_guide2', icon: '📈' },
@@ -473,18 +455,33 @@
             ]
         };
 
+        let appData = JSON.parse(JSON.stringify(defaultData));
+
         async function initApp() {
             try {
                 const app = firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
                 auth = firebase.auth();
-
                 await auth.signInAnonymously();
                 
                 const docRef = db.collection('configs').doc(configDocId);
                 docRef.onSnapshot((doc) => {
                     if (doc.exists) {
-                        appData = doc.data();
+                        const data = doc.data();
+                        
+                        // Безопасное обновление с дефолтными значениями
+                        appData = {
+                            headerTitle: data.headerTitle || defaultData.headerTitle,
+                            headerSubtitle: data.headerSubtitle || defaultData.headerSubtitle,
+                            mainMenu: data.mainMenu || defaultData.mainMenu,
+                            guides: data.guides || defaultData.guides
+                        };
+                        
+                        // Если в базе чего-то не хватало, дозапишем
+                        if (!data.mainMenu || !data.guides) {
+                             docRef.set(appData, { merge: true });
+                        }
+
                         updateUI();
                         setOnlineStatus(true);
                     } else {
@@ -495,8 +492,9 @@
                 }, (error) => {
                     console.error("Firebase error:", error);
                     setOnlineStatus(false);
+                    // Показываем дефолт при ошибке
+                    updateUI(); 
                 });
-
             } catch (e) {
                 console.error("Init error:", e);
                 setOnlineStatus(false);
@@ -507,28 +505,59 @@
         function setOnlineStatus(online) {
             isOnline = online;
             const dot = document.getElementById('status-dot');
-            if (isOnline) {
-                dot.classList.remove('offline');
-                dot.classList.add('online');
-            } else {
-                dot.classList.remove('online');
-                dot.classList.add('offline');
-            }
+            if (dot) dot.className = `status-dot ${online ? 'online' : 'offline'}`;
         }
 
-        let tempAppData = null;
-
         function updateUI() {
-            document.getElementById('display-service-title').textContent = appData.service.title;
-            document.getElementById('display-reviews-title').textContent = appData.reviews.title;
+            document.getElementById('nav-header').textContent = appData.headerTitle;
+            document.getElementById('nav-subheader').textContent = appData.headerSubtitle;
+            renderMainMenu();
             renderGuides();
+        }
+
+        function renderMainMenu() {
+            const container = document.getElementById('main-menu-container');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            (appData.mainMenu || []).forEach((btn) => {
+                const btnEl = document.createElement('div');
+                btnEl.className = 'glass-card p-4 flex items-center cursor-pointer';
+                
+                // Обработка клика
+                btnEl.onclick = () => {
+                    if (btn.link === 'action:guides') showGuides();
+                    else if (btn.link === 'action:warning') tg.HapticFeedback.notificationOccurred('warning');
+                    else if (btn.link) handleLink(btn.link);
+                };
+
+                // Сборка иконки
+                const iconStyle = btn.border ? `border: ${btn.border}` : '';
+                const subtitleHtml = btn.isBadge 
+                    ? `<div class="badge-dev">${btn.subtitle}</div>` 
+                    : `<p class="text-gray-400 text-xs text-white/60">${btn.subtitle}</p>`;
+
+                btnEl.innerHTML = `
+                    <div class="icon-box" style="${iconStyle}">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="${btn.iconColor || 'text-white'}">
+                            ${btn.iconContent}
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-white">${btn.title}</h3>
+                        ${subtitleHtml}
+                    </div>
+                    <div class="opacity-30 text-xl">›</div>
+                `;
+                container.appendChild(btnEl);
+            });
         }
 
         function renderGuides() {
             const container = document.getElementById('guides-container');
             if (!container) return;
             container.innerHTML = '';
-            appData.guides.forEach((guide) => {
+            (appData.guides || []).forEach((guide) => {
                 const guideEl = document.createElement('div');
                 guideEl.className = 'glass-card p-4 flex items-center cursor-pointer';
                 guideEl.onclick = () => handleLink(guide.link);
@@ -563,17 +592,12 @@
 
         function handleLink(url) {
             tg.HapticFeedback.impactOccurred('medium');
-            if (url && url.startsWith('https://t.me/')) {
-                tg.openTelegramLink(url);
-            } else if (url) {
-                tg.openLink(url);
-            }
+            if (!url) return;
+            if (url.startsWith('https://t.me/')) tg.openTelegramLink(url);
+            else tg.openLink(url);
         }
 
-        function openDynamicLink(key) {
-            if (appData[key]?.link) handleLink(appData[key].link);
-        }
-
+        // --- ЛОГИКА АДМИНКИ ---
         let tapCount = 0;
         let tapTimer;
         document.getElementById('nav-header').addEventListener('click', () => {
@@ -582,57 +606,91 @@
             tapTimer = setTimeout(() => tapCount = 0, 1000);
             if (tapCount >= 5) {
                 const userId = tg.initDataUnsafe?.user?.id;
-                
-                if (userId === ADMIN_ID) {
-                    openAdmin();
-                } else {
-                    const password = prompt('Введите пароль администратора:');
-                    if (password === ADMIN_PASSWORD) {
-                        openAdmin();
-                    } else if (password !== null) {
-                        alert('Доступ запрещен');
-                    }
+                if (userId === ADMIN_ID) openAdmin();
+                else {
+                    const password = prompt('Пароль администратора:');
+                    if (password === ADMIN_PASSWORD) openAdmin();
+                    else if (password !== null) alert('Доступ запрещен');
                 }
                 tapCount = 0;
             }
         });
 
+        let tempAppData = null;
+
         function openAdmin() {
             tg.HapticFeedback.impactOccurred('heavy');
             tempAppData = JSON.parse(JSON.stringify(appData));
-            document.getElementById('admin-service-title').value = tempAppData.service.title;
-            document.getElementById('admin-service-link').value = tempAppData.service.link;
-            document.getElementById('admin-reviews-title').value = tempAppData.reviews.title;
-            document.getElementById('admin-reviews-link').value = tempAppData.reviews.link;
+            
+            // Заголовки
+            document.getElementById('admin-header-title').value = tempAppData.headerTitle;
+            document.getElementById('admin-header-subtitle').value = tempAppData.headerSubtitle;
+            
+            renderAdminMainMenu();
             renderAdminGuides();
             adminPage.classList.replace('hidden-bottom', 'active-modal');
+        }
+
+        function renderAdminMainMenu() {
+            const list = document.getElementById('admin-main-menu-list');
+            list.innerHTML = '';
+            (tempAppData.mainMenu || []).forEach((btn, index) => {
+                const div = document.createElement('div');
+                div.className = "guide-item-admin";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] text-cyan-400">КНОПКА ${index + 1}</span>
+                        <button onclick="removeMainMenuButton(${index})" class="btn-delete-icon">✕</button>
+                    </div>
+                    <label class="admin-label">Название</label>
+                    <input type="text" class="admin-input" value="${btn.title}" onchange="tempAppData.mainMenu[${index}].title = this.value">
+                    
+                    <label class="admin-label">Подзаголовок / Статус</label>
+                    <input type="text" class="admin-input" value="${btn.subtitle}" onchange="tempAppData.mainMenu[${index}].subtitle = this.value">
+                    
+                    <label class="admin-label">Ссылка (или action:guides)</label>
+                    <input type="text" class="admin-input" value="${btn.link || ''}" onchange="tempAppData.mainMenu[${index}].link = this.value">
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function addNewMainMenuButton() {
+            // Добавляем дефолтную кнопку при создании
+            tempAppData.mainMenu.push({
+                id: "new",
+                title: "Новая кнопка",
+                subtitle: "Описание",
+                iconContent: '<path d="M12 2v20M2 12h20"></path>', // Плюс
+                iconColor: "text-white",
+                link: ""
+            });
+            renderAdminMainMenu();
+        }
+
+        function removeMainMenuButton(index) {
+            if(confirm('Удалить эту кнопку с главного экрана?')) {
+                tempAppData.mainMenu.splice(index, 1);
+                renderAdminMainMenu();
+            }
         }
 
         function renderAdminGuides() {
             const list = document.getElementById('admin-guides-list');
             list.innerHTML = '';
-            tempAppData.guides.forEach((guide, index) => {
+            (tempAppData.guides || []).forEach((guide, index) => {
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
                 div.innerHTML = `
-                    <div class="flex justify-between items-start mb-2">
-                        <span class="text-[10px] text-gray-500 font-mono">ID: GUIDE_0${index + 1}</span>
-                        <button onclick="removeGuide(${index})" class="btn-delete-icon">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
-                        </button>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-[10px] text-gray-500">ГАЙД ${index + 1}</span>
+                        <button onclick="removeGuide(${index})" class="btn-delete-icon">✕</button>
                     </div>
-                    <div class="flex gap-2 mb-2">
-                        <div class="w-16">
-                            <label class="admin-label">Иконка</label>
-                            <input type="text" class="admin-input text-center" value="${guide.icon}" onchange="updateGuideData(${index}, 'icon', this.value)">
-                        </div>
-                        <div class="flex-1">
-                            <label class="admin-label">Заголовок</label>
-                            <input type="text" class="admin-input" value="${guide.title}" onchange="updateGuideData(${index}, 'title', this.value)">
-                        </div>
+                    <div class="flex gap-2">
+                        <input type="text" class="admin-input w-16 text-center" value="${guide.icon}" placeholder="Icon" onchange="tempAppData.guides[${index}].icon = this.value">
+                        <input type="text" class="admin-input flex-1" value="${guide.title}" placeholder="Название" onchange="tempAppData.guides[${index}].title = this.value">
                     </div>
-                    <label class="admin-label">Ссылка</label>
-                    <input type="text" class="admin-input" value="${guide.link}" onchange="updateGuideData(${index}, 'link', this.value)">
+                    <input type="text" class="admin-input mt-1" value="${guide.link}" placeholder="Ссылка" onchange="tempAppData.guides[${index}].link = this.value">
                 `;
                 list.appendChild(div);
             });
@@ -644,14 +702,10 @@
         }
 
         function removeGuide(index) {
-            if(confirm('Удалить этот блок?')) {
+            if(confirm('Удалить этот гайд?')) {
                 tempAppData.guides.splice(index, 1);
                 renderAdminGuides();
             }
-        }
-
-        function updateGuideData(index, field, value) {
-            tempAppData.guides[index][field] = value;
         }
 
         function closeAdmin() {
@@ -660,14 +714,14 @@
         }
 
         async function saveAdminData() {
-            if (!db) return alert("Ошибка: База данных не подключена.");
+            if (!db) return alert("БД не подключена.");
             
             tg.HapticFeedback.impactOccurred('medium');
-            tempAppData.service.title = document.getElementById('admin-service-title').value;
-            tempAppData.service.link = document.getElementById('admin-service-link').value;
-            tempAppData.reviews.title = document.getElementById('admin-reviews-title').value;
-            tempAppData.reviews.link = document.getElementById('admin-reviews-link').value;
             
+            // Сохраняем заголовки
+            tempAppData.headerTitle = document.getElementById('admin-header-title').value;
+            tempAppData.headerSubtitle = document.getElementById('admin-header-subtitle').value;
+
             try {
                 await db.collection('configs').doc(configDocId).set(tempAppData);
                 
