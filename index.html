@@ -96,8 +96,6 @@
 
         @keyframes pulse-gray {
             0% { opacity: 0.5; }
-            50% { opacity: 0.2; }
-            100% { opacity: 0.5; }
         }
 
         .page {
@@ -138,6 +136,116 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
+        /* Стили админки */
+        .admin-card {
+            background: rgba(10, 10, 15, 0.8);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .admin-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--neon-color);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-section-title::after {
+            content: '';
+            height: 1px;
+            flex: 1;
+            background: linear-gradient(90deg, rgba(0, 242, 255, 0.3), transparent);
+        }
+
+        .guide-item-admin {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid var(--neon-pink);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .admin-input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            transition: border-color 0.3s;
+        }
+
+        .admin-input:focus {
+            outline: none;
+            border-color: var(--neon-color);
+            background: rgba(0, 242, 255, 0.05);
+        }
+
+        .admin-label {
+            font-size: 10px;
+            color: #777;
+            margin-bottom: 4px;
+            margin-left: 4px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .btn-delete-icon {
+            color: rgba(255, 77, 77, 0.6);
+            transition: color 0.3s;
+            padding: 4px;
+        }
+
+        .btn-delete-icon:hover {
+            color: #ff4d4d;
+        }
+
+        .btn-add-cyber {
+            background: rgba(0, 242, 255, 0.05);
+            color: var(--neon-color);
+            border: 1px dashed rgba(0, 242, 255, 0.4);
+            border-radius: 12px;
+            padding: 12px;
+            width: 100%;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s;
+        }
+
+        .btn-add-cyber:active {
+            background: rgba(0, 242, 255, 0.15);
+            transform: scale(0.98);
+        }
+
+        .btn-save-cyber {
+            background: linear-gradient(135deg, #0066ff, #00f2ff);
+            box-shadow: 0 4px 15px rgba(0, 242, 255, 0.3);
+            color: white;
+            font-weight: 700;
+            padding: 14px;
+            border-radius: 15px;
+            width: 100%;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Остальные стили */
         .icon-box {
             width: 54px;
             height: 54px;
@@ -168,58 +276,6 @@
             border: 1px solid rgba(255, 0, 122, 0.3);
             display: inline-block;
             margin-top: 4px;
-        }
-
-        .admin-input {
-            width: 100%;
-            background: rgba(0,0,0,0.3);
-            border: 1px solid rgba(255,255,255,0.1);
-            color: white;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 8px;
-            font-size: 12px;
-        }
-        .admin-input:focus {
-            outline: none;
-            border-color: var(--neon-color);
-        }
-        .admin-label {
-            font-size: 10px;
-            color: #aaa;
-            margin-bottom: 4px;
-            display: block;
-            text-transform: uppercase;
-        }
-        .admin-section {
-            margin-bottom: 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-            padding-bottom: 16px;
-        }
-        .admin-row {
-            display: flex;
-            gap: 8px;
-        }
-        .btn-delete {
-            background: rgba(255, 0, 0, 0.2);
-            color: #ff4d4d;
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            border-radius: 8px;
-            width: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-        }
-        .btn-add {
-            background: rgba(0, 242, 255, 0.1);
-            color: var(--neon-color);
-            border: 1px dashed var(--neon-color);
-            border-radius: 12px;
-            padding: 12px;
-            width: 100%;
-            font-size: 14px;
-            margin-top: 10px;
         }
     </style>
 </head>
@@ -310,7 +366,7 @@
         </div>
 
         <footer class="mt-auto pt-16 pb-8 text-center">
-            <p class="text-[9px] uppercase tracking-[0.3em] text-gray-600 opacity-50">Visual Experience v1.4</p>
+            <p class="text-[9px] uppercase tracking-[0.3em] text-gray-600 opacity-50">Visual Experience v1.5</p>
         </footer>
     </div>
 
@@ -325,33 +381,58 @@
     </div>
 
     <!-- ЭКРАН АДМИНКИ -->
-    <div id="admin-page" class="page hidden-bottom" style="background: rgba(0,0,0,0.95); z-index: 50;">
-        <header class="mb-6 flex justify-between items-center">
-            <h2 class="text-2xl font-bold text-white">Админ Панель</h2>
-            <button onclick="closeAdmin()" class="text-gray-400 p-2">✕</button>
+    <div id="admin-page" class="page hidden-bottom" style="background: rgba(5,5,8,0.98); z-index: 50;">
+        <header class="mb-8 flex justify-between items-center sticky top-0 bg-[#050508] py-4 z-10">
+            <div>
+                <h2 class="text-2xl font-bold text-white tracking-tight">Terminal</h2>
+                <div class="text-[10px] text-cyan-400 font-mono">ACCESS GRANTED // ADMIN_MODE</div>
+            </div>
+            <button onclick="closeAdmin()" class="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center text-gray-400">✕</button>
         </header>
+
         <div id="admin-content">
-            <div class="admin-section">
-                <label class="admin-label">Кнопка: Мои услуги</label>
-                <input type="text" id="admin-service-title" class="admin-input" placeholder="Название">
-                <input type="text" id="admin-service-link" class="admin-input" placeholder="Ссылка (https://...)">
+            <!-- Блок основных кнопок -->
+            <div class="admin-card">
+                <div class="admin-section-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.778-7.778zM12 12l.663-3.646a1 1 0 0 1 1.341-.772l1.378.494a1 1 0 0 0 1.258-.57l1-2.52"/></svg>
+                    Основные кнопки
+                </div>
+                
+                <div class="mb-4">
+                    <label class="admin-label">Кнопка «Сервисы»</label>
+                    <input type="text" id="admin-service-title" class="admin-input" placeholder="Название">
+                    <input type="text" id="admin-service-link" class="admin-input" placeholder="Ссылка (https://...)">
+                </div>
+
+                <div>
+                    <label class="admin-label">Кнопка «Отзывы»</label>
+                    <input type="text" id="admin-reviews-title" class="admin-input" placeholder="Название">
+                    <input type="text" id="admin-reviews-link" class="admin-input" placeholder="Ссылка (https://...)">
+                </div>
             </div>
-            <div class="admin-section">
-                <label class="admin-label">Кнопка: Отзывы</label>
-                <input type="text" id="admin-reviews-title" class="admin-input" placeholder="Название">
-                <input type="text" id="admin-reviews-link" class="admin-input" placeholder="Ссылка (https://...)">
+
+            <!-- Блок библиотеки -->
+            <div class="admin-card">
+                <div class="admin-section-title">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V5A2.5 2.5 0 0 1 6.5 2.5H20v14H6.5a2.5 2.5 0 0 0-2.5 2.5z"/></svg>
+                    Библиотека гайдов
+                </div>
+                
+                <div id="admin-guides-list" class="space-y-4">
+                    <!-- Гайды рендерятся тут -->
+                </div>
+
+                <button onclick="addNewGuide()" class="btn-add-cyber mt-4">
+                    <span>+</span> Добавить новый блок
+                </button>
             </div>
-            <div class="admin-section">
-                <label class="admin-label mb-2">Гайды (Библиотека)</label>
-                <div id="admin-guides-list"></div>
-                <button onclick="addNewGuide()" class="btn-add">+ Добавить блок</button>
-            </div>
-            <button onclick="saveAdminData()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl mt-4 transition-colors">
-                Сохранить изменения
+
+            <button onclick="saveAdminData()" class="btn-save-cyber">
+                Применить изменения
             </button>
-            <div id="save-status" class="text-center text-xs text-green-400 mt-2 opacity-0 transition-opacity">Сохранено!</div>
+            <div id="save-status" class="text-center text-xs text-cyan-400 mt-4 opacity-0 transition-opacity font-mono">DATABASE_SYNC_COMPLETE...</div>
         </div>
-        <div class="h-20"></div>
+        <div class="h-24"></div>
     </div>
 
     <script>
@@ -361,7 +442,7 @@
 
         // --- КОНФИГУРАЦИЯ ---
         const ADMIN_ID = 758556732; 
-        const ADMIN_PASSWORD = "12061977"; // Ваш секретный пароль
+        const ADMIN_PASSWORD = "cyber_admin_secure_99"; 
 
         // --- FIREBASE SETUP ---
         const firebaseConfig = {
@@ -497,11 +578,9 @@
             if (tapCount >= 5) {
                 const userId = tg.initDataUnsafe?.user?.id;
                 
-                // Проверка прав администратора
                 if (userId === ADMIN_ID) {
                     openAdmin();
                 } else {
-                    // Если ID не совпадает или не определен, просим пароль
                     const password = prompt('Введите пароль администратора:');
                     if (password === ADMIN_PASSWORD) {
                         openAdmin();
@@ -529,16 +608,25 @@
             list.innerHTML = '';
             tempAppData.guides.forEach((guide, index) => {
                 const div = document.createElement('div');
-                div.className = "mb-3";
+                div.className = "guide-item-admin";
                 div.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs text-gray-400">Блок #${index + 1}</span>
-                        <button onclick="removeGuide(${index})" class="btn-delete">✕</button>
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="text-[10px] text-gray-500 font-mono">ID: GUIDE_0${index + 1}</span>
+                        <button onclick="removeGuide(${index})" class="btn-delete-icon">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6"/></svg>
+                        </button>
                     </div>
-                    <div class="admin-row">
-                        <input type="text" class="admin-input w-1/5 text-center" value="${guide.icon}" onchange="updateGuideData(${index}, 'icon', this.value)">
-                        <input type="text" class="admin-input w-4/5" value="${guide.title}" onchange="updateGuideData(${index}, 'title', this.value)">
+                    <div class="flex gap-2 mb-2">
+                        <div class="w-16">
+                            <label class="admin-label">Иконка</label>
+                            <input type="text" class="admin-input text-center" value="${guide.icon}" onchange="updateGuideData(${index}, 'icon', this.value)">
+                        </div>
+                        <div class="flex-1">
+                            <label class="admin-label">Заголовок</label>
+                            <input type="text" class="admin-input" value="${guide.title}" onchange="updateGuideData(${index}, 'title', this.value)">
+                        </div>
                     </div>
+                    <label class="admin-label">Ссылка</label>
                     <input type="text" class="admin-input" value="${guide.link}" onchange="updateGuideData(${index}, 'link', this.value)">
                 `;
                 list.appendChild(div);
