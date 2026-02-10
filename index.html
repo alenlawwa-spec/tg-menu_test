@@ -540,8 +540,18 @@
         document.getElementById('nav-header').addEventListener('click', () => {
             tapCount++;
             if (tapCount >= 5) {
-                const pass = prompt('Admin Password:');
-                if (pass === ADMIN_PASSWORD) openAdmin();
+                // ПРОВЕРКА USER_ID ТЕЛЕГРАМА
+                const currentUserId = tg.initDataUnsafe?.user?.id;
+                
+                if (currentUserId === ADMIN_ID) {
+                    openAdmin(); // Вход по ID
+                } else {
+                    // ЕСЛИ ID ДРУГОЙ ИЛИ НЕ ОПРЕДЕЛЕН - ПРОСИМ ПАРОЛЬ
+                    const pass = prompt('Admin Password:');
+                    if (pass === ADMIN_PASSWORD) {
+                        openAdmin(); // Вход по паролю
+                    }
+                }
                 tapCount = 0;
             }
             setTimeout(() => tapCount = 0, 1000);
