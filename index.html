@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Navigation</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-color: #00f2ff;
+            --neon-pink: #ff007a;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #050505;
+            color: white;
+            overflow: hidden; /* Чтобы не было лишних скроллов */
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Анимированный фон с неоновыми пятнами */
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, #1a1033 0%, #050505 50%);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite alternate;
+        }
+
+        .orb-1 { width: 300px; height: 300px; background: var(--neon-color); top: -100px; right: -50px; }
+        .orb-2 { width: 250px; height: 250px; background: var(--neon-pink); bottom: -50px; left: -50px; animation-delay: -5s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 60px); }
+        }
+
+        /* Эффект стекла */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:active {
+            transform: scale(0.92) translateY(4px);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: var(--neon-color);
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.3);
+        }
+
+        /* Неоновая полоска сверху для стиля */
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        }
+
+        /* 3D иконки (эмуляция через тени и градиенты) */
+        .icon-box {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05));
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 2px 2px 5px rgba(255,255,255,0.1), 
+                        5px 5px 15px rgba(0,0,0,0.4);
+            margin-right: 16px;
+        }
+
+        .scroll-container {
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+            padding-bottom: 40px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        /* Кастомный скроллбар */
+        .scroll-container::-webkit-scrollbar { width: 0px; }
+
+        .title-gradient {
+            background: linear-gradient(to right, #fff, #888);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <div class="scroll-container">
+        <header class="mb-10 mt-6 text-center">
+            <h1 class="text-3xl font-semibold title-gradient mb-2">Навигация</h1>
+            <p class="text-gray-400 text-sm">Выбери свой путь в неоновом мире</p>
+        </header>
+
+        <main class="space-y-4">
+            <!-- Плашка 1 -->
+            <div class="glass-card p-5 flex items-center cursor-pointer" onclick="openLink('https://t.me/your_channel')">
+                <div class="icon-box">
+                    <span class="text-2xl">✨</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-medium text-lg">Текст раздела 1</h3>
+                    <p class="text-gray-400 text-xs">Краткое описание того, что там ждет</p>
+                </div>
+                <div class="text-gray-500">→</div>
+            </div>
+
+            <!-- Плашка 2 -->
+            <div class="glass-card p-5 flex items-center cursor-pointer" onclick="openLink('https://t.me/your_channel')">
+                <div class="icon-box">
+                    <span class="text-2xl">💎</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-medium text-lg text-cyan-400">Текст раздела 2</h3>
+                    <p class="text-gray-400 text-xs">Что-то очень важное и красивое</p>
+                </div>
+                <div class="text-gray-500">→</div>
+            </div>
+
+            <!-- Плашка 3 -->
+            <div class="glass-card p-5 flex items-center cursor-pointer" onclick="openLink('https://t.me/your_channel')">
+                <div class="icon-box">
+                    <span class="text-2xl">🔥</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-medium text-lg">Текст раздела 3</h3>
+                    <p class="text-gray-400 text-xs">Самый горячий контент здесь</p>
+                </div>
+                <div class="text-gray-500">→</div>
+            </div>
+
+            <!-- Плашка 4 -->
+            <div class="glass-card p-5 flex items-center cursor-pointer" onclick="openLink('https://t.me/your_channel')">
+                <div class="icon-box" style="box-shadow: 0 0 15px rgba(255, 0, 122, 0.4);">
+                    <span class="text-2xl">👑</span>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-medium text-lg text-pink-500">Текст раздела 4</h3>
+                    <p class="text-gray-400 text-xs">Эксклюзив для своих</p>
+                </div>
+                <div class="text-gray-500">→</div>
+            </div>
+        </main>
+
+        <footer class="mt-12 text-center opacity-30 text-[10px] tracking-widest uppercase">
+            Powered by CyberVibe Engine
+        </footer>
+    </div>
+
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.expand(); // Разворачиваем на все окно
+        
+        // Настройка цветов темы из ТГ (опционально)
+        tg.headerColor = '#050505';
+        tg.backgroundColor = '#050505';
+
+        function openLink(url) {
+            // Легкая вибрация при нажатии
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            // Открываем ссылку внутри ТГ или в браузере
+            tg.openTelegramLink(url);
+            // Если ссылка внешняя, используй: tg.openLink(url);
+        }
+
+        // Сообщаем ТГ, что приложение готово
+        tg.ready();
+    </script>
+</body>
+</html>
