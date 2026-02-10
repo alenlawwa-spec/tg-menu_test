@@ -49,14 +49,24 @@
             100% { transform: translate(30px, 50px) scale(1.1); }
         }
 
-        /* Контейнер со скроллом */
-        .scroll-container {
-            height: 100vh;
+        /* Контейнеры экранов */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-y: auto;
             padding: 24px 20px 40px;
             -webkit-overflow-scrolling: touch;
         }
-        .scroll-container::-webkit-scrollbar { width: 0px; }
+
+        .page::-webkit-scrollbar { width: 0px; }
+
+        .hidden-left { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+        .hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
+        .active { transform: translateX(0); opacity: 1; pointer-events: all; }
 
         /* Эффект стекла */
         .glass-card {
@@ -75,7 +85,7 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Иконка-изображение */
+        /* Иконки */
         .icon-box {
             width: 54px;
             height: 54px;
@@ -89,15 +99,24 @@
             flex-shrink: 0;
         }
 
-        .icon-box svg {
-            width: 28px;
-            height: 28px;
-        }
+        .icon-box svg { width: 26px; height: 26px; }
 
         .title-gradient {
             background: linear-gradient(135deg, #ffffff 0%, #a1a1a1 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+
+        /* Бейдж "в разработке" */
+        .badge-dev {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(255, 0, 122, 0.15);
+            color: #ff007a;
+            border: 1px solid rgba(255, 0, 122, 0.3);
+            display: inline-block;
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -107,7 +126,8 @@
         <div class="orb orb-2"></div>
     </div>
 
-    <div class="scroll-container" id="app">
+    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <div id="main-page" class="page active">
         <header class="mb-10 mt-4 text-center">
             <h1 class="text-3xl font-bold title-gradient tracking-tight">Навигация</h1>
             <p class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
@@ -115,7 +135,7 @@
 
         <div class="grid gap-4">
             <!-- КНОПКА 1: Все гайды -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleAction('https://t.me/your_link_1')">
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="showGuides()">
                 <div class="icon-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
                         <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
@@ -129,7 +149,7 @@
             </div>
 
             <!-- КНОПКА 2: Мои услуги -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleAction('https://t.me/your_link_2')">
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_link_2')">
                 <div class="icon-box" style="border: 1px solid rgba(0, 242, 255, 0.2)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-400">
                         <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
@@ -137,13 +157,13 @@
                 </div>
                 <div class="flex-1">
                     <h3 class="font-semibold text-cyan-400 text-white">Мои услуги</h3>
-                    <p class="text-gray-400 text-xs">Лучшее качество здесь</p>
+                    <p class="text-gray-400 text-xs text-white/60">Лучшее качество здесь</p>
                 </div>
                 <div class="opacity-30 text-xl">›</div>
             </div>
 
             <!-- КНОПКА 3: Обучение -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleAction('https://t.me/your_link_3')">
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="tg.HapticFeedback.notificationOccurred('warning')">
                 <div class="icon-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-purple-400">
                         <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
@@ -152,13 +172,13 @@
                 </div>
                 <div class="flex-1">
                     <h3 class="font-semibold text-white">Обучение</h3>
-                    <p class="text-gray-400 text-xs text-pink-400 italic">в разработке...</p>
+                    <div class="badge-dev">в разработке...</div>
                 </div>
                 <div class="opacity-30 text-xl">›</div>
             </div>
 
             <!-- КНОПКА 4: Связь со мной -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleAction('https://t.me/your_username')">
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_username')">
                 <div class="icon-box">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-green-400">
                         <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
@@ -172,7 +192,7 @@
             </div>
 
             <!-- КНОПКА 5: Отзывы -->
-            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleAction('https://t.me/your_link_5')">
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_link_5')">
                 <div class="icon-box" style="border: 1px solid rgba(255, 0, 122, 0.2)">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="text-pink-500">
                         <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
@@ -180,15 +200,53 @@
                 </div>
                 <div class="flex-1">
                     <h3 class="font-semibold text-pink-500">Отзывы</h3>
-                    <p class="text-gray-400 text-xs">Что говорят подписчики</p>
+                    <p class="text-gray-400 text-xs text-white/60">Что говорят подписчики</p>
                 </div>
                 <div class="opacity-30 text-xl">›</div>
             </div>
         </div>
 
         <footer class="mt-16 text-center">
-            <p class="text-[9px] uppercase tracking-[0.3em] text-gray-600 opacity-50">Visual Experience v1.2</p>
+            <p class="text-[9px] uppercase tracking-[0.3em] text-gray-600 opacity-50">Visual Experience v1.3</p>
         </footer>
+    </div>
+
+    <!-- ЭКРАН ГАЙДОВ -->
+    <div id="guides-page" class="page hidden-right">
+        <header class="mb-10 mt-4 text-center">
+            <h1 class="text-3xl font-bold title-gradient tracking-tight text-blue-400">Библиотека</h1>
+            <p class="text-gray-500 text-sm mt-2">Выбери интересующую категорию</p>
+        </header>
+
+        <div class="grid gap-4">
+            <!-- КАТЕГОРИЯ 1 -->
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_link_guide1')">
+                <div class="icon-box text-blue-300">🔥</div>
+                <div class="flex-1 text-white font-medium">Топ-10 секретов успеха</div>
+                <div class="opacity-30">›</div>
+            </div>
+            
+            <!-- КАТЕГОРИЯ 2 -->
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_link_guide2')">
+                <div class="icon-box text-blue-300">📈</div>
+                <div class="flex-1 text-white font-medium">Как вырасти в доходе</div>
+                <div class="opacity-30">›</div>
+            </div>
+
+            <!-- КАТЕГОРИЯ 3 -->
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_link_guide3')">
+                <div class="icon-box text-blue-300">🛠</div>
+                <div class="flex-1 text-white font-medium">Инструменты эксперта</div>
+                <div class="opacity-30">›</div>
+            </div>
+
+            <!-- КАТЕГОРИЯ 4 -->
+            <div class="glass-card p-4 flex items-center cursor-pointer" onclick="handleLink('https://t.me/your_link_guide4')">
+                <div class="icon-box text-blue-300">🎬</div>
+                <div class="flex-1 text-white font-medium">Гайд по Reels</div>
+                <div class="opacity-30">›</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -196,9 +254,39 @@
         tg.expand();
         tg.enableClosingConfirmation();
 
-        function handleAction(url) {
+        // Элементы страниц
+        const mainPage = document.getElementById('main-page');
+        const guidesPage = document.getElementById('guides-page');
+
+        // Кнопка "Назад" от Telegram
+        tg.BackButton.onClick(() => {
+            hideGuides();
+        });
+
+        function showGuides() {
             tg.HapticFeedback.impactOccurred('medium');
+            mainPage.classList.remove('active');
+            mainPage.classList.add('hidden-left');
             
+            guidesPage.classList.remove('hidden-right');
+            guidesPage.classList.add('active');
+            
+            tg.BackButton.show(); // Показываем системную кнопку "Назад"
+        }
+
+        function hideGuides() {
+            tg.HapticFeedback.impactOccurred('light');
+            guidesPage.classList.remove('active');
+            guidesPage.classList.add('hidden-right');
+            
+            mainPage.classList.remove('hidden-left');
+            mainPage.classList.add('active');
+            
+            tg.BackButton.hide(); // Прячем кнопку "Назад"
+        }
+
+        function handleLink(url) {
+            tg.HapticFeedback.impactOccurred('medium');
             if (url.startsWith('https://t.me/')) {
                 tg.openTelegramLink(url);
             } else {
