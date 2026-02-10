@@ -19,6 +19,7 @@
         :root {
             --neon-color: #00f2ff;
             --neon-pink: #ff007a;
+            --neon-green: #39ff14;
         }
 
         body {
@@ -56,6 +57,47 @@
         @keyframes float {
             0% { transform: translate(0, 0) scale(1); }
             100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        /* Индикатор статуса */
+        .status-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #444;
+            transition: all 0.5s ease;
+        }
+
+        .status-dot.online {
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+            animation: pulse-green 2s infinite;
+        }
+
+        .status-dot.offline {
+            animation: pulse-gray 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse-gray {
+            0% { opacity: 0.5; }
+            50% { opacity: 0.2; }
+            100% { opacity: 0.5; }
         }
 
         .page {
@@ -187,6 +229,11 @@
         <div class="orb orb-2"></div>
     </div>
 
+    <!-- Индикатор связи -->
+    <div class="status-container">
+        <div id="status-dot" class="status-dot offline"></div>
+    </div>
+
     <!-- ГЛАВНЫЙ ЭКРАН -->
     <div id="main-page" class="page active">
         <header class="mb-10 mt-4 text-center">
@@ -309,25 +356,26 @@
 
     <script>
         const tg = window.Telegram.WebApp;
-        console.log("Версия API Telegram:", tg.version);
         tg.expand();
         tg.enableClosingConfirmation();
 
         // --- КОНФИГУРАЦИЯ ---
         const ADMIN_ID = 758556732; 
+        const ADMIN_PASSWORD = "cyber_admin_secure_99"; // Ваш секретный пароль
 
         // --- FIREBASE SETUP ---
         const firebaseConfig = {
-            apiKey: "ВСТАВЬ_API_KEY",
-            authDomain: "ПРОЕКТ.firebaseapp.com",
-            projectId: "ПРОЕКТ_ID",
-            storageBucket: "ПРОЕКТ.appspot.com",
-            messagingSenderId: "ОТПРАВИТЕЛЬ_ID",
-            appId: "APP_ID"
+            apiKey: "AIzaSyCiYBslwEecbyuMyW5J05nvTs_sXLlurR4",
+            authDomain: "tg-menu.firebaseapp.com",
+            projectId: "tg-menu",
+            storageBucket: "tg-menu.firebasestorage.app",
+            messagingSenderId: "754545603793",
+            appId: "1:754545603793:web:a466fd9b21a298a69d41f0"
         };
 
-        const appId = "cyber-nav-v1";
+        const configDocId = "main_nav";
         let db, auth;
+        let isOnline = false;
         let appData = {
             service: { title: 'Мои услуги', link: 'https://t.me/your_link_2' },
             reviews: { title: 'Отзывы', link: 'https://t.me/your_link_5' },
@@ -341,27 +389,44 @@
 
         async function initApp() {
             try {
-                if (firebaseConfig.apiKey !== "ВСТАВЬ_API_KEY") {
-                    const app = firebase.initializeApp(firebaseConfig);
-                    db = firebase.firestore();
-                    auth = firebase.auth();
+                const app = firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                auth = firebase.auth();
 
-                    await auth.signInAnonymously();
-                    
-                    const docRef = db.collection('configs').doc(appId);
-                    docRef.onSnapshot((doc) => {
-                        if (doc.exists) {
-                            appData = doc.data();
-                            updateUI();
-                        }
-                    });
-                } else {
-                    console.log("Демо-режим: вставьте ключи Firebase в код.");
-                    updateUI();
-                }
+                await auth.signInAnonymously();
+                
+                const docRef = db.collection('configs').doc(configDocId);
+                docRef.onSnapshot((doc) => {
+                    if (doc.exists) {
+                        appData = doc.data();
+                        updateUI();
+                        setOnlineStatus(true);
+                    } else {
+                        docRef.set(appData);
+                        updateUI();
+                        setOnlineStatus(true);
+                    }
+                }, (error) => {
+                    console.error("Firebase error:", error);
+                    setOnlineStatus(false);
+                });
+
             } catch (e) {
-                console.error("Ошибка Firebase:", e);
+                console.error("Init error:", e);
+                setOnlineStatus(false);
                 updateUI();
+            }
+        }
+
+        function setOnlineStatus(online) {
+            isOnline = online;
+            const dot = document.getElementById('status-dot');
+            if (isOnline) {
+                dot.classList.remove('offline');
+                dot.classList.add('online');
+            } else {
+                dot.classList.remove('online');
+                dot.classList.add('offline');
             }
         }
 
@@ -431,11 +496,18 @@
             tapTimer = setTimeout(() => tapCount = 0, 1000);
             if (tapCount >= 5) {
                 const userId = tg.initDataUnsafe?.user?.id;
+                
+                // Проверка прав администратора
                 if (userId === ADMIN_ID) {
                     openAdmin();
                 } else {
-                    console.log("Access Denied for user:", userId);
-                    tg.showAlert('Доступ запрещен.');
+                    // Если ID не совпадает или не определен, просим пароль
+                    const password = prompt('Введите пароль администратора:');
+                    if (password === ADMIN_PASSWORD) {
+                        openAdmin();
+                    } else if (password !== null) {
+                        alert('Доступ запрещен');
+                    }
                 }
                 tapCount = 0;
             }
@@ -479,7 +551,7 @@
         }
 
         function removeGuide(index) {
-            if(confirm('Удалить?')) {
+            if(confirm('Удалить этот блок?')) {
                 tempAppData.guides.splice(index, 1);
                 renderAdminGuides();
             }
@@ -495,19 +567,25 @@
         }
 
         async function saveAdminData() {
-            if (!db) return tg.showAlert("Firebase не настроен!");
+            if (!db) return alert("Ошибка: База данных не подключена.");
+            
             tg.HapticFeedback.impactOccurred('medium');
             tempAppData.service.title = document.getElementById('admin-service-title').value;
             tempAppData.service.link = document.getElementById('admin-service-link').value;
             tempAppData.reviews.title = document.getElementById('admin-reviews-title').value;
             tempAppData.reviews.link = document.getElementById('admin-reviews-link').value;
+            
             try {
-                await db.collection('configs').doc(appId).set(tempAppData);
+                await db.collection('configs').doc(configDocId).set(tempAppData);
+                
                 const status = document.getElementById('save-status');
                 status.style.opacity = '1';
-                setTimeout(() => { status.style.opacity = '0'; closeAdmin(); }, 1500);
+                setTimeout(() => { 
+                    status.style.opacity = '0'; 
+                    closeAdmin(); 
+                }, 1500);
             } catch (e) {
-                tg.showAlert("Ошибка сохранения");
+                alert("Ошибка при сохранении данных.");
             }
         }
 
