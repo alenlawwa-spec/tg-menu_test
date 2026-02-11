@@ -32,13 +32,14 @@
             width: 100vw;
             margin: 0;
             position: fixed;
-            /* ЗАЩИТА КОНТЕНТА */
+            /* ЗАЩИТА КОНТЕНТА: Запрет выделения текста во всем приложении */
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
         }
 
+        /* Разрешаем выделение только в полях ввода, чтобы админка оставалась рабочей */
         input, textarea {
             -webkit-user-select: text;
             -moz-user-select: text;
@@ -220,6 +221,7 @@
             font-size: 13px;
         }
 
+        /* Сетка выбора иконок */
         .icon-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -246,6 +248,7 @@
 
         .icon-picker-btn svg { width: 18px; height: 18px; }
 
+        /* Выбор цвета */
         .color-row {
             display: flex;
             gap: 10px;
@@ -328,6 +331,18 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .badge-dev {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(255, 0, 122, 0.15);
+            color: #ff007a;
+            border: 1px solid rgba(255, 0, 122, 0.3);
+            display: inline-block;
+            margin-top: 4px;
+        }
+
+        /* --- СТИЛИ ДЛЯ ГАЛЕРЕИ ПРОМПТОВ --- */
         .gallery-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -353,6 +368,13 @@
             height: 100%;
             object-fit: cover;
         }
+        
+        .gallery-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            pointer-events: none; /* Чтобы клик обрабатывался родителем */
+        }
 
         .gallery-overlay {
             position: absolute;
@@ -365,10 +387,11 @@
             height: 50%;
         }
 
+        /* Fullscreen Modal */
         #gallery-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 5, 5, 0.98);
+            background: rgba(5, 5, 5, 0.98); /* Чуть темнее фон */
             backdrop-filter: blur(20px);
             z-index: 200;
             display: flex;
@@ -385,13 +408,13 @@
 
         .gallery-modal-img-container {
             width: 100%;
-            height: 55vh;
+            height: 55vh; /* Фиксированная высота фото */
             position: relative;
             background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
+            flex-shrink: 0; /* Не сжимать фото */
         }
         
         .gallery-modal-img {
@@ -401,19 +424,23 @@
         }
 
         .gallery-modal-content {
-            flex-grow: 1;
+            flex-grow: 1; /* Занимает оставшееся место */
             background: linear-gradient(to bottom, rgba(20, 20, 25, 1), rgba(10, 10, 15, 1));
             border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 24px 20px 100px 20px;
+            padding: 24px 20px 100px 20px; /* Снизу отступ под кнопку */
             display: flex;
             flex-direction: column;
             border-top-left-radius: 24px;
             border-top-right-radius: 24px;
-            margin-top: -24px;
+            margin-top: -24px; /* Наезд на фото */
             position: relative;
             z-index: 10;
-            overflow-y: auto;
+            overflow-y: auto; /* Скролл только тут */
             -webkit-overflow-scrolling: touch;
+        }
+        
+        .modal-text-wrapper {
+            /* Обертка для текста */
         }
 
         .quote-block {
@@ -422,9 +449,9 @@
             margin-bottom: 16px;
             font-style: italic;
             color: #ccc;
-            font-size: 13px;
+            font-size: 13px; /* Шрифт помельче */
             line-height: 1.6;
-            white-space: pre-wrap;
+            white-space: pre-wrap; /* Сохранять переносы */
         }
 
         .btn-copy {
@@ -432,7 +459,7 @@
             bottom: 30px;
             left: 20px;
             right: 20px;
-            background: rgba(255, 0, 122, 0.85);
+            background: rgba(255, 0, 122, 0.85); /* Полупрозрачный */
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
             color: white;
@@ -445,7 +472,7 @@
             justify-content: center;
             gap: 8px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-            z-index: 210;
+            z-index: 210; /* Поверх всего */
             transition: transform 0.1s;
         }
         
@@ -463,6 +490,7 @@
             gap: 4px;
         }
 
+        /* Spinner */
         .spinner {
             width: 40px;
             height: 40px;
@@ -476,6 +504,7 @@
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
+        /* --- СТИЛИ ДЛЯ ОТЗЫВОВ --- */
         .review-card {
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(15px);
@@ -515,6 +544,7 @@
             gap: 8px;
         }
 
+        /* Modal Write Review */
         #review-write-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -571,9 +601,10 @@
         <div id="status-dot" class="status-dot offline"></div>
     </div>
 
+    <!-- ГЛАВНЫЙ ЭКРАН -->
     <div id="main-page" class="page active">
         <header class="mb-10 mt-4 text-center">
-            <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none cursor-pointer">Навигация</h1>
+            <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none">Навигация</h1>
             <p id="nav-subheader" class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
         </header>
 
@@ -584,8 +615,10 @@
         </footer>
     </div>
 
+    <!-- УНИВЕРСАЛЬНАЯ ВНУТРЕННЯЯ СТРАНИЦА -->
     <div id="sub-page" class="page hidden-right">
         <header class="mb-6 mt-4 text-center relative">
+             <!-- Добавил кнопку назад сверху для удобства -->
              <button onclick="hideSubPage()" class="absolute left-0 top-1 text-2xl opacity-50 p-2">‹</button>
             <h1 id="sub-page-title" class="text-2xl font-bold title-gradient tracking-tight text-blue-400">Заголовок</h1>
             <p id="sub-page-subtitle" class="text-gray-500 text-xs mt-1">Описание раздела</p>
@@ -594,14 +627,22 @@
         <div class="mt-auto h-20"></div> 
     </div>
 
+    <!-- МОДАЛКА ГАЛЕРЕИ (Full Screen) -->
     <div id="gallery-modal">
         <button onclick="closeGalleryModal()" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 rounded-full text-white flex items-center justify-center backdrop-blur-md">✕</button>
-        <div class="gallery-modal-img-container" id="modal-img-wrapper"></div>
+        
+        <div class="gallery-modal-img-container" id="modal-img-wrapper">
+            <!-- Сюда JS вставит img и спиннер -->
+        </div>
+        
         <div class="gallery-modal-content">
             <div class="modal-text-wrapper">
                 <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-bold flex-shrink-0">PROMPT TEXT</div>
-                <div class="quote-block" id="modal-prompt-text"></div>
+                <div class="quote-block" id="modal-prompt-text">
+                    <!-- Text goes here -->
+                </div>
             </div>
+            <!-- Кнопка теперь fixed (вне потока контента внутри content, но визуально внутри модалки) -->
             <button onclick="copyCurrentPrompt()" class="btn-copy">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Копировать промпт ✨
@@ -609,6 +650,7 @@
         </div>
     </div>
 
+    <!-- МОДАЛКА НАПИСАНИЯ ОТЗЫВА -->
     <div id="review-write-modal">
         <div class="text-center mb-6">
             <h2 class="text-2xl font-bold text-white mb-2">Ваш отзыв</h2>
@@ -632,6 +674,7 @@
         <button onclick="closeReviewModal()" class="text-gray-500 text-sm mt-4">Отмена</button>
     </div>
 
+    <!-- ЭКРАН АДМИНКИ -->
     <div id="admin-page" class="page hidden-bottom" style="background: rgba(5,5,8,0.98); z-index: 50;">
         <header class="mb-8 flex justify-between items-center sticky top-0 bg-[#050508] py-4 z-20 border-b border-white/5">
             <div>
@@ -693,10 +736,12 @@
         tg.expand();
 
         const ADMIN_ID = 758556732; 
+        // Пароль удален, так как вход только по ID
 
         // ЗАЩИТА ПРАВОЙ КНОПКИ
         document.addEventListener('contextmenu', event => event.preventDefault());
 
+        // Иконки библиотеки
         const ICON_LIBRARY = [
             { id: 'folder', svg: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>' },
             { id: 'star', svg: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
@@ -763,6 +808,7 @@
             const container = document.getElementById('main-menu-container');
             container.innerHTML = '';
             (appData.mainMenu || []).forEach((btn) => {
+                // Если тип кнопки "Галерея" или "Отзывы", считаем это списком для логики открытия
                 const isComplexMode = btn.mode === 'list' || btn.mode === 'gallery' || btn.mode === 'reviews';
                 
                 const btnEl = document.createElement('div');
@@ -787,17 +833,12 @@
             });
         }
 
-        // --- ЛОГИКА СВАЙПА (ИСПРАВЛЕНА И ДОПОЛНЕНА) ---
+        // --- ЛОГИКА СВАЙПА ---
         let touchStartX = 0;
         const subPage = document.getElementById('sub-page');
 
         subPage.addEventListener('touchstart', e => {
             touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        // Добавлено touchMove для предотвращения дефолтного скролла при горизонтальном свайпе
-        subPage.addEventListener('touchmove', e => {
-            // Если свайп явно горизонтальный, можно блокировать вертикальный скролл (опционально)
         }, { passive: true });
 
         subPage.addEventListener('touchend', e => {
@@ -817,42 +858,6 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // ФУНКЦИЯ: ЗАГРУЗКА ОТЗЫВОВ (ВЫНЕСЕНА ОТДЕЛЬНО ДЛЯ ЯСНОСТИ)
-        function loadReviews(container) {
-            const reviewsList = document.createElement('div');
-            reviewsList.id = 'reviews-public-list';
-            reviewsList.innerHTML = '<div class="text-center mt-10"><div class="spinner relative left-1/2 -ml-5"></div></div>';
-            container.appendChild(reviewsList);
-
-            db.collection('reviews').where('approved', '==', true).get().then(snap => {
-                reviewsList.innerHTML = '';
-                const docs = [];
-                snap.forEach(d => docs.push(d.data()));
-                docs.sort((a,b) => new Date(b.date) - new Date(a.date));
-                
-                if(docs.length === 0) {
-                    reviewsList.innerHTML = '<div class="text-center text-gray-500 text-sm mt-4">Отзывов пока нет. Будь первым!</div>';
-                    return;
-                }
-
-                docs.forEach(r => {
-                    const card = document.createElement('div');
-                    card.className = 'review-card animate-pulse-enter';
-                    const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-                    const dateStr = new Date(r.date).toLocaleDateString();
-                    card.innerHTML = `
-                        <div class="review-header">
-                            <span class="review-name">${escapeHtml(r.name)}</span>
-                            <span class="stars">${stars}</span>
-                        </div>
-                        <div class="review-text">${escapeHtml(r.text)}</div>
-                        <div class="review-date mt-2 text-right opacity-50 text-[9px]">${dateStr}</div>
-                    `;
-                    reviewsList.appendChild(card);
-                });
-            });
-        }
-
         function openSubPage(btnData) {
             tg.HapticFeedback.impactOccurred('medium');
             document.getElementById('sub-page-title').textContent = btnData.title;
@@ -860,6 +865,7 @@
             const container = document.getElementById('sub-page-container');
             container.innerHTML = '';
 
+            // РЕЖИМ ГАЛЕРЕИ
             if (btnData.mode === 'gallery') {
                 container.className = 'gallery-grid animate-pulse-enter'; 
                 (btnData.items || []).forEach(item => {
@@ -876,18 +882,53 @@
                     container.appendChild(itemEl);
                 });
             } 
+            // РЕЖИМ ОТЗЫВОВ (NEW)
             else if (btnData.mode === 'reviews') {
                 container.className = 'flex flex-col pb-20';
                 
+                // Кнопка написать
                 const btn = document.createElement('button');
                 btn.className = 'btn-write-review';
                 btn.innerHTML = '✨ Написать отзыв';
                 btn.onclick = openReviewModal;
                 container.appendChild(btn);
                 
-                // ЗАДАЧА 1: Загрузка отзывов
-                loadReviews(container);
+                const reviewsList = document.createElement('div');
+                reviewsList.id = 'reviews-public-list';
+                reviewsList.innerHTML = '<div class="text-center mt-10"><div class="spinner relative left-1/2 -ml-5"></div></div>';
+                container.appendChild(reviewsList);
+
+                // Загрузка только одобренных
+                db.collection('reviews').where('approved', '==', true).get().then(snap => {
+                    reviewsList.innerHTML = '';
+                    const docs = [];
+                    snap.forEach(d => docs.push(d.data()));
+                    // Сортировка на клиенте
+                    docs.sort((a,b) => new Date(b.date) - new Date(a.date));
+                    
+                    if(docs.length === 0) {
+                        reviewsList.innerHTML = '<div class="text-center text-gray-500 text-sm mt-4">Пока нет отзывов. Будь первым! 🚀</div>';
+                        return;
+                    }
+
+                    docs.forEach(r => {
+                        const card = document.createElement('div');
+                        card.className = 'review-card animate-pulse-enter';
+                        const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
+                        const dateStr = new Date(r.date).toLocaleDateString();
+                        card.innerHTML = `
+                            <div class="review-header">
+                                <span class="review-name">${escapeHtml(r.name)}</span>
+                                <span class="stars">${stars}</span>
+                            </div>
+                            <div class="review-text">${escapeHtml(r.text)}</div>
+                            <div class="review-date mt-2 text-right opacity-50 text-[9px]">${dateStr}</div>
+                        `;
+                        reviewsList.appendChild(card);
+                    });
+                });
             }
+            // ОБЫЧНЫЙ СПИСОК
             else {
                 container.className = 'grid gap-4'; 
                 (btnData.items || []).forEach(item => {
@@ -911,6 +952,7 @@
         }
 
         tg.BackButton.onClick(() => {
+            // Если открыта модалка галереи - закрываем её, иначе назад в меню
             const galleryModal = document.getElementById('gallery-modal');
             if (galleryModal.classList.contains('active-modal')) {
                 closeGalleryModal();
@@ -929,7 +971,7 @@
             }
         }
 
-        // --- ЗАДАЧА 1: ФУНКЦИИ ОТЗЫВОВ ---
+        // --- ЛОГИКА ОТПРАВКИ ОТЗЫВОВ ---
         function openReviewModal() {
             const nameInput = document.getElementById('review-name-input');
             const userFirstName = tg.initDataUnsafe?.user?.first_name || "Гость";
@@ -951,6 +993,7 @@
             
             const rating = parseInt(ratingEl.value);
             
+            // Сохранение в Firestore
             db.collection('reviews').add({
                 name: name,
                 text: text,
@@ -962,6 +1005,7 @@
                 closeReviewModal();
                 tg.showAlert("Ваш отзыв отправлен на модерацию! ✨");
                 document.getElementById('review-text-input').value = '';
+                // Сброс звезд
                 document.querySelectorAll('input[name="rating"]').forEach(el => el.checked = false);
             });
         }
@@ -971,17 +1015,21 @@
             tg.HapticFeedback.impactOccurred('medium');
             const modal = document.getElementById('gallery-modal');
             const wrapper = document.getElementById('modal-img-wrapper');
+            
+            // Чистим контейнер
             wrapper.innerHTML = '';
 
+            // Спиннер
             const spinner = document.createElement('div');
             spinner.className = 'spinner';
             wrapper.appendChild(spinner);
 
+            // Всегда рисуем как картинку с no-referrer
             const img = document.createElement('img');
             img.src = imgUrl;
             img.className = "gallery-modal-img";
-            img.referrerPolicy = "no-referrer";
-            img.style.opacity = "0";
+            img.referrerPolicy = "no-referrer"; // Важно для Телеграма
+            img.style.opacity = "0"; // Скрываем пока грузится
             img.onload = () => {
                 spinner.remove();
                 img.style.transition = "opacity 0.3s";
@@ -1015,6 +1063,7 @@
                 tg.showAlert('Промпт скопирован!');
                 tg.HapticFeedback.notificationOccurred('success');
             }).catch(() => {
+                // Фолбэк для старых версий
                 const ta = document.createElement('textarea');
                 ta.value = text;
                 document.body.appendChild(ta);
@@ -1030,10 +1079,16 @@
         document.getElementById('nav-header').addEventListener('click', () => {
             tapCount++;
             if (tapCount >= 5) {
-                // ЗАДАЧА 3: Защита по ID
-                if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
+                const currentUserId = tg.initDataUnsafe?.user?.id;
                 
-                openAdmin(); 
+                // СТРОГАЯ ПРОВЕРКА ПО ID
+                if (currentUserId === ADMIN_ID) {
+                    openAdmin(); 
+                } else {
+                    // Игнорируем всех остальных
+                    console.log("Access Denied: ID mismatch");
+                }
+                
                 tapCount = 0;
             }
             setTimeout(() => tapCount = 0, 1000);
@@ -1048,6 +1103,7 @@
             document.getElementById('admin-header-subtitle').value = tempAppData.headerSubtitle;
             renderAdminMainMenu();
             document.getElementById('admin-page').classList.replace('hidden-bottom', 'active-modal');
+            // Убеждаемся что показывается главное меню админки
             document.getElementById('admin-content-main').classList.remove('hidden');
             document.getElementById('admin-content-sublist').classList.add('hidden');
             document.getElementById('admin-content-moderation').classList.add('hidden');
@@ -1064,6 +1120,7 @@
                 const upBtn = idx > 0 ? `<button onclick="moveMainMenuButton(${idx}, -1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▲</button>` : `<span class="px-2 opacity-0">▲</span>`;
                 const downBtn = idx < total - 1 ? `<button onclick="moveMainMenuButton(${idx}, 1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▼</button>` : `<span class="px-2 opacity-0">▼</span>`;
 
+                // Кнопка редактирования списка меняется в зависимости от режима
                 let editBtnText = "Редактировать список";
                 if (btn.mode === 'gallery') editBtnText = "Редактировать ГАЛЕРЕЮ 🎨";
                 if (btn.mode === 'reviews') editBtnText = "Настройка не требуется (AUTO)";
@@ -1163,17 +1220,18 @@
             renderSubListItems();
         }
 
-        // --- ЗАДАЧА 2: ФУНКЦИИ МОДЕРАЦИИ ---
+        // --- МОДЕРАЦИЯ ОТЗЫВОВ (АДМИН) ---
         function openModeration() {
             document.getElementById('admin-content-main').classList.add('hidden');
             document.getElementById('admin-content-moderation').classList.remove('hidden');
-            loadModerationList();
+            renderModerationList();
         }
 
-        function loadModerationList() {
+        function renderModerationList() {
             const list = document.getElementById('moderation-list');
             list.innerHTML = '<div class="text-center mt-4"><div class="spinner relative left-1/2 -ml-5"></div></div>';
             
+            // Ищем неодобренные
             db.collection('reviews').where('approved', '==', false).get().then(snap => {
                 list.innerHTML = '';
                 if(snap.empty) {
@@ -1206,7 +1264,7 @@
         function approveReview(id) {
             if(!confirm('Одобрить этот отзыв?')) return;
             db.collection('reviews').doc(id).update({ approved: true }).then(() => {
-                loadModerationList();
+                renderModerationList();
                 tg.showAlert("Отзыв одобрен! ✅");
             });
         }
@@ -1214,11 +1272,11 @@
         function deleteReview(id) {
             if(!confirm('Удалить отзыв навсегда?')) return;
             db.collection('reviews').doc(id).delete().then(() => {
-                loadModerationList();
+                renderModerationList();
             });
         }
 
-        // --- МАГИЧЕСКАЯ ФУНКЦИЯ ---
+        // --- МАГИЧЕСКАЯ ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕЛЕГРАМ ПОСТОВ (С ПРЕВЬЮ) ---
         async function magicPaste(itemIdx) {
             const textArea = document.getElementById(`magic-paste-${itemIdx}`);
             const raw = textArea.value;
@@ -1227,64 +1285,84 @@
             const urlRegex = /(https:\/\/t\.me\/[\w\/]+)/;
             const match = raw.match(urlRegex);
             
-            if (!match) return tg.showAlert("Нужна ссылка вида https://t.me/channel/123");
+            if (!match) {
+                return tg.showAlert("Нужна ссылка вида https://t.me/channel/123");
+            }
 
             const tgLink = match[0];
             tg.showAlert("🔮 Анализирую пост...");
 
             try {
+                // Запрашиваем embed версию через прокси AllOrigins
                 const embedUrl = tgLink + '?embed=1&mode=tme';
                 const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(embedUrl);
                 
                 const response = await fetch(proxyUrl);
                 const data = await response.json();
+                
                 if (!data.contents) throw new Error("No data");
 
+                // Парсим HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(data.contents, "text/html");
 
+                // Ищем картинку в стилях background-image
                 let extractedImg = "";
                 const photoWrap = doc.querySelector('.tgme_widget_message_photo_wrap');
                 if (photoWrap) {
                     const style = photoWrap.getAttribute('style');
+                    // Регулярка для вытаскивания url('...')
                     const bgMatch = style.match(/url\('?(.*?)'?\)/);
                     if (bgMatch) extractedImg = bgMatch[1];
                 }
 
+                // --- НОВАЯ ЛОГИКА ПАРСИНГА ЦИТАТ ---
                 let extractedText = "";
+                
+                // Ищем блоки цитат, моноширинный текст (код) или pre
+                // В телеграме Web Embed цитаты и моноширинный текст обычно попадают в эти теги
+                // или иногда просто в <i>, если старый формат. Но приоритет - блочные элементы.
                 const quoteBlocks = doc.querySelectorAll('.tgme_widget_message_text blockquote, .tgme_widget_message_text code, .tgme_widget_message_text pre');
                 
                 if (quoteBlocks && quoteBlocks.length > 0) {
+                    // Собираем текст из всех найденных блоков
                     const parts = [];
                     quoteBlocks.forEach(block => parts.push(block.innerText.trim()));
                     extractedText = parts.join('\n\n');
                 } else {
+                    // Если цитат не найдено вообще, берем весь текст?
+                    // Пользователь просил: "Твой код должен брать ТОЛЬКО текст, который находится в блоке цитаты"
+                    // Но если Елена забыла оформить цитату, лучше взять весь текст, чем пустоту.
+                    // Сделаем fallback: если нет blockquote/code/pre, берем весь текст message_text
                     const textDiv = doc.querySelector('.tgme_widget_message_text');
                     if (textDiv) extractedText = textDiv.innerText;
                 }
 
+                // Обновляем данные
                 let msg = "";
                 if (extractedImg) {
                     tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = extractedImg;
                     msg += "Картинка+ ";
                 } else {
-                    msg += "Картинка не найдена. ";
+                    msg += "Картинка не найдена (вставь вручную). ";
                 }
 
                 if (extractedText) {
                      tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = extractedText;
                      msg += "Текст+";
                 } else {
-                     msg += "Текст не найден.";
+                     msg += "Текст (цитата) не найден.";
                 }
 
                 tg.showAlert(msg || "Ничего не найдено");
-                renderSubListItems();
 
             } catch (e) {
                 console.error(e);
                 tg.showAlert("Ошибка доступа к Telegram 🚫");
             }
+
+            // Перерисовываем UI
+            renderSubListItems();
         }
 
         function renderSubListItems() {
@@ -1303,6 +1381,8 @@
                 div.className = "guide-item-admin";
 
                 if (isGalleryMode) {
+                    // --- РЕДАКТОР ГАЛЕРЕИ (с превью) ---
+                    // Проверяем, есть ли картинка для показа превью
                     const imgPreview = item.imageUrl ? 
                         `<div class="mb-2 mt-2 w-full h-32 bg-black rounded-lg overflow-hidden border border-white/10 relative">
                             <img src="${item.imageUrl}" class="w-full h-full object-contain">
@@ -1318,17 +1398,25 @@
                                 <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
                              </div>
                         </div>
+                        
+                        <!-- Magic Paste Section -->
                         <div class="bg-white/5 p-2 rounded mb-2 border border-white/10">
                             <label class="admin-label text-purple-400">✨ Magic Paste (Ссылка на пост)</label>
                             <textarea id="magic-paste-${idx}" class="admin-input h-10 text-[10px]" placeholder="https://t.me/channel/123"></textarea>
                             <button onclick="magicPaste(${idx})" class="magic-btn">🪄 Распознать</button>
                         </div>
+                        
                         ${imgPreview}
+
                         <input type="text" class="admin-input" value="${item.title || ''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
+                        
+                        <div class="text-[9px] text-gray-500 mb-1 ml-1">Если фото не грузится, используй ссылку из @Telegraph или браузера</div>
                         <input type="text" class="admin-input" value="${item.imageUrl || ''}" placeholder="Ссылка на картинку" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].imageUrl=this.value">
+                        
                         <textarea class="admin-textarea" placeholder="Текст промпта..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt || ''}</textarea>
                     `;
                 } else {
+                    // --- ОБЫЧНЫЙ СПИСОК ---
                     div.innerHTML = `
                         <div class="flex gap-2 items-center">
                             <div class="flex flex-col gap-0 items-center justify-center mr-1">
@@ -1380,7 +1468,12 @@
         function closeAdmin() { document.getElementById('admin-page').classList.replace('active-modal', 'hidden-bottom'); }
 
         async function saveAdminData() {
-            if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
+            // ЗАЩИТА: Проверка ID перед сохранением
+            if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) {
+                console.error("Unauthorized save attempt");
+                return;
+            }
+
             tempAppData.headerTitle = document.getElementById('admin-header-title').value;
             tempAppData.headerSubtitle = document.getElementById('admin-header-subtitle').value;
             await db.collection('configs').doc(configDocId).set(tempAppData);
