@@ -5,16 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Cyber Navigation</title>
     
-    <!-- Подключение Telegram WebApp -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
-    <!-- Подключение Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    
     <style>
         :root {
             --neon-color: #00f2ff;
@@ -134,7 +128,6 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Админка */
         .admin-card {
             background: rgba(10, 10, 15, 0.8);
             border: 1px solid rgba(0, 242, 255, 0.15);
@@ -203,7 +196,6 @@
             font-size: 13px;
         }
 
-        /* Сетка выбора иконок */
         .icon-grid {
             display: grid;
             grid-template-columns: repeat(6, 1fr);
@@ -230,7 +222,6 @@
 
         .icon-picker-btn svg { width: 18px; height: 18px; }
 
-        /* Выбор цвета */
         .color-row {
             display: flex;
             gap: 10px;
@@ -307,21 +298,25 @@
 
         .icon-box svg { width: 26px; height: 26px; }
 
+        .icon-box-small {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+            margin-right: 14px;
+            flex-shrink: 0;
+        }
+
+        .icon-box-small svg { width: 18px; height: 18px; }
+
         .title-gradient {
             background: linear-gradient(135deg, #ffffff 0%, #a1a1a1 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-        }
-
-        .badge-dev {
-            font-size: 10px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            background: rgba(255, 0, 122, 0.15);
-            color: #ff007a;
-            border: 1px solid rgba(255, 0, 122, 0.3);
-            display: inline-block;
-            margin-top: 4px;
         }
     </style>
 </head>
@@ -341,9 +336,7 @@
             <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none">Навигация</h1>
             <p id="nav-subheader" class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
         </header>
-
         <div id="main-menu-container" class="grid gap-4"></div>
-
         <footer class="mt-auto pt-16 pb-8 text-center">
             <p class="text-[10px] text-gray-600 opacity-50">Developed by Elena Sotnikova</p>
         </footer>
@@ -389,7 +382,6 @@
                     <span>⚡</span> Добавить кнопку
                 </button>
             </div>
-
             <button onclick="saveAdminData()" class="btn-save-cyber">Сохранить всё</button>
         </div>
 
@@ -407,14 +399,28 @@
         <div class="h-24"></div>
     </div>
 
-    <script>
+    <!-- Firebase SDK v11 (Modern ESM) -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js';
+        import { getFirestore, doc, onSnapshot, setDoc, enableIndexedDbPersistence } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js';
+        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiYBslwEecbyuMyW5J05nvTs_sXLlurR4",
+            authDomain: "tg-menu.firebaseapp.com",
+            projectId: "tg-menu",
+            storageBucket: "tg-menu.firebasestorage.app",
+            messagingSenderId: "754545603793",
+            appId: "1:754545603793:web:a466fd9b21a298a69d41f0"
+        };
+
         const tg = window.Telegram.WebApp;
         tg.expand();
 
         const ADMIN_ID = 758556732; 
         const ADMIN_PASSWORD = "cyber_admin_secure_99"; 
+        const configDocId = "main_nav_v4_pro";
 
-        // Иконки библиотеки
         const ICON_LIBRARY = [
             { id: 'folder', svg: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>' },
             { id: 'star', svg: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
@@ -438,33 +444,47 @@
             { id: 'text-white', hex: '#ffffff' }
         ];
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyCiYBslwEecbyuMyW5J05nvTs_sXLlurR4",
-            authDomain: "tg-menu.firebaseapp.com",
-            projectId: "tg-menu",
-            storageBucket: "tg-menu.firebasestorage.app",
-            messagingSenderId: "754545603793",
-            appId: "1:754545603793:web:a466fd9b21a298a69d41f0"
-        };
-
-        const configDocId = "main_nav_v4_pro"; 
         let db, auth;
         let appData = { headerTitle: "Навигация", headerSubtitle: "Твой проводник", mainMenu: [] };
+        let tempAppData = null;
+        let currentEditingIndex = null;
 
-        async function initApp() {
-            firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            auth = firebase.auth();
-            await auth.signInAnonymously();
-            
-            db.collection('configs').doc(configDocId).onSnapshot((doc) => {
-                if (doc.exists) {
-                    appData = doc.data();
-                    updateUI();
-                    setOnlineStatus(true);
-                }
-            });
-        }
+        // Повторная попытка соединения
+        const retry = async (fn, retries = 5, delay = 1000) => {
+            try { return await fn(); }
+            catch (err) {
+                if (retries <= 1) throw err;
+                await new Promise(r => setTimeout(r, delay));
+                return retry(fn, retries - 1, delay * 2);
+            }
+        };
+
+        const initFirebase = async () => {
+            try {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+                
+                // Включаем офлайн-поддержку
+                try { await enableIndexedDbPersistence(db); } catch(e) {}
+
+                await retry(() => signInAnonymously(auth));
+                
+                onSnapshot(doc(db, 'configs', configDocId), (docSnap) => {
+                    if (docSnap.exists()) {
+                        appData = docSnap.data();
+                        updateUI();
+                        setOnlineStatus(true);
+                    }
+                }, (err) => {
+                    console.error("Firestore sync error:", err);
+                    setOnlineStatus(false);
+                });
+            } catch (err) {
+                console.error("Firebase Init Error:", err);
+                setOnlineStatus(false);
+            }
+        };
 
         function setOnlineStatus(online) {
             const dot = document.getElementById('status-dot');
@@ -472,8 +492,8 @@
         }
 
         function updateUI() {
-            document.getElementById('nav-header').textContent = appData.headerTitle;
-            document.getElementById('nav-subheader').textContent = appData.headerSubtitle;
+            document.getElementById('nav-header').textContent = appData.headerTitle || "Навигация";
+            document.getElementById('nav-subheader').textContent = appData.headerSubtitle || "";
             renderMainMenu();
         }
 
@@ -484,108 +504,69 @@
                 const btnEl = document.createElement('div');
                 btnEl.className = 'glass-card p-4 flex items-center cursor-pointer';
                 btnEl.onclick = () => btn.mode === 'list' ? openSubPage(btn) : handleLink(btn.directLink);
-
                 const iconSvg = ICON_LIBRARY.find(i => i.id === btn.iconId)?.svg || ICON_LIBRARY[2].svg;
-                
                 btnEl.innerHTML = `
-                    <div class="icon-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="${btn.iconColor || 'text-white'}">
-                            ${iconSvg}
-                        </svg>
-                    </div>
-                    <div class="flex-1">
-                        <h3 class="font-semibold text-white">${btn.title}</h3>
-                        <p class="text-gray-400 text-xs text-white/60">${btn.subtitle}</p>
-                    </div>
+                    <div class="icon-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="${btn.iconColor || 'text-white'}">${iconSvg}</svg></div>
+                    <div class="flex-1"><h3 class="font-semibold text-white">${btn.title}</h3><p class="text-gray-400 text-xs text-white/60">${btn.subtitle || ''}</p></div>
                     <div class="opacity-30 text-xl">›</div>
                 `;
                 container.appendChild(btnEl);
             });
         }
 
-        // --- ЛОГИКА СВАЙПА ---
-        let touchStartX = 0;
-        const subPage = document.getElementById('sub-page');
-
-        subPage.addEventListener('touchstart', e => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        subPage.addEventListener('touchend', e => {
-            const touchEndX = e.changedTouches[0].screenX;
-            if (touchEndX - touchStartX > 50) {
-                hideSubPage();
-            }
-        }, { passive: true });
-
-        function openSubPage(btnData) {
+        window.openSubPage = (btnData) => {
             tg.HapticFeedback.impactOccurred('medium');
             document.getElementById('sub-page-title').textContent = btnData.title;
-            document.getElementById('sub-page-subtitle').textContent = btnData.subtitle;
+            document.getElementById('sub-page-subtitle').textContent = btnData.subtitle || "";
             const container = document.getElementById('sub-page-container');
             container.innerHTML = '';
+            const starSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>';
             (btnData.items || []).forEach(item => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'glass-card p-4 flex items-center cursor-pointer';
                 itemEl.onclick = () => handleLink(item.link);
-                itemEl.innerHTML = `<div class="icon-box text-blue-300 text-xl">${item.icon || '📄'}</div><div class="flex-1 text-white font-medium">${item.title}</div><div class="opacity-30 text-xl">›</div>`;
+                itemEl.innerHTML = `
+                    <div class="icon-box-small text-blue-300">${starSvg}</div>
+                    <div class="flex-1"><div class="text-sm font-semibold text-white">${item.title}</div><div class="text-xs text-gray-400">${item.subtitle || ''}</div></div>
+                    <div class="opacity-30 text-xl">›</div>
+                `;
                 container.appendChild(itemEl);
             });
             document.getElementById('main-page').classList.replace('active', 'hidden-left');
-            subPage.classList.replace('hidden-right', 'active');
+            document.getElementById('sub-page').classList.replace('hidden-right', 'active');
             tg.BackButton.show();
-        }
+        };
 
-        function hideSubPage() {
-            subPage.classList.replace('active', 'hidden-right');
+        window.hideSubPage = () => {
+            document.getElementById('sub-page').classList.replace('active', 'hidden-right');
             document.getElementById('main-page').classList.replace('hidden-left', 'active');
             tg.BackButton.hide();
-        }
+        };
 
-        tg.BackButton.onClick(() => {
-            hideSubPage();
-        });
+        tg.BackButton.onClick(window.hideSubPage);
 
-        // Исправленная логика открытия ссылок
         function handleLink(url) {
             if (!url) return;
             tg.HapticFeedback.impactOccurred('light');
-            
-            // Если ссылка ведет на Telegram (пост, канал, профиль)
-            if (url.includes('t.me/')) {
-                tg.openTelegramLink(url);
-            } else {
-                // Для внешних сайтов открываем с Instant View если доступно, не закрывая WebApp
-                tg.openLink(url, { try_instant_view: true });
-            }
+            if (url.includes('t.me/')) tg.openTelegramLink(url);
+            else tg.openLink(url, { try_instant_view: true });
         }
 
-        // --- АДМИНКА ---
+        // Админка логика
         let tapCount = 0;
         document.getElementById('nav-header').addEventListener('click', () => {
             tapCount++;
             if (tapCount >= 5) {
-                const currentUserId = tg.initDataUnsafe?.user?.id;
-                if (currentUserId === ADMIN_ID) {
-                    openAdmin(); 
-                } else {
-                    const pass = prompt('Admin Password:');
-                    if (pass === ADMIN_PASSWORD) {
-                        openAdmin(); 
-                    }
-                }
+                if (tg.initDataUnsafe?.user?.id === ADMIN_ID || prompt('Admin Password:') === ADMIN_PASSWORD) openAdmin();
                 tapCount = 0;
             }
             setTimeout(() => tapCount = 0, 1000);
         });
 
-        let tempAppData = null;
-        let currentEditingIndex = null;
-
         function openAdmin() {
             tempAppData = JSON.parse(JSON.stringify(appData));
-            document.getElementById('admin-header-title').value = tempAppData.headerTitle;
-            document.getElementById('admin-header-subtitle').value = tempAppData.headerSubtitle;
+            document.getElementById('admin-header-title').value = tempAppData.headerTitle || "";
+            document.getElementById('admin-header-subtitle').value = tempAppData.headerSubtitle || "";
             renderAdminMainMenu();
             document.getElementById('admin-page').classList.replace('hidden-bottom', 'active-modal');
         }
@@ -593,132 +574,80 @@
         function renderAdminMainMenu() {
             const list = document.getElementById('admin-main-menu-list');
             list.innerHTML = '';
-            const total = tempAppData.mainMenu.length;
-            tempAppData.mainMenu.forEach((btn, idx) => {
+            (tempAppData.mainMenu || []).forEach((btn, idx) => {
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
-
-                // Стрелки для главного меню
-                const upBtn = idx > 0 ? `<button onclick="moveMainMenuButton(${idx}, -1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▲</button>` : `<span class="px-2 opacity-0">▲</span>`;
-                const downBtn = idx < total - 1 ? `<button onclick="moveMainMenuButton(${idx}, 1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▼</button>` : `<span class="px-2 opacity-0">▼</span>`;
-
+                const up = idx > 0 ? `<button onclick="moveMainMenuButton(${idx}, -1)" class="px-2 text-gray-500">▲</button>` : `<span class="px-2 opacity-0">▲</span>`;
+                const down = idx < tempAppData.mainMenu.length - 1 ? `<button onclick="moveMainMenuButton(${idx}, 1)" class="px-2 text-gray-500">▼</button>` : `<span class="px-2 opacity-0">▼</span>`;
                 div.innerHTML = `
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] text-cyan-400">BUTTON ${idx+1}</span>
-                        <div class="flex items-center">
-                             ${upBtn}
-                             ${downBtn}
-                            <button onclick="removeMainMenuButton(${idx})" class="btn-delete-icon ml-2">✕</button>
-                        </div>
-                    </div>
-                    <label class="admin-label">Icon & Color</label>
-                    <div class="icon-grid" id="icon-grid-${idx}"></div>
-                    <div class="color-row" id="color-row-${idx}"></div>
-                    <input type="text" class="admin-input" value="${btn.title}" placeholder="Заголовок" onchange="tempAppData.mainMenu[${idx}].title=this.value">
-                    <input type="text" class="admin-input" value="${btn.subtitle}" placeholder="Подзаголовок" onchange="tempAppData.mainMenu[${idx}].subtitle=this.value">
-                    <select class="admin-select" onchange="tempAppData.mainMenu[${idx}].mode=this.value; renderAdminMainMenu();">
-                        <option value="link" ${btn.mode==='link'?'selected':''}>Ссылка</option>
-                        <option value="list" ${btn.mode==='list'?'selected':''}>Список</option>
-                    </select>
-                    ${btn.mode==='link' 
-                        ? `<input type="text" class="admin-input mt-2" value="${btn.directLink||''}" placeholder="URL" onchange="tempAppData.mainMenu[${idx}].directLink=this.value">`
-                        : `<button onclick="editSubList(${idx})" class="btn-edit-list">Редактировать список (${btn.items?.length||0})</button>`
-                    }
+                    <div class="flex justify-between items-center mb-4"><span class="text-[10px] text-cyan-400">BUTTON ${idx+1}</span><div class="flex items-center">${up}${down}<button onclick="removeMainMenuButton(${idx})" class="ml-2 text-red-500">✕</button></div></div>
+                    <div class="icon-grid" id="icon-grid-${idx}"></div><div class="color-row" id="color-row-${idx}"></div>
+                    <input type="text" class="admin-input" value="${btn.title}" placeholder="Заголовок" oninput="tempAppData.mainMenu[${idx}].title=this.value">
+                    <input type="text" class="admin-input" value="${btn.subtitle||''}" placeholder="Подзаголовок" oninput="tempAppData.mainMenu[${idx}].subtitle=this.value">
+                    <select class="admin-select" onchange="tempAppData.mainMenu[${idx}].mode=this.value; renderAdminMainMenu();"><option value="link" ${btn.mode==='link'?'selected':''}>Ссылка</option><option value="list" ${btn.mode==='list'?'selected':''}>Список</option></select>
+                    ${btn.mode==='link' ? `<input type="text" class="admin-input" value="${btn.directLink||''}" placeholder="URL" oninput="tempAppData.mainMenu[${idx}].directLink=this.value">` : `<button onclick="editSubList(${idx})" class="btn-edit-list">Редактировать список (${btn.items?.length||0})</button>`}
                 `;
                 list.appendChild(div);
                 renderIconPicker(idx);
             });
         }
 
-        // --- НОВАЯ ФУНКЦИЯ ПЕРЕМЕЩЕНИЯ (ГЛАВНОЕ МЕНЮ) ---
-        function moveMainMenuButton(index, direction) {
+        window.moveMainMenuButton = (idx, dir) => {
             const list = tempAppData.mainMenu;
-            const newIndex = index + direction;
-            if (newIndex >= 0 && newIndex < list.length) {
-                [list[index], list[newIndex]] = [list[newIndex], list[index]];
-                renderAdminMainMenu();
-            }
-        }
+            [list[idx], list[idx+dir]] = [list[idx+dir], list[idx]];
+            renderAdminMainMenu();
+        };
+
+        window.removeMainMenuButton = (idx) => { if(confirm('Удалить?')) { tempAppData.mainMenu.splice(idx,1); renderAdminMainMenu(); }};
+
+        window.addNewMainMenuButton = () => {
+            tempAppData.mainMenu.push({ id: Date.now().toString(), title: "Новая кнопка", iconId: "bolt", iconColor: "text-blue-400", mode: "link", items: [] });
+            renderAdminMainMenu();
+        };
 
         function renderIconPicker(idx) {
             const grid = document.getElementById(`icon-grid-${idx}`);
-            const btn = tempAppData.mainMenu[idx];
+            const row = document.getElementById(`color-row-${idx}`);
             ICON_LIBRARY.forEach(icon => {
-                const iBtn = document.createElement('button');
-                iBtn.className = `icon-picker-btn ${btn.iconId === icon.id ? 'active' : ''}`;
-                iBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon.svg}</svg>`;
-                iBtn.onclick = () => { 
-                    tempAppData.mainMenu[idx].iconId = icon.id;
-                    renderAdminMainMenu();
-                };
-                grid.appendChild(iBtn);
+                const b = document.createElement('button');
+                b.className = `icon-picker-btn ${tempAppData.mainMenu[idx].iconId === icon.id ? 'active' : ''}`;
+                b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon.svg}</svg>`;
+                b.onclick = () => { tempAppData.mainMenu[idx].iconId = icon.id; renderAdminMainMenu(); };
+                grid.appendChild(b);
             });
-
-            const colorRow = document.getElementById(`color-row-${idx}`);
             COLOR_LIBRARY.forEach(color => {
-                const cBtn = document.createElement('button');
-                cBtn.className = `color-picker-btn ${btn.iconColor === color.id ? 'active' : ''}`;
-                cBtn.style.backgroundColor = color.hex;
-                cBtn.onclick = () => {
-                    tempAppData.mainMenu[idx].iconColor = color.id;
-                    renderAdminMainMenu();
-                };
-                colorRow.appendChild(cBtn);
+                const b = document.createElement('button');
+                b.className = `color-picker-btn ${tempAppData.mainMenu[idx].iconColor === color.id ? 'active' : ''}`;
+                b.style.backgroundColor = color.hex;
+                b.onclick = () => { tempAppData.mainMenu[idx].iconColor = color.id; renderAdminMainMenu(); };
+                row.appendChild(b);
             });
         }
 
-        function addNewMainMenuButton() {
-            tempAppData.mainMenu.push({
-                id: Date.now().toString(),
-                title: "Новая кнопка",
-                subtitle: "Описание",
-                iconId: "bolt",
-                iconColor: "text-blue-400",
-                mode: "link",
-                directLink: "",
-                items: []
-            });
-            renderAdminMainMenu();
-        }
-
-        function removeMainMenuButton(idx) {
-            if(confirm('Удалить?')) { tempAppData.mainMenu.splice(idx, 1); renderAdminMainMenu(); }
-        }
-
-        function editSubList(idx) {
+        window.editSubList = (idx) => {
             currentEditingIndex = idx;
             document.getElementById('admin-content-main').classList.add('hidden');
             document.getElementById('admin-content-sublist').classList.remove('hidden');
             document.getElementById('admin-sublist-title').textContent = tempAppData.mainMenu[idx].title;
             renderSubListItems();
-        }
+        };
 
         function renderSubListItems() {
             const list = document.getElementById('admin-sublist-items');
             list.innerHTML = '';
             const items = tempAppData.mainMenu[currentEditingIndex].items || [];
-            
             items.forEach((item, idx) => {
-                const total = items.length;
-                // Стрелки для вложенного списка
-                const upBtn = idx > 0 ? `<button onclick="moveSubListItem(${idx}, -1)" class="text-xs text-gray-500 hover:text-white p-1">▲</button>` : `<span class="p-1 w-4 block"></span>`;
-                const downBtn = idx < total - 1 ? `<button onclick="moveSubListItem(${idx}, 1)" class="text-xs text-gray-500 hover:text-white p-1">▼</button>` : `<span class="p-1 w-4 block"></span>`;
-
+                const up = idx > 0 ? `<button onclick="moveSubListItem(${idx}, -1)" class="text-xs text-gray-500">▲</button>` : `<span class="w-4"></span>`;
+                const down = idx < items.length - 1 ? `<button onclick="moveSubListItem(${idx}, 1)" class="text-xs text-gray-500">▼</button>` : `<span class="w-4"></span>`;
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
                 div.innerHTML = `
-                    <div class="flex gap-2 items-center">
-                        <div class="flex flex-col gap-0 items-center justify-center mr-1">
-                            ${upBtn}
-                            ${downBtn}
-                        </div>
+                    <div class="flex gap-2">
+                        <div class="flex flex-col">${up}${down}</div>
                         <div class="flex-1">
-                            <div class="flex gap-2 mb-2">
-                                <input type="text" class="admin-input w-12 text-center" value="${item.icon}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].icon=this.value">
-                                <input type="text" class="admin-input flex-1" value="${item.title}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
-                                <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
-                            </div>
-                            <input type="text" class="admin-input" value="${item.link}" placeholder="URL" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].link=this.value">
+                            <div class="flex gap-2 mb-1"><input type="text" class="admin-input font-bold" value="${item.title}" placeholder="Заголовок" oninput="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value"><button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500">✕</button></div>
+                            <input type="text" class="admin-input text-xs" value="${item.subtitle||''}" placeholder="Описание" oninput="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].subtitle=this.value">
+                            <input type="text" class="admin-input" value="${item.link}" placeholder="URL" oninput="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].link=this.value">
                         </div>
                     </div>
                 `;
@@ -726,41 +655,35 @@
             });
         }
 
-        // --- НОВАЯ ФУНКЦИЯ ПЕРЕМЕЩЕНИЯ (ВЛОЖЕННЫЙ СПИСОК) ---
-        function moveSubListItem(index, direction) {
+        window.moveSubListItem = (idx, dir) => {
             const list = tempAppData.mainMenu[currentEditingIndex].items;
-            const newIndex = index + direction;
-            if (newIndex >= 0 && newIndex < list.length) {
-                [list[index], list[newIndex]] = [list[newIndex], list[index]];
-                renderSubListItems();
-            }
-        }
-
-        function addNewSubItem() {
-            tempAppData.mainMenu[currentEditingIndex].items.push({ title: 'Новый пункт', link: '', icon: '📄' });
+            [list[idx], list[idx+dir]] = [list[idx+dir], list[idx]];
             renderSubListItems();
-        }
+        };
 
-        function backToMainAdmin() {
+        window.addNewSubItem = () => {
+            if(!tempAppData.mainMenu[currentEditingIndex].items) tempAppData.mainMenu[currentEditingIndex].items = [];
+            tempAppData.mainMenu[currentEditingIndex].items.push({ title: 'Новый пункт', subtitle: '', link: '' });
+            renderSubListItems();
+        };
+
+        window.backToMainAdmin = () => {
             document.getElementById('admin-content-sublist').classList.add('hidden');
             document.getElementById('admin-content-main').classList.remove('hidden');
-            renderAdminMainMenu();
-        }
+        };
 
-        function closeAdmin() { document.getElementById('admin-page').classList.replace('active-modal', 'hidden-bottom'); }
-
-        async function saveAdminData() {
+        window.saveAdminData = async () => {
             tempAppData.headerTitle = document.getElementById('admin-header-title').value;
             tempAppData.headerSubtitle = document.getElementById('admin-header-subtitle').value;
-            await db.collection('configs').doc(configDocId).set(tempAppData);
+            await setDoc(doc(db, 'configs', configDocId), tempAppData);
             document.getElementById('save-status').style.opacity = '1';
-            setTimeout(() => { document.getElementById('save-status').style.opacity = '0'; closeAdmin(); }, 1000);
-        }
+            setTimeout(() => { document.getElementById('save-status').style.opacity = '0'; window.closeAdmin(); }, 1000);
+        };
 
-        function saveSubList() { backToMainAdmin(); }
+        window.saveSubList = () => window.backToMainAdmin();
+        window.closeAdmin = () => document.getElementById('admin-page').classList.replace('active-modal', 'hidden-bottom');
 
-        initApp();
-        tg.ready();
+        initFirebase();
     </script>
 </body>
 </html>
