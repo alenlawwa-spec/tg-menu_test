@@ -398,6 +398,9 @@
             width: 100%;
             position: relative;
             background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         .gallery-modal-img {
@@ -418,6 +421,14 @@
             margin-top: -20px;
             position: relative;
         }
+        
+        /* Исправленный контейнер для текста и кнопки */
+        .modal-text-wrapper {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
         .quote-block {
             border-left: 3px solid var(--neon-pink);
@@ -427,8 +438,9 @@
             color: #ddd;
             font-size: 14px;
             line-height: 1.5;
-            max-height: 100%;
+            flex: 1;
             overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         .btn-copy {
@@ -443,6 +455,8 @@
             justify-content: center;
             gap: 8px;
             box-shadow: 0 4px 15px rgba(255, 0, 122, 0.4);
+            flex-shrink: 0; /* Чтобы не сжималась */
+            margin-top: 10px;
         }
         
         .btn-copy:active { transform: scale(0.98); }
@@ -458,6 +472,20 @@
             align-items: center;
             gap: 4px;
         }
+
+        /* Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--neon-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            z-index: 5;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
 
     </style>
 </head>
@@ -502,19 +530,17 @@
         <button onclick="closeGalleryModal()" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/50 rounded-full text-white flex items-center justify-center backdrop-blur-md">✕</button>
         
         <div class="gallery-modal-img-container" id="modal-img-wrapper">
-            <!-- Сюда JS вставит либо img, либо iframe -->
-            <img id="modal-full-img" src="" class="gallery-modal-img" alt="">
-            <div class="absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#141419] to-transparent pointer-events-none"></div>
+            <!-- Сюда JS вставит img и спиннер -->
         </div>
         
         <div class="gallery-modal-content">
-            <div class="flex-1 overflow-hidden relative">
-                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-bold">PROMPT TEXT</div>
-                <div class="quote-block h-[calc(100%-40px)]" id="modal-prompt-text">
+            <div class="modal-text-wrapper">
+                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-bold flex-shrink-0">PROMPT TEXT</div>
+                <div class="quote-block" id="modal-prompt-text">
                     <!-- Text goes here -->
                 </div>
             </div>
-            <button onclick="copyCurrentPrompt()" class="btn-copy mt-4">
+            <button onclick="copyCurrentPrompt()" class="btn-copy">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Копировать промпт
             </button>
@@ -586,7 +612,7 @@
             { id: 'zap', svg: '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>' },
             { id: 'instagram', svg: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>' },
             { id: 'youtube', svg: '<path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>' },
-            { id: 'telegram', svg: '<path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75c-.92.376-.91 1.055-.16 1.43l4.33 1.353 10.033-6.326c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.813.448 1.4.217 1.6-.758l2.9-13.68c.273-1.08-.41-1.574-1.108-1.23z"></path>' },
+            { id: 'telegram', svg: '<path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75c-.92.376-.91 1.055-.16 1.43l4.33 1.353 10.033-6.326c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.438-.448 1.4.217 1.6-.758l2.9-13.68c.273-1.08-.41-1.574-1.108-1.23z"></path>' },
             { id: 'globe', svg: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>' },
             { id: 'gift', svg: '<polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>' },
             { id: 'award', svg: '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>' }
@@ -700,8 +726,9 @@
                     // Клик открывает модалку
                     itemEl.onclick = () => openGalleryModal(item.imageUrl, item.prompt);
                     
+                    // Добавлен referrerpolicy="no-referrer"
                     itemEl.innerHTML = `
-                        <img src="${item.imageUrl}" class="gallery-img" onerror="this.src='https://placehold.co/400x600/222/555?text=No+Img'">
+                        <img src="${item.imageUrl}" class="gallery-img" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/400x600/222/555?text=No+Img'">
                         <div class="gallery-overlay pointer-events-none">
                             <div class="text-[10px] text-pink-500 font-bold uppercase tracking-wider mb-1">PROMPT</div>
                             <div class="text-white text-xs font-semibold truncate">${item.title || 'Untitled'}</div>
@@ -762,13 +789,26 @@
             // Чистим контейнер
             wrapper.innerHTML = '';
 
-            // Всегда рисуем как картинку
+            // Спиннер
+            const spinner = document.createElement('div');
+            spinner.className = 'spinner';
+            wrapper.appendChild(spinner);
+
+            // Всегда рисуем как картинку с no-referrer
             const img = document.createElement('img');
             img.src = imgUrl;
             img.className = "gallery-modal-img";
-            // Если ссылка битая, покажем заглушку
+            img.referrerPolicy = "no-referrer"; // Важно для Телеграма
+            img.style.opacity = "0"; // Скрываем пока грузится
+            img.onload = () => {
+                spinner.remove();
+                img.style.transition = "opacity 0.3s";
+                img.style.opacity = "1";
+            };
             img.onerror = function() {
+                spinner.remove();
                 this.src = 'https://placehold.co/400x600/222/555?text=Error+Loading';
+                this.style.opacity = "1";
             };
             wrapper.appendChild(img);
             
@@ -957,7 +997,7 @@
             }
 
             const tgLink = match[0];
-            tg.showAlert("🔮 Ищу картинку в коде...");
+            tg.showAlert("🔮 Анализирую пост...");
 
             try {
                 // Запрашиваем embed версию через прокси AllOrigins
@@ -987,26 +1027,32 @@
                 let extractedText = "";
                 const textDiv = doc.querySelector('.tgme_widget_message_text');
                 if (textDiv) {
+                    // Используем innerText для сохранения переносов, но чистим лишнее
                     extractedText = textDiv.innerText;
                 }
 
+                // Обновляем данные
+                let msg = "";
                 if (extractedImg) {
                     tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = extractedImg;
-                    tg.showAlert("Картинка извлечена! 🖼️");
+                    msg += "Картинка+ ";
                 } else {
-                    tg.showAlert("Картинка не найдена в посте 😕");
+                    msg += "Картинка не найдена (вставь вручную). ";
                 }
 
                 if (extractedText) {
                      tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = extractedText;
+                     msg += "Текст+";
                 }
+
+                tg.showAlert(msg || "Ничего не найдено");
 
             } catch (e) {
                 console.error(e);
                 tg.showAlert("Ошибка доступа к Telegram 🚫");
             }
 
-            // Перерисовываем UI, чтобы показать новую картинку в превью
+            // Перерисовываем UI
             renderSubListItems();
         }
 
@@ -1054,7 +1100,10 @@
                         ${imgPreview}
 
                         <input type="text" class="admin-input" value="${item.title || ''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
-                        <input type="text" class="admin-input" value="${item.imageUrl || ''}" placeholder="Ссылка на картинку (заполнится сама)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].imageUrl=this.value">
+                        
+                        <div class="text-[9px] text-gray-500 mb-1 ml-1">Если фото не грузится, используй ссылку из @Telegraph или браузера</div>
+                        <input type="text" class="admin-input" value="${item.imageUrl || ''}" placeholder="Ссылка на картинку" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].imageUrl=this.value">
+                        
                         <textarea class="admin-textarea" placeholder="Текст промпта..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt || ''}</textarea>
                     `;
                 } else {
