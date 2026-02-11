@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cyber Navigation</title>
+    
+    <!-- Подключение Telegram WebApp -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Подключение Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --neon-color: #00f2ff;
+            --neon-pink: #ff007a;
+            --neon-green: #39ff14;
+            --neon-yellow: #ffea00;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #050505;
+            color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            margin: 0;
+            position: fixed;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: radial-gradient(circle at 20% 30%, #1a1033 0%, #050505 50%);
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: float 15s infinite alternate ease-in-out;
+        }
+
+        .orb-1 { width: 300px; height: 300px; background: var(--neon-color); top: -80px; right: -40px; }
+        .orb-2 { width: 250px; height: 250px; background: var(--neon-pink); bottom: -60px; left: -40px; animation-delay: -3s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(30px, 50px) scale(1.1); }
+        }
+
+        .status-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #444;
+            transition: all 0.5s ease;
+        }
+
+        .status-dot.online {
+            background: var(--neon-green);
+            box-shadow: 0 0 10px var(--neon-green), 0 0 20px var(--neon-green);
+            animation: pulse-green 2s infinite;
+        }
+
+        .status-dot.offline {
+            animation: pulse-gray 2s infinite;
+        }
+
+        @keyframes pulse-green {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.6; transform: scale(1.2); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes pulse-gray { 0% { opacity: 0.5; } }
+
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            padding: 24px 20px calc(40px + env(safe-area-inset-bottom));
+            -webkit-overflow-scrolling: touch;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page::-webkit-scrollbar { width: 0px; }
+
+        .hidden-left { transform: translateX(-100%); opacity: 0; pointer-events: none; }
+        .hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
+        .hidden-bottom { transform: translateY(100%); opacity: 0; pointer-events: none; }
+        .active { transform: translateX(0); opacity: 1; pointer-events: all; }
+        .active-modal { transform: translateY(0); opacity: 1; pointer-events: all; }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+
+        .glass-card:active {
+            transform: scale(0.94);
+            border-color: rgba(0, 242, 255, 0.5);
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        /* Админка */
+        .admin-card {
+            background: rgba(10, 10, 15, 0.8);
+            border: 1px solid rgba(0, 242, 255, 0.15);
+            border-radius: 20px;
+            padding: 16px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .admin-section-title {
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--neon-color);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .admin-section-title::after {
+            content: '';
+            height: 1px;
+            flex: 1;
+            background: linear-gradient(90deg, rgba(0, 242, 255, 0.3), transparent);
+        }
+
+        .guide-item-admin {
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 2px solid var(--neon-pink);
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 12px;
+            position: relative;
+        }
+
+        .admin-input {
+            width: 100%;
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .admin-label {
+            font-size: 10px;
+            color: #777;
+            margin-bottom: 4px;
+            margin-left: 4px;
+            display: block;
+            text-transform: uppercase;
+        }
+
+        .admin-select {
+            width: 100%;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: white;
+            padding: 10px 12px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        /* Сетка выбора иконок */
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .icon-picker-btn {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .icon-picker-btn.active {
+            border-color: var(--neon-color);
+            background: rgba(0, 242, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+        }
+
+        .icon-picker-btn svg { width: 18px; height: 18px; }
+
+        /* Выбор цвета */
+        .color-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+
+        .color-picker-btn {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .color-picker-btn.active {
+            transform: scale(1.2);
+            border-color: white;
+        }
+
+        .btn-delete-icon {
+            color: rgba(255, 77, 77, 0.6);
+            padding: 4px;
+        }
+
+        .btn-add-cyber {
+            background: rgba(0, 242, 255, 0.05);
+            color: var(--neon-color);
+            border: 1px dashed rgba(0, 242, 255, 0.4);
+            border-radius: 12px;
+            padding: 12px;
+            width: 100%;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-save-cyber {
+            background: linear-gradient(135deg, #0066ff, #00f2ff);
+            color: white;
+            font-weight: 700;
+            padding: 14px;
+            border-radius: 15px;
+            width: 100%;
+            margin-top: 10px;
+            text-transform: uppercase;
+        }
+
+        .btn-edit-list {
+            background: rgba(255, 0, 122, 0.1);
+            color: var(--neon-pink);
+            border: 1px solid rgba(255, 0, 122, 0.3);
+            border-radius: 10px;
+            padding: 8px;
+            width: 100%;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+
+        .icon-box {
+            width: 54px;
+            height: 54px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 4px 4px 12px rgba(0,0,0,0.3);
+            margin-right: 18px;
+            flex-shrink: 0;
+        }
+
+        .icon-box svg { width: 26px; height: 26px; }
+
+        .title-gradient {
+            background: linear-gradient(135deg, #ffffff 0%, #a1a1a1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .badge-dev {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(255, 0, 122, 0.15);
+            color: #ff007a;
+            border: 1px solid rgba(255, 0, 122, 0.3);
+            display: inline-block;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+    </div>
+
+    <div class="status-container">
+        <div id="status-dot" class="status-dot offline"></div>
+    </div>
+
+    <!-- ГЛАВНЫЙ ЭКРАН -->
+    <div id="main-page" class="page active">
+        <header class="mb-10 mt-4 text-center">
+            <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none">Навигация</h1>
+            <p id="nav-subheader" class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
+        </header>
+
+        <div id="main-menu-container" class="grid gap-4"></div>
+
+        <footer class="mt-auto pt-16 pb-8 text-center">
+            <p class="text-[10px] text-gray-600 opacity-50">Developed by Elena Sotnikova</p>
+        </footer>
+    </div>
+
+    <!-- УНИВЕРСАЛЬНАЯ ВНУТРЕННЯЯ СТРАНИЦА -->
+    <div id="sub-page" class="page hidden-right">
+        <header class="mb-10 mt-4 text-center">
+            <h1 id="sub-page-title" class="text-3xl font-bold title-gradient tracking-tight text-blue-400">Заголовок</h1>
+            <p id="sub-page-subtitle" class="text-gray-500 text-sm mt-2">Описание раздела</p>
+        </header>
+        <div id="sub-page-container" class="grid gap-4"></div>
+        <div class="mt-auto h-20"></div> 
+    </div>
+
+    <!-- ЭКРАН АДМИНКИ -->
+    <div id="admin-page" class="page hidden-bottom" style="background: rgba(5,5,8,0.98); z-index: 50;">
+        <header class="mb-8 flex justify-between items-center sticky top-0 bg-[#050508] py-4 z-20 border-b border-white/5">
+            <div>
+                <h2 class="text-2xl font-bold text-white tracking-tight">Terminal</h2>
+                <div class="text-[10px] text-cyan-400 font-mono">ACCESS GRANTED // ADMIN_MODE</div>
+            </div>
+            <button onclick="closeAdmin()" class="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center text-gray-400">✕</button>
+        </header>
+
+        <div id="admin-content-main" class="z-10">
+            <div class="admin-card">
+                <div class="admin-section-title">Заголовки Главной</div>
+                <div class="mb-2">
+                    <label class="admin-label">Главный заголовок</label>
+                    <input type="text" id="admin-header-title" class="admin-input">
+                </div>
+                <div>
+                    <label class="admin-label">Подзаголовок</label>
+                    <input type="text" id="admin-header-subtitle" class="admin-input">
+                </div>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-section-title">Структура меню</div>
+                <div id="admin-main-menu-list" class="space-y-4"></div>
+                <button onclick="addNewMainMenuButton()" class="btn-add-cyber mt-4">
+                    <span>⚡</span> Добавить кнопку
+                </button>
+            </div>
+
+            <button onclick="saveAdminData()" class="btn-save-cyber">Сохранить всё</button>
+        </div>
+
+        <div id="admin-content-sublist" class="hidden z-10">
+            <button onclick="backToMainAdmin()" class="text-gray-400 text-xs mb-4 flex items-center gap-2">‹ Назад</button>
+            <div class="admin-card">
+                <div class="admin-section-title text-pink-500" id="admin-sublist-title">Редактор списка</div>
+                <div id="admin-sublist-items" class="space-y-4"></div>
+                <button onclick="addNewSubItem()" class="btn-add-cyber mt-4"><span>+</span> Добавить пункт</button>
+            </div>
+            <button onclick="saveSubList()" class="btn-save-cyber">Готово</button>
+        </div>
+
+        <div id="save-status" class="text-center text-xs text-cyan-400 mt-4 opacity-0 transition-opacity font-mono">DB_SYNC_COMPLETE</div>
+        <div class="h-24"></div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        const ADMIN_ID = 758556732; 
+        const ADMIN_PASSWORD = "cyber_admin_secure_99"; 
+
+        // Иконки библиотеки
+        const ICON_LIBRARY = [
+            { id: 'folder', svg: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>' },
+            { id: 'star', svg: '<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>' },
+            { id: 'bolt', svg: '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>' },
+            { id: 'message', svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>' },
+            { id: 'book', svg: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>' },
+            { id: 'zap', svg: '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>' },
+            { id: 'instagram', svg: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>' },
+            { id: 'youtube', svg: '<path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>' },
+            { id: 'telegram', svg: '<path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75c-.92.376-.91 1.055-.16 1.43l4.33 1.353 10.033-6.326c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.813.448 1.4.217 1.6-.758l2.9-13.68c.273-1.08-.41-1.574-1.108-1.23z"></path>' },
+            { id: 'globe', svg: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>' },
+            { id: 'gift', svg: '<polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>' },
+            { id: 'award', svg: '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>' }
+        ];
+
+        const COLOR_LIBRARY = [
+            { id: 'text-blue-400', hex: '#00f2ff' },
+            { id: 'text-pink-500', hex: '#ff007a' },
+            { id: 'text-green-400', hex: '#39ff14' },
+            { id: 'text-yellow-400', hex: '#ffea00' },
+            { id: 'text-white', hex: '#ffffff' }
+        ];
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCiYBslwEecbyuMyW5J05nvTs_sXLlurR4",
+            authDomain: "tg-menu.firebaseapp.com",
+            projectId: "tg-menu",
+            storageBucket: "tg-menu.firebasestorage.app",
+            messagingSenderId: "754545603793",
+            appId: "1:754545603793:web:a466fd9b21a298a69d41f0"
+        };
+
+        const configDocId = "main_nav_v4_pro"; 
+        let db, auth;
+        let appData = { headerTitle: "Навигация", headerSubtitle: "Твой проводник", mainMenu: [] };
+
+        async function initApp() {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            auth = firebase.auth();
+            await auth.signInAnonymously();
+            
+            db.collection('configs').doc(configDocId).onSnapshot((doc) => {
+                if (doc.exists) {
+                    appData = doc.data();
+                    updateUI();
+                    setOnlineStatus(true);
+                }
+            });
+        }
+
+        function setOnlineStatus(online) {
+            const dot = document.getElementById('status-dot');
+            if (dot) dot.className = `status-dot ${online ? 'online' : 'offline'}`;
+        }
+
+        function updateUI() {
+            document.getElementById('nav-header').textContent = appData.headerTitle;
+            document.getElementById('nav-subheader').textContent = appData.headerSubtitle;
+            renderMainMenu();
+        }
+
+        function renderMainMenu() {
+            const container = document.getElementById('main-menu-container');
+            container.innerHTML = '';
+            (appData.mainMenu || []).forEach((btn) => {
+                const btnEl = document.createElement('div');
+                btnEl.className = 'glass-card p-4 flex items-center cursor-pointer';
+                btnEl.onclick = () => btn.mode === 'list' ? openSubPage(btn) : handleLink(btn.directLink);
+
+                const iconSvg = ICON_LIBRARY.find(i => i.id === btn.iconId)?.svg || ICON_LIBRARY[2].svg;
+                
+                btnEl.innerHTML = `
+                    <div class="icon-box">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="${btn.iconColor || 'text-white'}">
+                            ${iconSvg}
+                        </svg>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-white">${btn.title}</h3>
+                        <p class="text-gray-400 text-xs text-white/60">${btn.subtitle}</p>
+                    </div>
+                    <div class="opacity-30 text-xl">›</div>
+                `;
+                container.appendChild(btnEl);
+            });
+        }
+
+        // --- ЛОГИКА СВАЙПА ---
+        let touchStartX = 0;
+        const subPage = document.getElementById('sub-page');
+
+        subPage.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        subPage.addEventListener('touchend', e => {
+            const touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX - touchStartX > 50) {
+                hideSubPage();
+            }
+        }, { passive: true });
+
+        function openSubPage(btnData) {
+            tg.HapticFeedback.impactOccurred('medium');
+            document.getElementById('sub-page-title').textContent = btnData.title;
+            document.getElementById('sub-page-subtitle').textContent = btnData.subtitle;
+            const container = document.getElementById('sub-page-container');
+            container.innerHTML = '';
+            (btnData.items || []).forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'glass-card p-4 flex items-center cursor-pointer';
+                itemEl.onclick = () => handleLink(item.link);
+                itemEl.innerHTML = `<div class="icon-box text-blue-300 text-xl">${item.icon || '📄'}</div><div class="flex-1 text-white font-medium">${item.title}</div><div class="opacity-30 text-xl">›</div>`;
+                container.appendChild(itemEl);
+            });
+            document.getElementById('main-page').classList.replace('active', 'hidden-left');
+            subPage.classList.replace('hidden-right', 'active');
+            tg.BackButton.show();
+        }
+
+        function hideSubPage() {
+            subPage.classList.replace('active', 'hidden-right');
+            document.getElementById('main-page').classList.replace('hidden-left', 'active');
+            tg.BackButton.hide();
+        }
+
+        tg.BackButton.onClick(() => {
+            hideSubPage();
+        });
+
+        // Исправленная логика открытия ссылок
+        function handleLink(url) {
+            if (!url) return;
+            tg.HapticFeedback.impactOccurred('light');
+            
+            // Если ссылка ведет на Telegram (пост, канал, профиль)
+            if (url.includes('t.me/')) {
+                tg.openTelegramLink(url);
+            } else {
+                // Для внешних сайтов открываем с Instant View если доступно, не закрывая WebApp
+                tg.openLink(url, { try_instant_view: true });
+            }
+        }
+
+        // --- АДМИНКА ---
+        let tapCount = 0;
+        document.getElementById('nav-header').addEventListener('click', () => {
+            tapCount++;
+            if (tapCount >= 5) {
+                const currentUserId = tg.initDataUnsafe?.user?.id;
+                if (currentUserId === ADMIN_ID) {
+                    openAdmin(); 
+                } else {
+                    const pass = prompt('Admin Password:');
+                    if (pass === ADMIN_PASSWORD) {
+                        openAdmin(); 
+                    }
+                }
+                tapCount = 0;
+            }
+            setTimeout(() => tapCount = 0, 1000);
+        });
+
+        let tempAppData = null;
+        let currentEditingIndex = null;
+
+        function openAdmin() {
+            tempAppData = JSON.parse(JSON.stringify(appData));
+            document.getElementById('admin-header-title').value = tempAppData.headerTitle;
+            document.getElementById('admin-header-subtitle').value = tempAppData.headerSubtitle;
+            renderAdminMainMenu();
+            document.getElementById('admin-page').classList.replace('hidden-bottom', 'active-modal');
+        }
+
+        function renderAdminMainMenu() {
+            const list = document.getElementById('admin-main-menu-list');
+            list.innerHTML = '';
+            tempAppData.mainMenu.forEach((btn, idx) => {
+                const div = document.createElement('div');
+                div.className = "guide-item-admin";
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-[10px] text-cyan-400">BUTTON ${idx+1}</span>
+                        <button onclick="removeMainMenuButton(${idx})" class="btn-delete-icon">✕</button>
+                    </div>
+                    <label class="admin-label">Icon & Color</label>
+                    <div class="icon-grid" id="icon-grid-${idx}"></div>
+                    <div class="color-row" id="color-row-${idx}"></div>
+                    <input type="text" class="admin-input" value="${btn.title}" placeholder="Заголовок" onchange="tempAppData.mainMenu[${idx}].title=this.value">
+                    <input type="text" class="admin-input" value="${btn.subtitle}" placeholder="Подзаголовок" onchange="tempAppData.mainMenu[${idx}].subtitle=this.value">
+                    <select class="admin-select" onchange="tempAppData.mainMenu[${idx}].mode=this.value; renderAdminMainMenu();">
+                        <option value="link" ${btn.mode==='link'?'selected':''}>Ссылка</option>
+                        <option value="list" ${btn.mode==='list'?'selected':''}>Список</option>
+                    </select>
+                    ${btn.mode==='link' 
+                        ? `<input type="text" class="admin-input mt-2" value="${btn.directLink||''}" placeholder="URL" onchange="tempAppData.mainMenu[${idx}].directLink=this.value">`
+                        : `<button onclick="editSubList(${idx})" class="btn-edit-list">Редактировать список (${btn.items?.length||0})</button>`
+                    }
+                `;
+                list.appendChild(div);
+                renderIconPicker(idx);
+            });
+        }
+
+        function renderIconPicker(idx) {
+            const grid = document.getElementById(`icon-grid-${idx}`);
+            const btn = tempAppData.mainMenu[idx];
+            ICON_LIBRARY.forEach(icon => {
+                const iBtn = document.createElement('button');
+                iBtn.className = `icon-picker-btn ${btn.iconId === icon.id ? 'active' : ''}`;
+                iBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${icon.svg}</svg>`;
+                iBtn.onclick = () => { 
+                    tempAppData.mainMenu[idx].iconId = icon.id;
+                    renderAdminMainMenu();
+                };
+                grid.appendChild(iBtn);
+            });
+
+            const colorRow = document.getElementById(`color-row-${idx}`);
+            COLOR_LIBRARY.forEach(color => {
+                const cBtn = document.createElement('button');
+                cBtn.className = `color-picker-btn ${btn.iconColor === color.id ? 'active' : ''}`;
+                cBtn.style.backgroundColor = color.hex;
+                cBtn.onclick = () => {
+                    tempAppData.mainMenu[idx].iconColor = color.id;
+                    renderAdminMainMenu();
+                };
+                colorRow.appendChild(cBtn);
+            });
+        }
+
+        function addNewMainMenuButton() {
+            tempAppData.mainMenu.push({
+                id: Date.now().toString(),
+                title: "Новая кнопка",
+                subtitle: "Описание",
+                iconId: "bolt",
+                iconColor: "text-blue-400",
+                mode: "link",
+                directLink: "",
+                items: []
+            });
+            renderAdminMainMenu();
+        }
+
+        function removeMainMenuButton(idx) {
+            if(confirm('Удалить?')) { tempAppData.mainMenu.splice(idx, 1); renderAdminMainMenu(); }
+        }
+
+        function editSubList(idx) {
+            currentEditingIndex = idx;
+            document.getElementById('admin-content-main').classList.add('hidden');
+            document.getElementById('admin-content-sublist').classList.remove('hidden');
+            document.getElementById('admin-sublist-title').textContent = tempAppData.mainMenu[idx].title;
+            renderSubListItems();
+        }
+
+        function renderSubListItems() {
+            const list = document.getElementById('admin-sublist-items');
+            list.innerHTML = '';
+            (tempAppData.mainMenu[currentEditingIndex].items || []).forEach((item, idx) => {
+                const div = document.createElement('div');
+                div.className = "guide-item-admin";
+                div.innerHTML = `
+                    <div class="flex gap-2">
+                        <input type="text" class="admin-input w-12 text-center" value="${item.icon}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].icon=this.value">
+                        <input type="text" class="admin-input flex-1" value="${item.title}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
+                        <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500">✕</button>
+                    </div>
+                    <input type="text" class="admin-input mt-2" value="${item.link}" placeholder="URL" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].link=this.value">
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        function addNewSubItem() {
+            tempAppData.mainMenu[currentEditingIndex].items.push({ title: 'Новый пункт', link: '', icon: '📄' });
+            renderSubListItems();
+        }
+
+        function backToMainAdmin() {
+            document.getElementById('admin-content-sublist').classList.add('hidden');
+            document.getElementById('admin-content-main').classList.remove('hidden');
+            renderAdminMainMenu();
+        }
+
+        function closeAdmin() { document.getElementById('admin-page').classList.replace('active-modal', 'hidden-bottom'); }
+
+        async function saveAdminData() {
+            tempAppData.headerTitle = document.getElementById('admin-header-title').value;
+            tempAppData.headerSubtitle = document.getElementById('admin-header-subtitle').value;
+            await db.collection('configs').doc(configDocId).set(tempAppData);
+            document.getElementById('save-status').style.opacity = '1';
+            setTimeout(() => { document.getElementById('save-status').style.opacity = '0'; closeAdmin(); }, 1000);
+        }
+
+        function saveSubList() { backToMainAdmin(); }
+
+        initApp();
+        tg.ready();
+    </script>
+</body>
+</html>
