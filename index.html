@@ -513,7 +513,6 @@
 
         subPage.addEventListener('touchend', e => {
             const touchEndX = e.changedTouches[0].screenX;
-            // Если свайп вправо (начало слева, движение вправо)
             if (touchEndX - touchStartX > 50) {
                 hideSubPage();
             }
@@ -547,10 +546,18 @@
             hideSubPage();
         });
 
+        // Исправленная логика открытия ссылок
         function handleLink(url) {
             if (!url) return;
-            if (url.startsWith('https://t.me/')) tg.openTelegramLink(url);
-            else tg.openLink(url);
+            tg.HapticFeedback.impactOccurred('light');
+            
+            // Если ссылка ведет на Telegram (пост, канал, профиль)
+            if (url.includes('t.me/')) {
+                tg.openTelegramLink(url);
+            } else {
+                // Для внешних сайтов открываем с Instant View если доступно, не закрывая WebApp
+                tg.openLink(url, { try_instant_view: true });
+            }
         }
 
         // --- АДМИНКА ---
@@ -586,13 +593,23 @@
         function renderAdminMainMenu() {
             const list = document.getElementById('admin-main-menu-list');
             list.innerHTML = '';
+            const total = tempAppData.mainMenu.length;
             tempAppData.mainMenu.forEach((btn, idx) => {
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
+
+                // Стрелки для главного меню
+                const upBtn = idx > 0 ? `<button onclick="moveMainMenuButton(${idx}, -1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▲</button>` : `<span class="px-2 opacity-0">▲</span>`;
+                const downBtn = idx < total - 1 ? `<button onclick="moveMainMenuButton(${idx}, 1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▼</button>` : `<span class="px-2 opacity-0">▼</span>`;
+
                 div.innerHTML = `
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-[10px] text-cyan-400">BUTTON ${idx+1}</span>
-                        <button onclick="removeMainMenuButton(${idx})" class="btn-delete-icon">✕</button>
+                        <div class="flex items-center">
+                             ${upBtn}
+                             ${downBtn}
+                            <button onclick="removeMainMenuButton(${idx})" class="btn-delete-icon ml-2">✕</button>
+                        </div>
                     </div>
                     <label class="admin-label">Icon & Color</label>
                     <div class="icon-grid" id="icon-grid-${idx}"></div>
@@ -611,6 +628,16 @@
                 list.appendChild(div);
                 renderIconPicker(idx);
             });
+        }
+
+        // --- НОВАЯ ФУНКЦИЯ ПЕРЕМЕЩЕНИЯ (ГЛАВНОЕ МЕНЮ) ---
+        function moveMainMenuButton(index, direction) {
+            const list = tempAppData.mainMenu;
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < list.length) {
+                [list[index], list[newIndex]] = [list[newIndex], list[index]];
+                renderAdminMainMenu();
+            }
         }
 
         function renderIconPicker(idx) {
@@ -669,19 +696,44 @@
         function renderSubListItems() {
             const list = document.getElementById('admin-sublist-items');
             list.innerHTML = '';
-            (tempAppData.mainMenu[currentEditingIndex].items || []).forEach((item, idx) => {
+            const items = tempAppData.mainMenu[currentEditingIndex].items || [];
+            
+            items.forEach((item, idx) => {
+                const total = items.length;
+                // Стрелки для вложенного списка
+                const upBtn = idx > 0 ? `<button onclick="moveSubListItem(${idx}, -1)" class="text-xs text-gray-500 hover:text-white p-1">▲</button>` : `<span class="p-1 w-4 block"></span>`;
+                const downBtn = idx < total - 1 ? `<button onclick="moveSubListItem(${idx}, 1)" class="text-xs text-gray-500 hover:text-white p-1">▼</button>` : `<span class="p-1 w-4 block"></span>`;
+
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
                 div.innerHTML = `
-                    <div class="flex gap-2">
-                        <input type="text" class="admin-input w-12 text-center" value="${item.icon}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].icon=this.value">
-                        <input type="text" class="admin-input flex-1" value="${item.title}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
-                        <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500">✕</button>
+                    <div class="flex gap-2 items-center">
+                        <div class="flex flex-col gap-0 items-center justify-center mr-1">
+                            ${upBtn}
+                            ${downBtn}
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex gap-2 mb-2">
+                                <input type="text" class="admin-input w-12 text-center" value="${item.icon}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].icon=this.value">
+                                <input type="text" class="admin-input flex-1" value="${item.title}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
+                                <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
+                            </div>
+                            <input type="text" class="admin-input" value="${item.link}" placeholder="URL" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].link=this.value">
+                        </div>
                     </div>
-                    <input type="text" class="admin-input mt-2" value="${item.link}" placeholder="URL" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].link=this.value">
                 `;
                 list.appendChild(div);
             });
+        }
+
+        // --- НОВАЯ ФУНКЦИЯ ПЕРЕМЕЩЕНИЯ (ВЛОЖЕННЫЙ СПИСОК) ---
+        function moveSubListItem(index, direction) {
+            const list = tempAppData.mainMenu[currentEditingIndex].items;
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < list.length) {
+                [list[index], list[newIndex]] = [list[newIndex], list[index]];
+                renderSubListItems();
+            }
         }
 
         function addNewSubItem() {
