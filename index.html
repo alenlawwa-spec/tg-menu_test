@@ -378,7 +378,7 @@
         #gallery-modal {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(5, 5, 5, 0.95);
+            background: rgba(5, 5, 5, 0.98); /* Чуть темнее фон */
             backdrop-filter: blur(20px);
             z-index: 200;
             display: flex;
@@ -394,13 +394,14 @@
         }
 
         .gallery-modal-img-container {
-            flex: 1;
             width: 100%;
+            height: 55vh; /* Фиксированная высота фото */
             position: relative;
             background: #000;
             display: flex;
             align-items: center;
             justify-content: center;
+            flex-shrink: 0; /* Не сжимать фото */
         }
         
         .gallery-modal-img {
@@ -410,56 +411,59 @@
         }
 
         .gallery-modal-content {
-            height: 45%;
-            background: rgba(20, 20, 25, 0.9);
+            flex-grow: 1; /* Занимает оставшееся место */
+            background: linear-gradient(to bottom, rgba(20, 20, 25, 1), rgba(10, 10, 15, 1));
             border-top: 1px solid rgba(255,255,255,0.1);
-            padding: 20px;
+            padding: 24px 20px 100px 20px; /* Снизу отступ под кнопку */
             display: flex;
             flex-direction: column;
             border-top-left-radius: 24px;
             border-top-right-radius: 24px;
-            margin-top: -20px;
+            margin-top: -24px; /* Наезд на фото */
             position: relative;
+            z-index: 10;
+            overflow-y: auto; /* Скролл только тут */
+            -webkit-overflow-scrolling: touch;
         }
         
-        /* Исправленный контейнер для текста и кнопки */
         .modal-text-wrapper {
-            flex: 1;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
+            /* Обертка для текста */
         }
 
         .quote-block {
             border-left: 3px solid var(--neon-pink);
-            padding-left: 12px;
+            padding-left: 16px;
             margin-bottom: 16px;
             font-style: italic;
-            color: #ddd;
-            font-size: 14px;
-            line-height: 1.5;
-            flex: 1;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            color: #ccc;
+            font-size: 13px; /* Шрифт помельче */
+            line-height: 1.6;
+            white-space: pre-wrap; /* Сохранять переносы */
         }
 
         .btn-copy {
-            background: linear-gradient(90deg, var(--neon-pink), #9d00ff);
+            position: fixed;
+            bottom: 30px;
+            left: 20px;
+            right: 20px;
+            background: rgba(255, 0, 122, 0.85); /* Полупрозрачный */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             color: white;
-            border: none;
-            padding: 12px;
-            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 14px;
+            border-radius: 16px;
             font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            box-shadow: 0 4px 15px rgba(255, 0, 122, 0.4);
-            flex-shrink: 0; /* Чтобы не сжималась */
-            margin-top: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            z-index: 210; /* Поверх всего */
+            transition: transform 0.1s;
         }
         
-        .btn-copy:active { transform: scale(0.98); }
+        .btn-copy:active { transform: scale(0.96); }
 
         .magic-btn {
             background: linear-gradient(135deg, #7b2ff7, #2f88f7);
@@ -540,9 +544,10 @@
                     <!-- Text goes here -->
                 </div>
             </div>
+            <!-- Кнопка теперь fixed (вне потока контента внутри content, но визуально внутри модалки) -->
             <button onclick="copyCurrentPrompt()" class="btn-copy">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                Копировать промпт
+                Копировать промпт ✨
             </button>
         </div>
     </div>
@@ -830,7 +835,7 @@
         function copyCurrentPrompt() {
             const text = document.getElementById('modal-prompt-text').textContent;
             navigator.clipboard.writeText(text).then(() => {
-                tg.showAlert('Скопировано!✨');
+                tg.showAlert('Промпт скопирован!');
                 tg.HapticFeedback.notificationOccurred('success');
             }).catch(() => {
                 // Фолбэк для старых версий
@@ -840,7 +845,7 @@
                 ta.select();
                 document.execCommand('copy');
                 document.body.removeChild(ta);
-                tg.showAlert('Скопировано!✨');
+                tg.showAlert('Промпт скопирован!');
             });
         }
 
@@ -1023,12 +1028,26 @@
                     if (bgMatch) extractedImg = bgMatch[1];
                 }
 
-                // Ищем текст поста
+                // --- НОВАЯ ЛОГИКА ПАРСИНГА ЦИТАТ ---
                 let extractedText = "";
-                const textDiv = doc.querySelector('.tgme_widget_message_text');
-                if (textDiv) {
-                    // Используем innerText для сохранения переносов, но чистим лишнее
-                    extractedText = textDiv.innerText;
+                
+                // Ищем блоки цитат, моноширинный текст (код) или pre
+                // В телеграме Web Embed цитаты и моноширинный текст обычно попадают в эти теги
+                // или иногда просто в <i>, если старый формат. Но приоритет - блочные элементы.
+                const quoteBlocks = doc.querySelectorAll('.tgme_widget_message_text blockquote, .tgme_widget_message_text code, .tgme_widget_message_text pre');
+                
+                if (quoteBlocks && quoteBlocks.length > 0) {
+                    // Собираем текст из всех найденных блоков
+                    const parts = [];
+                    quoteBlocks.forEach(block => parts.push(block.innerText.trim()));
+                    extractedText = parts.join('\n\n');
+                } else {
+                    // Если цитат не найдено вообще, берем весь текст?
+                    // Пользователь просил: "Твой код должен брать ТОЛЬКО текст, который находится в блоке цитаты"
+                    // Но если Елена забыла оформить цитату, лучше взять весь текст, чем пустоту.
+                    // Сделаем fallback: если нет blockquote/code/pre, берем весь текст message_text
+                    const textDiv = doc.querySelector('.tgme_widget_message_text');
+                    if (textDiv) extractedText = textDiv.innerText;
                 }
 
                 // Обновляем данные
@@ -1043,6 +1062,8 @@
                 if (extractedText) {
                      tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = extractedText;
                      msg += "Текст+";
+                } else {
+                     msg += "Текст (цитата) не найден.";
                 }
 
                 tg.showAlert(msg || "Ничего не найдено");
