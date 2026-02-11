@@ -586,7 +586,7 @@
             { id: 'zap', svg: '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>' },
             { id: 'instagram', svg: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>' },
             { id: 'youtube', svg: '<path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.33z"></path><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02"></polygon>' },
-            { id: 'telegram', svg: '<path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75c-.92.376-.91 1.055-.16 1.43l4.33 1.353 10.033-6.326c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.813.448 1.4.217 1.6-.758l2.9-13.68c.273-1.08-.41-1.574-1.108-1.23z"></path>' },
+            { id: 'telegram', svg: '<path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75c-.92.376-.91 1.055-.16 1.43l4.33 1.353 10.033-6.326c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.813.448 1.4.217 1.6-.758l2.9-13.68c.273-1.08-.41-1.574-1.108-1.23z"></path>' },
             { id: 'globe', svg: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>' },
             { id: 'gift', svg: '<polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>' },
             { id: 'award', svg: '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>' }
@@ -700,25 +700,8 @@
                     // Клик открывает модалку
                     itemEl.onclick = () => openGalleryModal(item.imageUrl, item.prompt);
                     
-                    // ПРОВЕРКА: Это Telegram ссылка или картинка?
-                    const isTgLink = item.imageUrl && item.imageUrl.includes('t.me/');
-                    
-                    let contentHtml = '';
-                    if (isTgLink) {
-                        // ФОЛБЭК: Если ссылка на ТГ, показываем iframe виджета (single post)
-                        // Добавляем embed=1&userpic=false&single=1 для красивого вида
-                        let embedUrl = item.imageUrl;
-                        if (!embedUrl.includes('?')) embedUrl += '?embed=1&mode=tme&single=1';
-                        else embedUrl += '&embed=1&mode=tme&single=1';
-                        
-                        contentHtml = `<iframe src="${embedUrl}" class="gallery-iframe" scrolling="no"></iframe>`;
-                    } else {
-                        // ОБЫЧНАЯ КАРТИНКА (извлеченная или прямая)
-                        contentHtml = `<img src="${item.imageUrl}" class="gallery-img" onerror="this.src='https://placehold.co/400x600/222/555?text=No+Img'">`;
-                    }
-
                     itemEl.innerHTML = `
-                        ${contentHtml}
+                        <img src="${item.imageUrl}" class="gallery-img" onerror="this.src='https://placehold.co/400x600/222/555?text=No+Img'">
                         <div class="gallery-overlay pointer-events-none">
                             <div class="text-[10px] text-pink-500 font-bold uppercase tracking-wider mb-1">PROMPT</div>
                             <div class="text-white text-xs font-semibold truncate">${item.title || 'Untitled'}</div>
@@ -779,37 +762,26 @@
             // Чистим контейнер
             wrapper.innerHTML = '';
 
-            const isTgLink = imgUrl && imgUrl.includes('t.me/');
+            // Всегда рисуем как картинку
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.className = "gallery-modal-img";
+            // Если ссылка битая, покажем заглушку
+            img.onerror = function() {
+                this.src = 'https://placehold.co/400x600/222/555?text=Error+Loading';
+            };
+            wrapper.appendChild(img);
+            
+            const grad = document.createElement('div');
+            grad.className = "absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#141419] to-transparent pointer-events-none";
+            wrapper.appendChild(grad);
 
-            if (isTgLink) {
-                 // Виджет для модалки
-                let embedUrl = imgUrl;
-                if (!embedUrl.includes('?')) embedUrl += '?embed=1&mode=tme&single=1';
-                else embedUrl += '&embed=1&mode=tme&single=1';
-
-                const iframe = document.createElement('iframe');
-                iframe.src = embedUrl;
-                iframe.className = "w-full h-full border-none";
-                wrapper.appendChild(iframe);
-            } else {
-                // Обычная картинка
-                const img = document.createElement('img');
-                img.src = imgUrl;
-                img.className = "gallery-modal-img";
-                wrapper.appendChild(img);
-                // Градиент
-                const grad = document.createElement('div');
-                grad.className = "absolute bottom-0 inset-x-0 h-24 bg-gradient-to-t from-[#141419] to-transparent pointer-events-none";
-                wrapper.appendChild(grad);
-            }
-
-            document.getElementById('modal-prompt-text').textContent = promptText || "Нет промпта (или он внутри поста)";
+            document.getElementById('modal-prompt-text').textContent = promptText || "Нет промпта";
             modal.classList.add('active-modal');
         }
 
         function closeGalleryModal() {
             document.getElementById('gallery-modal').classList.remove('active-modal');
-            // Очищаем iframe чтобы остановить видео/загрузку
             setTimeout(() => {
                  document.getElementById('modal-img-wrapper').innerHTML = '';
             }, 300);
@@ -818,7 +790,7 @@
         function copyCurrentPrompt() {
             const text = document.getElementById('modal-prompt-text').textContent;
             navigator.clipboard.writeText(text).then(() => {
-                tg.showAlert('Скопировано! ✨');
+                tg.showAlert('Скопировано!✨');
                 tg.HapticFeedback.notificationOccurred('success');
             }).catch(() => {
                 // Фолбэк для старых версий
@@ -828,7 +800,7 @@
                 ta.select();
                 document.execCommand('copy');
                 document.body.removeChild(ta);
-                tg.showAlert('Скопировано! ✨');
+                tg.showAlert('Скопировано!✨');
             });
         }
 
@@ -971,27 +943,24 @@
             renderSubListItems();
         }
 
-        // --- МАГИЧЕСКАЯ ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕЛЕГРАМ ПОСТОВ (UPDATED) ---
+        // --- МАГИЧЕСКАЯ ФУНКЦИЯ ДЛЯ ПАРСИНГА ТЕЛЕГРАМ ПОСТОВ (С ПРЕВЬЮ) ---
         async function magicPaste(itemIdx) {
             const textArea = document.getElementById(`magic-paste-${itemIdx}`);
             const raw = textArea.value;
             if(!raw) return tg.showAlert("Сначала вставь ссылку!");
 
-            // 1. Ищем ссылку на телеграм (t.me)
             const urlRegex = /(https:\/\/t\.me\/[\w\/]+)/;
             const match = raw.match(urlRegex);
             
             if (!match) {
-                return tg.showAlert("Нужна ссылка вида https://t.me/...");
+                return tg.showAlert("Нужна ссылка вида https://t.me/channel/123");
             }
 
             const tgLink = match[0];
-            
-            // Если Елена вставила просто ссылку, попробуем её "пробить" через прокси
-            tg.showAlert("🔮 Колдую над ссылкой...");
+            tg.showAlert("🔮 Ищу картинку в коде...");
 
             try {
-                // Используем allorigins как бесплатный CORS прокси
+                // Запрашиваем embed версию через прокси AllOrigins
                 const embedUrl = tgLink + '?embed=1&mode=tme';
                 const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(embedUrl);
                 
@@ -1000,51 +969,44 @@
                 
                 if (!data.contents) throw new Error("No data");
 
-                // Парсим HTML полученной страницы
+                // Парсим HTML
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(data.contents, "text/html");
 
-                // 2. Ищем картинку (background-image в embed)
-                // Обычно в классе .tgme_widget_message_photo_wrap
+                // Ищем картинку в стилях background-image
                 let extractedImg = "";
                 const photoWrap = doc.querySelector('.tgme_widget_message_photo_wrap');
                 if (photoWrap) {
                     const style = photoWrap.getAttribute('style');
-                    // вынимаем url('...')
+                    // Регулярка для вытаскивания url('...')
                     const bgMatch = style.match(/url\('?(.*?)'?\)/);
                     if (bgMatch) extractedImg = bgMatch[1];
                 }
 
-                // 3. Ищем текст
+                // Ищем текст поста
                 let extractedText = "";
                 const textDiv = doc.querySelector('.tgme_widget_message_text');
                 if (textDiv) {
                     extractedText = textDiv.innerText;
                 }
 
-                // Если картинку нашли - ставим её. Если нет - ставим саму ссылку на пост (сработает Виджет-Фолбэк)
                 if (extractedImg) {
                     tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = extractedImg;
-                    tg.showAlert("Картинка найдена! 🖼️");
+                    tg.showAlert("Картинка извлечена! 🖼️");
                 } else {
-                    tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = tgLink;
-                    tg.showAlert("Картинка скрыта, ставлю виджет! 🧩");
+                    tg.showAlert("Картинка не найдена в посте 😕");
                 }
 
                 if (extractedText) {
                      tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = extractedText;
-                } else {
-                     tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = "Текст внутри поста";
                 }
 
             } catch (e) {
                 console.error(e);
-                // ФОЛБЭК: Если прокси не сработал, просто сохраняем ссылку
-                tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = tgLink;
-                tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = "Ссылка на пост";
-                tg.showAlert("Магия не прошла, включен режим Виджета ⚙️");
+                tg.showAlert("Ошибка доступа к Telegram 🚫");
             }
 
+            // Перерисовываем UI, чтобы показать новую картинку в превью
             renderSubListItems();
         }
 
@@ -1063,9 +1025,16 @@
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
 
-                // РАЗНАЯ РАЗМЕТКА ДЛЯ СПИСКА И ГАЛЕРЕИ
                 if (isGalleryMode) {
-                    // --- РЕДАКТОР ГАЛЕРЕИ ---
+                    // --- РЕДАКТОР ГАЛЕРЕИ (с превью) ---
+                    // Проверяем, есть ли картинка для показа превью
+                    const imgPreview = item.imageUrl ? 
+                        `<div class="mb-2 mt-2 w-full h-32 bg-black rounded-lg overflow-hidden border border-white/10 relative">
+                            <img src="${item.imageUrl}" class="w-full h-full object-contain">
+                            <div class="absolute top-1 right-1 bg-green-500 text-[9px] text-white px-1 rounded">PREVIEW</div>
+                         </div>` 
+                        : '';
+
                     div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
                              <span class="text-[10px] text-pink-400 font-bold">SLIDE ${idx+1}</span>
@@ -1077,13 +1046,15 @@
                         
                         <!-- Magic Paste Section -->
                         <div class="bg-white/5 p-2 rounded mb-2 border border-white/10">
-                            <label class="admin-label text-purple-400">✨ Magic Paste (Просто ссылка на пост)</label>
+                            <label class="admin-label text-purple-400">✨ Magic Paste (Ссылка на пост)</label>
                             <textarea id="magic-paste-${idx}" class="admin-input h-10 text-[10px]" placeholder="https://t.me/channel/123"></textarea>
                             <button onclick="magicPaste(${idx})" class="magic-btn">🪄 Распознать</button>
                         </div>
+                        
+                        ${imgPreview}
 
                         <input type="text" class="admin-input" value="${item.title || ''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
-                        <input type="text" class="admin-input" value="${item.imageUrl || ''}" placeholder="Ссылка на картинку" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].imageUrl=this.value">
+                        <input type="text" class="admin-input" value="${item.imageUrl || ''}" placeholder="Ссылка на картинку (заполнится сама)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].imageUrl=this.value">
                         <textarea class="admin-textarea" placeholder="Текст промпта..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt || ''}</textarea>
                     `;
                 } else {
@@ -1119,7 +1090,6 @@
         }
 
         function addNewSubItem() {
-            // Структура зависит от родительского режима, но инициализируем универсально
             tempAppData.mainMenu[currentEditingIndex].items.push({ 
                 title: 'Новый пункт', 
                 link: '', 
