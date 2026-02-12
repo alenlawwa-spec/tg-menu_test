@@ -313,23 +313,6 @@
             filter: grayscale(1);
         }
 
-        /* Sticky Footer для Админки */
-        .admin-sticky-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 12px 20px 24px 20px;
-            background: rgba(5, 5, 8, 0.65);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
         .btn-edit-list {
             background: rgba(255, 0, 122, 0.1);
             color: var(--neon-pink);
@@ -738,6 +721,8 @@
                     <span>⚡</span> Добавить кнопку
                 </button>
             </div>
+            
+            <button onclick="saveAdminData()" id="btn-save-global" class="btn-save-cyber mt-4 mb-8" style="box-shadow: 0 4px 20px rgba(0, 242, 255, 0.2);">💾 Сохранить изменения</button>
         </div>
 
         <div id="admin-content-sublist" class="hidden z-10 pb-24">
@@ -746,8 +731,8 @@
             <div class="admin-card">
                 <div class="admin-section-title text-pink-500" id="admin-sublist-title">Редактор списка</div>
                 
-                <!-- NEW LOCATION: Add Button at TOP -->
-                <button onclick="addNewSubItem()" class="btn-add-cyber mb-4"><span>+</span> Добавить новый пункт СВЕРХУ</button>
+                <button onclick="addNewSubItem()" class="btn-add-cyber mb-2"><span>+</span> Добавить блок</button>
+                <button onclick="saveAdminData()" id="btn-save-sub" class="btn-save-cyber mb-6" style="margin-top: 0; box-shadow: 0 4px 20px rgba(0, 242, 255, 0.2);">💾 Сохранить изменения</button>
                 
                 <div id="admin-sublist-items" class="space-y-4"></div>
             </div>
@@ -760,11 +745,6 @@
         </div>
 
         <div id="save-status" class="text-center text-xs text-cyan-400 mt-4 opacity-0 transition-opacity font-mono">DB_SYNC_COMPLETE</div>
-        <div class="h-24"></div>
-
-        <div class="admin-sticky-footer">
-            <button onclick="saveAdminData()" id="btn-save-global" class="btn-save-cyber" style="margin: 0; max-width: 320px; box-shadow: 0 4px 20px rgba(0, 242, 255, 0.2);">💾 Сохранить изменения</button>
-        </div>
     </div>
 
     <script>
