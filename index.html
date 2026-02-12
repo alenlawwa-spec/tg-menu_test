@@ -17,26 +17,80 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* DARK MODE (DEFAULT) */
             --neon-color: #00f2ff;
             --neon-pink: #ff007a;
             --neon-green: #39ff14;
             --neon-yellow: #ffea00;
+            
+            --bg-body: #050505;
+            --text-main: white;
+            --text-sec: #9ca3af; /* gray-400 */
+            --card-bg: rgba(255, 255, 255, 0.04);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --admin-bg: rgba(5,5,8,0.98);
+            --admin-input-bg: rgba(0,0,0,0.4);
+            --admin-input-text: white;
+            --btn-glass-bg: rgba(255, 255, 255, 0.05);
+            --btn-glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        /* LIGHT MODE OVERRIDES */
+        [data-theme="light"] {
+            /* Акценты для светлой темы (Dusty Rose & Metallic Blue) */
+            --neon-color: #3182ce; /* Metallic Blue */
+            --neon-pink: #b83280; /* Dusty Rose/Soft Raspberry */
+            --neon-green: #2f855a;
+            --neon-yellow: #d69e2e;
+
+            /* Фон "Холодный фарфор" */
+            --bg-body: #eef0f4;
+            
+            /* Текст Графит */
+            --text-main: #2d3748; 
+            --text-sec: #718096;
+            
+            /* Матовое стекло */
+            --card-bg: rgba(255, 255, 255, 0.65);
+            --card-border: rgba(255, 255, 255, 0.4);
+            
+            /* Админка светлая */
+            --admin-bg: rgba(238, 240, 244, 0.98);
+            --admin-input-bg: rgba(255, 255, 255, 0.8);
+            --admin-input-text: #2d3748;
+            
+            --btn-glass-bg: rgba(0, 0, 0, 0.05);
+            --btn-glass-border: rgba(0, 0, 0, 0.1);
         }
 
         body {
             font-family: 'Inter', sans-serif;
-            background: #050505;
-            color: white;
+            background: var(--bg-body);
+            color: var(--text-main);
             overflow: hidden;
             height: 100vh;
             width: 100vw;
             margin: 0;
             position: fixed;
+            transition: background 0.3s, color 0.3s;
             /* ЗАЩИТА КОНТЕНТА */
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
             user-select: none;
+        }
+
+        /* Адаптация заголовков для светлой темы */
+        [data-theme="light"] .title-gradient {
+            background: linear-gradient(135deg, #1a202c 0%, #4a5568 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Скрываем орбы в светлой теме, или делаем их очень мягкими */
+        [data-theme="light"] .orb {
+            opacity: 0.1;
+            filter: blur(120px);
         }
 
         input, textarea {
@@ -53,7 +107,13 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at 20% 30%, #1a1033 0%, #050505 50%);
+            background: radial-gradient(circle at 20% 30%, #1a1033 0%, transparent 50%);
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        [data-theme="light"] .bg-glow {
+            opacity: 0; /* Убираем темное свечение в светлой теме */
         }
 
         .orb {
@@ -62,6 +122,7 @@
             filter: blur(80px);
             opacity: 0.3;
             animation: float 15s infinite alternate ease-in-out;
+            transition: opacity 0.3s;
         }
 
         .orb-1 { width: 300px; height: 300px; background: var(--neon-color); top: -80px; right: -40px; }
@@ -111,7 +172,7 @@
         /* АНИМАЦИЯ УСПЕХА */
         @keyframes flashGreen {
             0% { background-color: rgba(57, 255, 20, 0.3); border-color: var(--neon-green); }
-            100% { background-color: rgba(255, 255, 255, 0.03); border-color: transparent; }
+            100% { background-color: transparent; border-color: transparent; }
         }
         
         .flash-success {
@@ -141,10 +202,10 @@
         .active-modal { transform: translateY(0); opacity: 1; pointer-events: all; }
 
         .glass-card {
-            background: rgba(255, 255, 255, 0.04);
+            background: var(--card-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--card-border);
             border-radius: 22px;
             transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
             position: relative;
@@ -152,18 +213,28 @@
 
         .glass-card:active {
             transform: scale(0.94);
-            border-color: rgba(0, 242, 255, 0.5);
-            background: rgba(255, 255, 255, 0.08);
+            border-color: var(--neon-color); /* Используем переменную для адаптации */
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        [data-theme="light"] .glass-card:active {
+            background: rgba(255, 255, 255, 0.8);
         }
 
         /* Админка */
         .admin-card {
-            background: rgba(10, 10, 15, 0.8);
+            background: rgba(10, 10, 15, 0.6); 
             border: 1px solid rgba(0, 242, 255, 0.15);
             border-radius: 20px;
             padding: 16px;
             margin-bottom: 20px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        [data-theme="light"] .admin-card {
+            background: rgba(255, 255, 255, 0.6);
+            border-color: rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
         }
 
         .admin-section-title {
@@ -182,11 +253,12 @@
             content: '';
             height: 1px;
             flex: 1;
-            background: linear-gradient(90deg, rgba(0, 242, 255, 0.3), transparent);
+            background: linear-gradient(90deg, var(--neon-color), transparent);
+            opacity: 0.3;
         }
 
         .guide-item-admin {
-            background: rgba(255, 255, 255, 0.03);
+            background: var(--card-bg);
             border-left: 2px solid var(--neon-pink);
             border-radius: 12px;
             padding: 12px;
@@ -197,13 +269,18 @@
 
         .admin-input, .admin-textarea {
             width: 100%;
-            background: rgba(0,0,0,0.4);
+            background: var(--admin-input-bg);
             border: 1px solid rgba(255,255,255,0.1);
-            color: white;
+            color: var(--admin-input-text);
             padding: 10px 12px;
             border-radius: 10px;
             margin-bottom: 8px;
             font-size: 13px;
+        }
+        
+        [data-theme="light"] .admin-input, 
+        [data-theme="light"] .admin-textarea {
+            border-color: rgba(0,0,0,0.1);
         }
         
         .admin-textarea {
@@ -213,7 +290,7 @@
 
         .admin-label {
             font-size: 10px;
-            color: #777;
+            color: var(--text-sec);
             margin-bottom: 4px;
             margin-left: 4px;
             display: block;
@@ -222,14 +299,16 @@
 
         .admin-select {
             width: 100%;
-            background: rgba(0,0,0,0.6);
+            background: var(--admin-input-bg);
             border: 1px solid rgba(255,255,255,0.1);
-            color: white;
+            color: var(--admin-input-text);
             padding: 10px 12px;
             border-radius: 10px;
             margin-bottom: 8px;
             font-size: 13px;
         }
+        
+        [data-theme="light"] .admin-select { border-color: rgba(0,0,0,0.1); }
 
         .icon-grid {
             display: grid;
@@ -240,19 +319,27 @@
 
         .icon-picker-btn {
             aspect-ratio: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: var(--btn-glass-bg);
+            border: 1px solid var(--btn-glass-border);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s;
+            color: var(--text-main);
         }
 
         .icon-picker-btn.active {
             border-color: var(--neon-color);
             background: rgba(0, 242, 255, 0.2);
             box-shadow: 0 0 10px rgba(0, 242, 255, 0.3);
+            color: white; /* Активная всегда белая/яркая */
+        }
+        
+        [data-theme="light"] .icon-picker-btn.active {
+            background: rgba(49, 130, 206, 0.2); /* Адаптация под синий */
+            box-shadow: none;
+            color: var(--neon-color);
         }
 
         .icon-picker-btn svg { width: 18px; height: 18px; }
@@ -273,7 +360,7 @@
 
         .color-picker-btn.active {
             transform: scale(1.2);
-            border-color: white;
+            border-color: var(--text-main);
         }
 
         .btn-delete-icon {
@@ -295,6 +382,11 @@
             justify-content: center;
             gap: 8px;
         }
+        
+        [data-theme="light"] .btn-add-cyber {
+            background: rgba(49, 130, 206, 0.05);
+            border-color: rgba(49, 130, 206, 0.4);
+        }
 
         .btn-save-cyber {
             background: linear-gradient(135deg, #0066ff, #00f2ff);
@@ -303,14 +395,59 @@
             padding: 14px;
             border-radius: 15px;
             width: 100%;
-            margin-top: 10px;
             text-transform: uppercase;
+        }
+        
+        [data-theme="light"] .btn-save-cyber {
+            background: linear-gradient(135deg, #3182ce, #63b3ed);
         }
         
         .btn-save-cyber:disabled {
             opacity: 0.5;
             cursor: not-allowed;
             filter: grayscale(1);
+        }
+
+        /* Стиль для фиксированной кнопки */
+        .sticky-save-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0; 
+            right: 0;
+            display: flex;
+            justify-content: center;
+            z-index: 100;
+            pointer-events: none; 
+        }
+        
+        .sticky-save-btn {
+            pointer-events: auto;
+            background: rgba(0, 242, 255, 0.15);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(0, 242, 255, 0.3);
+            color: #00f2ff;
+            font-weight: 700;
+            padding: 12px 32px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 1px;
+            width: 80%;
+            max-width: 300px;
+        }
+        
+        [data-theme="light"] .sticky-save-btn {
+            background: rgba(49, 130, 206, 0.1);
+            color: #3182ce;
+            border-color: rgba(49, 130, 206, 0.3);
+            box-shadow: 0 4px 20px rgba(49, 130, 206, 0.1);
+        }
+
+        .sticky-save-btn:active {
+            transform: scale(0.96);
         }
 
         .btn-edit-list {
@@ -322,6 +459,11 @@
             width: 100%;
             font-size: 12px;
             margin-top: 5px;
+        }
+        
+        [data-theme="light"] .btn-edit-list {
+            background: rgba(184, 50, 128, 0.1);
+            border-color: rgba(184, 50, 128, 0.3);
         }
 
         .icon-box {
@@ -336,6 +478,11 @@
             margin-right: 18px;
             flex-shrink: 0;
         }
+        
+        [data-theme="light"] .icon-box {
+            background: linear-gradient(135deg, rgba(255,255,255,0.6), rgba(255,255,255,0.2));
+            box-shadow: 2px 2px 8px rgba(0,0,0,0.05);
+        }
 
         .icon-box svg { width: 26px; height: 26px; }
 
@@ -345,7 +492,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        /* Styles for Category Chips */
         .category-scroll-container {
             display: flex;
             gap: 8px;
@@ -353,10 +499,10 @@
             padding-bottom: 8px;
             margin-bottom: 12px;
             -webkit-overflow-scrolling: touch;
-            scrollbar-width: none; /* Firefox */
+            scrollbar-width: none; 
         }
         .category-scroll-container::-webkit-scrollbar {
-            display: none; /* Chrome/Safari */
+            display: none; 
         }
 
         .category-chip {
@@ -372,12 +518,24 @@
             backdrop-filter: blur(8px);
             color: #ccc;
         }
+        
+        [data-theme="light"] .category-chip {
+            border-color: rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.5);
+            color: #555;
+        }
 
         .category-chip.active {
             background: rgba(0, 242, 255, 0.15);
             color: var(--neon-color);
             border-color: rgba(0, 242, 255, 0.4);
             box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        }
+        
+        [data-theme="light"] .category-chip.active {
+            background: rgba(49, 130, 206, 0.1);
+            border-color: rgba(49, 130, 206, 0.3);
+            box-shadow: none;
         }
 
         .gallery-grid {
@@ -396,6 +554,11 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             transition: transform 0.2s;
             background: #111;
+        }
+        
+        [data-theme="light"] .gallery-item {
+            border-color: rgba(0,0,0,0.05);
+            background: #e2e8f0;
         }
 
         .gallery-item:active { transform: scale(0.96); }
@@ -428,6 +591,10 @@
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.3s;
+        }
+        
+        [data-theme="light"] #gallery-modal {
+             background: rgba(240, 242, 245, 0.98);
         }
 
         #gallery-modal.active-modal {
@@ -467,6 +634,11 @@
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
         }
+        
+        [data-theme="light"] .gallery-modal-content {
+            background: linear-gradient(to bottom, #ffffff, #f7fafc);
+            border-color: rgba(0,0,0,0.05);
+        }
 
         .quote-block {
             border-left: 3px solid var(--neon-pink);
@@ -477,6 +649,10 @@
             font-size: 13px;
             line-height: 1.6;
             white-space: pre-wrap;
+        }
+        
+        [data-theme="light"] .quote-block {
+            color: #4a5568;
         }
 
         .btn-copy {
@@ -501,6 +677,12 @@
             transition: transform 0.1s;
         }
         
+        [data-theme="light"] .btn-copy {
+            background: rgba(184, 50, 128, 0.85); /* Dusty Pink button */
+            border-color: rgba(255,255,255,0.4);
+            box-shadow: 0 4px 20px rgba(184, 50, 128, 0.3);
+        }
+        
         .btn-copy:active { transform: scale(0.96); }
 
         .magic-btn {
@@ -513,6 +695,10 @@
             display: inline-flex;
             align-items: center;
             gap: 4px;
+        }
+        
+        [data-theme="light"] .magic-btn {
+            background: linear-gradient(135deg, #805ad5, #4299e1);
         }
         
         .magic-btn:disabled {
@@ -530,14 +716,19 @@
             position: absolute;
             z-index: 5;
         }
+        
+        [data-theme="light"] .spinner {
+            border-color: rgba(0,0,0,0.1);
+            border-left-color: var(--neon-color);
+        }
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
         .review-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--card-bg);
             backdrop-filter: blur(15px);
             -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--card-border);
             border-radius: 16px;
             padding: 16px;
             margin-bottom: 12px;
@@ -553,7 +744,7 @@
 
         .review-name { font-weight: 600; color: var(--neon-color); font-size: 14px; }
         .review-date { font-size: 10px; color: #888; }
-        .review-text { font-size: 13px; line-height: 1.4; color: #ddd; word-wrap: break-word; }
+        .review-text { font-size: 13px; line-height: 1.4; color: var(--text-sec); word-wrap: break-word; }
         .stars { color: var(--neon-yellow); font-size: 12px; letter-spacing: 2px; }
 
         .btn-write-review {
@@ -571,6 +762,11 @@
             align-items: center;
             gap: 8px;
         }
+        
+        [data-theme="light"] .btn-write-review {
+            background: linear-gradient(90deg, #b83280, #805ad5);
+            box-shadow: 0 4px 15px rgba(184, 50, 128, 0.3);
+        }
 
         #review-write-modal {
             position: fixed;
@@ -586,6 +782,12 @@
             pointer-events: none;
             transition: all 0.3s;
         }
+        
+        [data-theme="light"] #review-write-modal {
+             background: rgba(255, 255, 255, 0.95);
+        }
+        
+        [data-theme="light"] #review-write-modal h2 { color: #1a202c; }
 
         #review-write-modal.active-modal {
             opacity: 1;
@@ -608,6 +810,8 @@
             cursor: pointer;
             transition: color 0.2s;
         }
+        
+        [data-theme="light"] .star-rating-input label { color: #cbd5e0; }
 
         .star-rating-input input:checked ~ label,
         .star-rating-input label:hover,
@@ -629,23 +833,30 @@
     </div>
 
     <div id="main-page" class="page active">
-        <header class="mb-10 mt-4 text-center">
-            <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none cursor-pointer">Навигация</h1>
-            <p id="nav-subheader" class="text-gray-500 text-sm mt-2">Твой проводник по контенту</p>
+        <!-- Главная шапка с переключателем темы -->
+        <header class="mb-10 mt-4 px-4 flex justify-between items-start">
+            <div class="flex-1">
+                <h1 id="nav-header" class="text-3xl font-bold title-gradient tracking-tight select-none cursor-pointer text-left">Навигация</h1>
+                <p id="nav-subheader" class="text-xs mt-2 text-left" style="color:var(--text-sec)">Твой проводник по контенту</p>
+            </div>
+            <!-- Глобальный переключатель темы -->
+            <button onclick="toggleTheme()" id="theme-toggle-btn-main" class="w-10 h-10 rounded-full flex items-center justify-center border transition backdrop-blur-md ml-4" style="background:var(--btn-glass-bg); border-color:var(--btn-glass-border); color:var(--text-sec)">
+                ☀️
+            </button>
         </header>
 
-        <div id="main-menu-container" class="grid gap-4"></div>
+        <div id="main-menu-container" class="grid gap-4 px-1"></div>
 
         <footer class="mt-auto pt-16 pb-8 text-center">
-            <p class="text-[10px] text-gray-600 opacity-50">Developed by Elena Sotnikova</p>
+            <p class="text-[10px] opacity-50" style="color:var(--text-sec)">Developed by Elena Sotnikova</p>
         </footer>
     </div>
 
     <div id="sub-page" class="page hidden-right">
-        <header class="mb-6 mt-4 text-center relative">
-             <button onclick="hideSubPage()" class="absolute left-0 top-1 text-2xl opacity-50 p-2">‹</button>
-            <h1 id="sub-page-title" class="text-2xl font-bold title-gradient tracking-tight text-blue-400">Заголовок</h1>
-            <p id="sub-page-subtitle" class="text-gray-500 text-xs mt-1">Описание раздела</p>
+        <header class="mb-6 mt-4 text-center relative px-4">
+             <button onclick="hideSubPage()" class="absolute left-0 top-1 text-2xl opacity-50 p-2" style="color:var(--text-main)">‹</button>
+            <h1 id="sub-page-title" class="text-2xl font-bold title-gradient tracking-tight" style="color:var(--neon-color)">Заголовок</h1>
+            <p id="sub-page-subtitle" class="text-xs mt-1" style="color:var(--text-sec)">Описание раздела</p>
         </header>
         <div id="sub-page-container"></div>
         <div class="mt-auto h-20"></div> 
@@ -656,7 +867,7 @@
         <div class="gallery-modal-img-container" id="modal-img-wrapper"></div>
         <div class="gallery-modal-content">
             <div class="modal-text-wrapper">
-                <div class="text-[10px] text-gray-500 uppercase tracking-widest mb-2 font-bold flex-shrink-0">PROMPT TEXT</div>
+                <div class="text-[10px] uppercase tracking-widest mb-2 font-bold flex-shrink-0" style="color:var(--text-sec)">PROMPT TEXT</div>
                 <div class="quote-block" id="modal-prompt-text"></div>
             </div>
             <button onclick="copyCurrentPrompt()" class="btn-copy">
@@ -669,11 +880,11 @@
     <div id="review-write-modal">
         <div class="text-center mb-6">
             <h2 class="text-2xl font-bold text-white mb-2">Ваш отзыв</h2>
-            <p class="text-gray-400 text-xs">Поделитесь впечатлениями</p>
+            <p class="text-xs" style="color:var(--text-sec)">Поделитесь впечатлениями</p>
         </div>
         
         <label class="admin-label">Ваше имя</label>
-        <input type="text" id="review-name-input" class="admin-input bg-white/10" placeholder="Имя">
+        <input type="text" id="review-name-input" class="admin-input" style="background:var(--admin-input-bg); color:var(--text-main)" placeholder="Имя">
         
         <div class="star-rating-input">
             <input type="radio" id="star5" name="rating" value="5"><label for="star5">★</label>
@@ -683,25 +894,26 @@
             <input type="radio" id="star1" name="rating" value="1"><label for="star1">★</label>
         </div>
         
-        <textarea id="review-text-input" class="admin-textarea bg-white/10 mb-6" placeholder="Напишите что-нибудь приятное..."></textarea>
+        <textarea id="review-text-input" class="admin-textarea mb-6" style="background:var(--admin-input-bg); color:var(--text-main)" placeholder="Напишите что-нибудь приятное..."></textarea>
         
         <button onclick="submitReview()" class="btn-save-cyber">Отправить ✨</button>
-        <button onclick="closeReviewModal()" class="text-gray-500 text-sm mt-4">Отмена</button>
+        <button onclick="closeReviewModal()" class="text-sm mt-4" style="color:var(--text-sec)">Отмена</button>
     </div>
 
-    <div id="admin-page" class="page hidden-bottom" style="background: rgba(5,5,8,0.98); z-index: 50;">
-        <header class="mb-8 flex justify-between items-center sticky top-0 bg-[#050508] py-4 z-20 border-b border-white/5">
+    <div id="admin-page" class="page hidden-bottom" style="background: var(--admin-bg); z-index: 50;">
+        <header class="mb-8 flex justify-between items-center sticky top-0 py-4 z-20 border-b border-white/5" style="background: var(--admin-bg);">
             <div>
-                <h2 class="text-2xl font-bold text-white tracking-tight">Terminal</h2>
-                <div class="text-[10px] text-cyan-400 font-mono">ACCESS GRANTED // ADMIN_MODE</div>
+                <h2 class="text-2xl font-bold tracking-tight" style="color: var(--text-main);">Terminal</h2>
+                <div class="text-[10px] font-mono" style="color:var(--neon-color)">ACCESS GRANTED // ADMIN_MODE</div>
             </div>
-            <div class="flex gap-2">
-                <button onclick="openModeration()" class="bg-blue-900/30 border border-blue-500/30 text-blue-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">🛡️ Модерация</button>
-                <button onclick="closeAdmin()" class="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center text-gray-400">✕</button>
+            <div class="flex gap-2 items-center">
+                <!-- Убрали кнопку темы отсюда -->
+                <button onclick="openModeration()" class="border px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1" style="background:rgba(49, 130, 206, 0.2); border-color:var(--neon-color); color:var(--neon-color)">🛡️</button>
+                <button onclick="closeAdmin()" class="bg-white/5 w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/10" style="color:var(--text-sec)">✕</button>
             </div>
         </header>
 
-        <div id="admin-content-main" class="z-10">
+        <div id="admin-content-main" class="z-10 pb-24">
             <div class="admin-card">
                 <div class="admin-section-title">Заголовки Главной</div>
                 <div class="mb-2">
@@ -722,34 +934,36 @@
                 </button>
             </div>
 
-            <button onclick="saveAdminData()" id="btn-save-global" class="btn-save-cyber">Сохранить всё</button>
+            <!-- Sticky Save Button (Global) -->
+            <div class="sticky-save-container">
+                <button onclick="saveAdminData()" id="btn-save-global" class="sticky-save-btn">
+                    Сохранить всё
+                </button>
+            </div>
         </div>
 
         <div id="admin-content-sublist" class="hidden z-10 pb-24">
-            <button onclick="backToMainAdmin()" class="text-gray-400 text-xs mb-4 flex items-center gap-2">‹ Назад</button>
+            <button onclick="backToMainAdmin()" class="text-xs mb-4 flex items-center gap-2" style="color:var(--text-sec)">‹ Назад</button>
             
-            <!-- Sticky Save Button -->
-            <div class="sticky bottom-6 z-50">
-                 <button onclick="saveSubList()" id="btn-save-sub" class="btn-save-cyber shadow-2xl backdrop-blur-md border border-white/20" style="background: rgba(0, 242, 255, 0.2); color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.2);">Готово (Save)</button>
+            <div class="admin-card">
+                <div class="admin-section-title" id="admin-sublist-title" style="color:var(--neon-pink)">Редактор списка</div>
+                <button onclick="addNewSubItem()" class="btn-add-cyber mb-4"><span>+</span> Добавить новый пункт СВЕРХУ</button>
+                <div id="admin-sublist-items" class="space-y-4"></div>
             </div>
 
-            <div class="admin-card">
-                <div class="admin-section-title text-pink-500" id="admin-sublist-title">Редактор списка</div>
-                
-                <!-- NEW LOCATION: Add Button at TOP -->
-                <button onclick="addNewSubItem()" class="btn-add-cyber mb-4"><span>+</span> Добавить новый пункт СВЕРХУ</button>
-                
-                <div id="admin-sublist-items" class="space-y-4"></div>
+            <!-- Sticky Save Button (Sublist) -->
+            <div class="sticky-save-container">
+                 <button onclick="saveSubList()" id="btn-save-sub" class="sticky-save-btn">Готово (Save)</button>
             </div>
         </div>
 
         <div id="admin-content-moderation" class="hidden z-10">
-             <button onclick="backToMainAdmin()" class="text-gray-400 text-xs mb-4 flex items-center gap-2">‹ Назад к меню</button>
-             <div class="admin-section-title text-yellow-400">Модерация отзывов</div>
+             <button onclick="backToMainAdmin()" class="text-xs mb-4 flex items-center gap-2" style="color:var(--text-sec)">‹ Назад к меню</button>
+             <div class="admin-section-title" style="color:var(--neon-yellow)">Модерация отзывов</div>
              <div id="moderation-list" class="space-y-4 pb-20"></div>
         </div>
 
-        <div id="save-status" class="text-center text-xs text-cyan-400 mt-4 opacity-0 transition-opacity font-mono">DB_SYNC_COMPLETE</div>
+        <div id="save-status" class="text-center text-xs mt-4 opacity-0 transition-opacity font-mono" style="color:var(--neon-color)">DB_SYNC_COMPLETE</div>
         <div class="h-24"></div>
     </div>
 
@@ -759,11 +973,32 @@
 
         const ADMIN_ID = 758556732; 
         
-        // ФЛАГ ПАРСИНГА ДЛЯ БЛОКИРОВКИ КНОПОК
         let isParsing = false;
 
-        // ЗАЩИТА ПРАВОЙ КНОПКИ
         document.addEventListener('contextmenu', event => event.preventDefault());
+        
+        // --- THEME LOGIC ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme') || 'dark';
+            const next = current === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            updateThemeIcon(next);
+        }
+
+        function updateThemeIcon(theme) {
+            const btn = document.getElementById('theme-toggle-btn-main');
+            if(btn) btn.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+        }
+
+        // Call immediately
+        initTheme();
 
         const ICON_LIBRARY = [
             { id: 'folder', svg: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>' },
@@ -846,10 +1081,10 @@
                         </svg>
                     </div>
                     <div class="flex-1">
-                        <h3 class="font-semibold text-white">${btn.title}</h3>
-                        <p class="text-gray-400 text-xs text-white/60">${btn.subtitle}</p>
+                        <h3 class="font-semibold" style="color:var(--text-main)">${btn.title}</h3>
+                        <p class="text-xs" style="color:var(--text-sec)">${btn.subtitle}</p>
                     </div>
-                    <div class="opacity-30 text-xl">›</div>
+                    <div class="opacity-30 text-xl" style="color:var(--text-main)">›</div>
                 `;
                 container.appendChild(btnEl);
             });
@@ -895,7 +1130,7 @@
                 docs.sort((a,b) => new Date(b.date) - new Date(a.date));
                 
                 if(docs.length === 0) {
-                    reviewsList.innerHTML = '<div class="text-center text-gray-500 text-sm mt-4">Отзывов пока нет. Будь первым!</div>';
+                    reviewsList.innerHTML = '<div class="text-center text-sm mt-4" style="color:var(--text-sec)">Отзывов пока нет. Будь первым!</div>';
                     return;
                 }
 
@@ -925,13 +1160,9 @@
             container.innerHTML = '';
 
             if (btnData.mode === 'gallery') {
-                // --- ЛОГИКА ГАЛЕРЕИ С ФИЛЬТРАМИ ---
                 const allItems = btnData.items || [];
-                
-                // 1. Получаем уникальные категории
                 const categories = ['Все', ...new Set(allItems.map(i => i.category).filter(Boolean))];
                 
-                // 2. Создаем контейнер для фильтров
                 if (categories.length > 1) {
                     const filterContainer = document.createElement('div');
                     filterContainer.className = 'category-scroll-container';
@@ -941,10 +1172,8 @@
                         chip.className = `category-chip ${cat === 'Все' ? 'active' : ''}`;
                         chip.textContent = cat;
                         chip.onclick = (e) => {
-                            // Переключение активного класса
                             document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
                             e.target.classList.add('active');
-                            // Фильтрация
                             renderGalleryItems(cat === 'Все' ? allItems : allItems.filter(i => i.category === cat), gridContainer);
                             tg.HapticFeedback.selectionChanged();
                         };
@@ -953,12 +1182,9 @@
                     container.appendChild(filterContainer);
                 }
 
-                // 3. Создаем контейнер сетки
                 const gridContainer = document.createElement('div');
                 gridContainer.className = 'gallery-grid animate-pulse-enter';
                 container.appendChild(gridContainer);
-                
-                // 4. Рендерим все элементы
                 renderGalleryItems(allItems, gridContainer);
             } 
             else if (btnData.mode === 'reviews') {
@@ -978,7 +1204,7 @@
                     const itemEl = document.createElement('div');
                     itemEl.className = 'glass-card p-4 flex items-center cursor-pointer';
                     itemEl.onclick = () => handleLink(item.link);
-                    itemEl.innerHTML = `<div class="icon-box text-blue-300 text-xl">${item.icon || '📄'}</div><div class="flex-1 text-white font-medium">${item.title}</div><div class="opacity-30 text-xl">›</div>`;
+                    itemEl.innerHTML = `<div class="icon-box text-blue-300 text-xl">${item.icon || '📄'}</div><div class="flex-1 font-medium" style="color:var(--text-main)">${item.title}</div><div class="opacity-30 text-xl" style="color:var(--text-main)">›</div>`;
                     container.appendChild(itemEl);
                 });
             }
@@ -988,7 +1214,6 @@
             tg.BackButton.show();
         }
 
-        // Вспомогательная функция рендера галереи
         function renderGalleryItems(items, container) {
             container.innerHTML = '';
             items.forEach(item => {
@@ -998,8 +1223,8 @@
                 itemEl.innerHTML = `
                     <img src="${item.imageUrl}" class="gallery-img" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/400x600/222/555?text=No+Img'">
                     <div class="gallery-overlay pointer-events-none">
-                        <div class="text-[10px] text-pink-500 font-bold uppercase tracking-wider mb-1">PROMPT</div>
-                        <div class="text-white text-xs font-semibold truncate">${item.title || 'Untitled'}</div>
+                        <div class="text-[10px] font-bold uppercase tracking-wider mb-1" style="color:var(--neon-pink)">PROMPT</div>
+                        <div class="text-white text-xs font-semibold truncate" style="color:var(--text-main)">${item.title || 'Untitled'}</div>
                     </div>
                 `;
                 container.appendChild(itemEl);
