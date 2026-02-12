@@ -345,6 +345,41 @@
             -webkit-text-fill-color: transparent;
         }
 
+        /* Styles for Category Chips */
+        .category-scroll-container {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+        }
+        .category-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .category-chip {
+            white-space: nowrap;
+            padding: 6px 16px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(8px);
+            color: #ccc;
+        }
+
+        .category-chip.active {
+            background: rgba(0, 242, 255, 0.15);
+            color: var(--neon-color);
+            border-color: rgba(0, 242, 255, 0.4);
+            box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+        }
+
         .gallery-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -820,7 +855,7 @@
             });
         }
 
-        // --- ЛОГИКА СВАЙПА (ИСПРАВЛЕНА И ДОПОЛНЕНА) ---
+        // --- ЛОГИКА СВАЙПА ---
         let touchStartX = 0;
         const subPage = document.getElementById('sub-page');
 
@@ -828,10 +863,7 @@
             touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
 
-        // Добавлено touchMove для предотвращения дефолтного скролла при горизонтальном свайпе
-        subPage.addEventListener('touchmove', e => {
-            // Если свайп явно горизонтальный, можно блокировать вертикальный скролл (опционально)
-        }, { passive: true });
+        subPage.addEventListener('touchmove', e => {}, { passive: true });
 
         subPage.addEventListener('touchend', e => {
             const touchEndX = e.changedTouches[0].screenX;
@@ -850,7 +882,6 @@
                 .replace(/'/g, "&#039;");
         }
 
-        // ФУНКЦИЯ: ЗАГРУЗКА ОТЗЫВОВ (ВЫНЕСЕНА ОТДЕЛЬНО ДЛЯ ЯСНОСТИ)
         function loadReviews(container) {
             const reviewsList = document.createElement('div');
             reviewsList.id = 'reviews-public-list';
@@ -894,20 +925,41 @@
             container.innerHTML = '';
 
             if (btnData.mode === 'gallery') {
-                container.className = 'gallery-grid animate-pulse-enter'; 
-                (btnData.items || []).forEach(item => {
-                    const itemEl = document.createElement('div');
-                    itemEl.className = 'gallery-item cursor-pointer';
-                    itemEl.onclick = () => openGalleryModal(item.imageUrl, item.prompt);
-                    itemEl.innerHTML = `
-                        <img src="${item.imageUrl}" class="gallery-img" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/400x600/222/555?text=No+Img'">
-                        <div class="gallery-overlay pointer-events-none">
-                            <div class="text-[10px] text-pink-500 font-bold uppercase tracking-wider mb-1">PROMPT</div>
-                            <div class="text-white text-xs font-semibold truncate">${item.title || 'Untitled'}</div>
-                        </div>
-                    `;
-                    container.appendChild(itemEl);
-                });
+                // --- ЛОГИКА ГАЛЕРЕИ С ФИЛЬТРАМИ ---
+                const allItems = btnData.items || [];
+                
+                // 1. Получаем уникальные категории
+                const categories = ['Все', ...new Set(allItems.map(i => i.category).filter(Boolean))];
+                
+                // 2. Создаем контейнер для фильтров
+                if (categories.length > 1) {
+                    const filterContainer = document.createElement('div');
+                    filterContainer.className = 'category-scroll-container';
+                    
+                    categories.forEach(cat => {
+                        const chip = document.createElement('div');
+                        chip.className = `category-chip ${cat === 'Все' ? 'active' : ''}`;
+                        chip.textContent = cat;
+                        chip.onclick = (e) => {
+                            // Переключение активного класса
+                            document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+                            e.target.classList.add('active');
+                            // Фильтрация
+                            renderGalleryItems(cat === 'Все' ? allItems : allItems.filter(i => i.category === cat), gridContainer);
+                            tg.HapticFeedback.selectionChanged();
+                        };
+                        filterContainer.appendChild(chip);
+                    });
+                    container.appendChild(filterContainer);
+                }
+
+                // 3. Создаем контейнер сетки
+                const gridContainer = document.createElement('div');
+                gridContainer.className = 'gallery-grid animate-pulse-enter';
+                container.appendChild(gridContainer);
+                
+                // 4. Рендерим все элементы
+                renderGalleryItems(allItems, gridContainer);
             } 
             else if (btnData.mode === 'reviews') {
                 container.className = 'flex flex-col pb-20';
@@ -918,7 +970,6 @@
                 btn.onclick = openReviewModal;
                 container.appendChild(btn);
                 
-                // ЗАДАЧА 1: Загрузка отзывов
                 loadReviews(container);
             }
             else {
@@ -935,6 +986,24 @@
             document.getElementById('main-page').classList.replace('active', 'hidden-left');
             subPage.classList.replace('hidden-right', 'active');
             tg.BackButton.show();
+        }
+
+        // Вспомогательная функция рендера галереи
+        function renderGalleryItems(items, container) {
+            container.innerHTML = '';
+            items.forEach(item => {
+                const itemEl = document.createElement('div');
+                itemEl.className = 'gallery-item cursor-pointer animate-pulse-enter';
+                itemEl.onclick = () => openGalleryModal(item.imageUrl, item.prompt);
+                itemEl.innerHTML = `
+                    <img src="${item.imageUrl}" class="gallery-img" referrerpolicy="no-referrer" onerror="this.src='https://placehold.co/400x600/222/555?text=No+Img'">
+                    <div class="gallery-overlay pointer-events-none">
+                        <div class="text-[10px] text-pink-500 font-bold uppercase tracking-wider mb-1">PROMPT</div>
+                        <div class="text-white text-xs font-semibold truncate">${item.title || 'Untitled'}</div>
+                    </div>
+                `;
+                container.appendChild(itemEl);
+            });
         }
 
         function hideSubPage() {
@@ -962,7 +1031,7 @@
             }
         }
 
-        // --- ЗАДАЧА 1: ФУНКЦИИ ОТЗЫВОВ ---
+        // --- ФУНКЦИИ ОТЗЫВОВ ---
         function openReviewModal() {
             const nameInput = document.getElementById('review-name-input');
             const userFirstName = tg.initDataUnsafe?.user?.first_name || "Гость";
@@ -1063,9 +1132,7 @@
         document.getElementById('nav-header').addEventListener('click', () => {
             tapCount++;
             if (tapCount >= 5) {
-                // ЗАДАЧА 3: Защита по ID
                 if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
-                
                 openAdmin(); 
                 tapCount = 0;
             }
@@ -1196,7 +1263,7 @@
             renderSubListItems();
         }
 
-        // --- ЗАДАЧА 2: ФУНКЦИИ МОДЕРАЦИИ ---
+        // --- ФУНКЦИИ МОДЕРАЦИИ ---
         function openModeration() {
             document.getElementById('admin-content-main').classList.add('hidden');
             document.getElementById('admin-content-moderation').classList.remove('hidden');
@@ -1207,7 +1274,6 @@
             const list = document.getElementById('moderation-list');
             list.innerHTML = '<div class="text-center mt-4"><div class="spinner relative left-1/2 -ml-5"></div></div>';
             
-            // Загружаем ВСЕ отзывы для возможности удаления одобренных
             db.collection('reviews').orderBy('date', 'desc').get().then(snap => {
                 list.innerHTML = '';
                 if(snap.empty) {
@@ -1225,7 +1291,6 @@
                     else pending.push(data);
                 });
 
-                // Функция рендера карточки
                 const renderCard = (r, isPending) => {
                     const card = document.createElement('div');
                     card.className = "guide-item-admin";
@@ -1256,7 +1321,6 @@
                     return card;
                 };
 
-                // Рендер ожидающих
                 if (pending.length > 0) {
                     const title = document.createElement('div');
                     title.className = "text-yellow-400 text-xs font-bold mb-2 uppercase tracking-widest mt-4";
@@ -1265,7 +1329,6 @@
                     pending.forEach(r => list.appendChild(renderCard(r, true)));
                 }
 
-                // Рендер одобренных
                 if (approved.length > 0) {
                     const title = document.createElement('div');
                     title.className = "text-green-400 text-xs font-bold mb-2 uppercase tracking-widest mt-6";
@@ -1296,10 +1359,9 @@
             }
         }
 
-        // --- МАГИЧЕСКАЯ ФУНКЦИЯ (ИСПРАВЛЕНА: ЗАЩИТА ОТ ЗАВИСАНИЯ, ДУБЛЕЙ И ПУСТЫШЕК) ---
+        // --- МАГИЧЕСКАЯ ФУНКЦИЯ ---
         async function magicPaste(itemIdx) {
             const btn = document.getElementById(`btn-magic-${itemIdx}`);
-            // 1. Блокировка повторного нажатия
             if(btn && btn.disabled) return;
 
             if(btn) {
@@ -1310,20 +1372,18 @@
             isParsing = true;
             updateSaveButtons();
             
-            // 2. Очистка полей
             const promptInput = document.getElementById(`prompt-area-${itemIdx}`);
-            if(promptInput) promptInput.value = ''; // Визуальная очистка
+            if(promptInput) promptInput.value = ''; 
             tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = "";
             tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = "";
             
             const textArea = document.getElementById(`magic-paste-${itemIdx}`);
             const raw = textArea.value.trim();
 
-            // Функция для показа ошибки на кнопке
             const showError = (msg) => {
                 if(btn) {
                     btn.innerText = msg;
-                    btn.style.color = '#ff4d4d'; // Красный текст
+                    btn.style.color = '#ff4d4d'; 
                     setTimeout(() => {
                         if(btn) {
                             btn.innerText = "🪄 Распознать";
@@ -1347,7 +1407,6 @@
             const embedUrl = tgLink + '?embed=1&mode=tme';
             const proxyUrl = 'https://api.allorigins.win/get?url=' + encodeURIComponent(embedUrl);
 
-            // 3. Таймаут 7 секунд
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 7000);
 
@@ -1402,15 +1461,14 @@
                 const wrapper = document.getElementById(`item-wrapper-${itemIdx}`);
                 if(wrapper) wrapper.classList.add('flash-success');
                 
-                // Успех - сбрасываем кнопку
                 isParsing = false;
                 updateSaveButtons();
 
             } catch (e) {
                 console.error(e);
-                clearTimeout(timeoutId); // Ensure timeout cleared on error
+                clearTimeout(timeoutId); 
                 if (e.name === 'AbortError') {
-                    showError("Долго отвечает, попробуй другую ссылку");
+                    showError("Долго отвечает");
                 } else {
                     showError("Ошибка загрузки");
                 }
@@ -1445,7 +1503,6 @@
 
                 const div = document.createElement('div');
                 div.className = "guide-item-admin";
-                // Добавляем ID для анимации
                 div.id = `item-wrapper-${idx}`;
 
                 if (isGalleryMode) {
@@ -1472,6 +1529,7 @@
                         ${imgPreview}
                         <input type="text" class="admin-input" value="${item.title || ''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
                         <input type="text" class="admin-input" value="${item.imageUrl || ''}" placeholder="Ссылка на картинку" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].imageUrl=this.value">
+                        <input type="text" class="admin-input" value="${item.category || ''}" placeholder="Категория (например: Фэнтези)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].category=this.value">
                         <textarea id="prompt-area-${idx}" class="admin-textarea" placeholder="Текст промпта..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt || ''}</textarea>
                     `;
                 } else {
@@ -1506,13 +1564,14 @@
         }
 
         function addNewSubItem() {
-            // ИСПОЛЬЗУЕМ UNSHIFT ДЛЯ ДОБАВЛЕНИЯ В НАЧАЛО (ИНВЕРСИЯ СПИСКА)
+            // ИСПОЛЬЗУЕМ UNSHIFT ДЛЯ ДОБАВЛЕНИЯ В НАЧАЛО
             tempAppData.mainMenu[currentEditingIndex].items.unshift({ 
                 title: 'Новый пункт', 
                 link: '', 
                 icon: '📄',
                 imageUrl: '',
-                prompt: ''
+                prompt: '',
+                category: ''
             });
             renderSubListItems();
         }
@@ -1528,7 +1587,6 @@
 
         async function saveAdminData() {
             if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
-            // Проверка блокировки
             if(isParsing) return tg.showAlert("Подождите завершения загрузки!");
             
             tempAppData.headerTitle = document.getElementById('admin-header-title').value;
