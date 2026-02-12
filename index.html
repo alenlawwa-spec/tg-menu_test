@@ -690,14 +690,22 @@
             <button onclick="saveAdminData()" id="btn-save-global" class="btn-save-cyber">Сохранить всё</button>
         </div>
 
-        <div id="admin-content-sublist" class="hidden z-10">
+        <div id="admin-content-sublist" class="hidden z-10 pb-24">
             <button onclick="backToMainAdmin()" class="text-gray-400 text-xs mb-4 flex items-center gap-2">‹ Назад</button>
+            
+            <!-- Sticky Save Button -->
+            <div class="sticky bottom-6 z-50">
+                 <button onclick="saveSubList()" id="btn-save-sub" class="btn-save-cyber shadow-2xl backdrop-blur-md border border-white/20" style="background: rgba(0, 242, 255, 0.2); color: #00f2ff; box-shadow: 0 0 20px rgba(0,242,255,0.2);">Готово (Save)</button>
+            </div>
+
             <div class="admin-card">
                 <div class="admin-section-title text-pink-500" id="admin-sublist-title">Редактор списка</div>
+                
+                <!-- NEW LOCATION: Add Button at TOP -->
+                <button onclick="addNewSubItem()" class="btn-add-cyber mb-4"><span>+</span> Добавить новый пункт СВЕРХУ</button>
+                
                 <div id="admin-sublist-items" class="space-y-4"></div>
-                <button onclick="addNewSubItem()" class="btn-add-cyber mt-4"><span>+</span> Добавить пункт</button>
             </div>
-            <button onclick="saveSubList()" id="btn-save-sub" class="btn-save-cyber">Готово</button>
         </div>
 
         <div id="admin-content-moderation" class="hidden z-10">
@@ -1498,7 +1506,8 @@
         }
 
         function addNewSubItem() {
-            tempAppData.mainMenu[currentEditingIndex].items.push({ 
+            // ИСПОЛЬЗУЕМ UNSHIFT ДЛЯ ДОБАВЛЕНИЯ В НАЧАЛО (ИНВЕРСИЯ СПИСКА)
+            tempAppData.mainMenu[currentEditingIndex].items.unshift({ 
                 title: 'Новый пункт', 
                 link: '', 
                 icon: '📄',
