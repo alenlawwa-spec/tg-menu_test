@@ -8,10 +8,10 @@
     <!-- Подключение Telegram WebApp (defer для скорости) -->
     <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
     
-    <!-- Подключение Firebase (defer для скорости) -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js" defer></script>
+    <!-- Подключение Firebase (Обновлено до 10.13.1) -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js" defer></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js" defer></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -887,6 +887,13 @@
                 firebase.initializeApp(firebaseConfig);
             }
             db = firebase.firestore();
+            
+            // --- FIX: Force Long Polling to avoid timeouts ---
+            db.settings({
+                experimentalForceLongPolling: true,
+                host: "firestore.googleapis.com",
+                ssl: true
+            });
             
             // --- ВАЖНО: ВКЛЮЧАЕМ OFFLINE PERSISTENCE ДО ЗАПРОСОВ ---
             try {
