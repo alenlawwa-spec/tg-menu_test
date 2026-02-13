@@ -8,10 +8,10 @@
     <!-- Подключение Telegram WebApp (defer для скорости) -->
     <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
     
-    <!-- Подключение Firebase (Обновлено до 10.13.1) -->
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-firestore-compat.js" defer></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-auth-compat.js" defer></script>
+    <!-- Подключение Firebase (ВЕРСИЯ 9.22.0 ПО ЗАПРОСУ) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -593,8 +593,6 @@
     <canvas id="compress-canvas" style="display: none;"></canvas>
 
     <script>
-        const ADMIN_ID = 758556732; 
-        
         let isParsing = false;
         let tg;
         let availableCategories = new Set();
@@ -609,14 +607,14 @@
             { id: 'book', svg: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>' },
             { id: 'zap', svg: '<path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>' },
             { id: 'instagram', svg: '<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>' },
-            { id: 'youtube', svg: '<path d="M2.5 17C2.5 17 2.5 7 2.5 7C2.5 5.34315 3.84315 4 5.5 4H18.5C20.1569 4 21.5 5.34315 21.5 7V17C21.5 18.6569 20.1569 20 18.5 20H5.5C3.84315 20 2.5 18.6569 2.5 17ZM10 8V16L16 12L10 8Z" fill="currentColor"/>' }, // Official Youtube shape
+            { id: 'youtube', svg: '<path d="M2.5 17C2.5 17 2.5 7 2.5 7C2.5 5.34315 3.84315 4 5.5 4H18.5C20.1569 4 21.5 5.34315 21.5 7V17C21.5 18.6569 20.1569 20 18.5 20H5.5C3.84315 20 2.5 18.6569 2.5 17ZM10 8V16L16 12L10 8Z" fill="currentColor"/>' }, 
             { id: 'telegram', svg: '<path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75c-.92.376-.91 1.055-.16 1.43l4.33 1.353 10.033-6.326c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.438-.448 1.4.217 1.6-.758l2.9-13.68c.273-1.08-.41-1.574-1.108-1.23z"></path>' },
             { id: 'globe', svg: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>' },
             { id: 'gift', svg: '<polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>' },
             { id: 'award', svg: '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>' },
-            { id: 'vk', svg: '<path d="M15.07 2H8.93C5.1 2 2 5.1 2 8.93V15.07C2 18.9 5.1 22 8.93 22H15.07C18.9 22 22 18.9 22 15.07V8.93C22 5.1 18.9 2 15.07 2ZM17.44 14.53C17.7 14.79 17.7 15.19 17.44 15.44C17.18 15.7 16.79 15.7 16.53 15.44L14.75 13.66C14.28 13.19 13.52 13.19 13.05 13.66C12.58 14.13 12.58 14.89 13.05 15.36L14.5 16.81C14.89 17.2 14.89 17.84 14.5 18.23C14.11 18.62 13.48 18.62 13.09 18.23L11.5 16.64C9.55 14.69 9.55 11.53 11.5 9.58L15.36 5.72C15.75 5.33 16.39 5.33 16.78 5.72C17.17 6.11 17.17 6.74 16.78 7.13L13.66 10.25C13.19 10.72 13.19 11.48 13.66 11.95C14.13 12.42 14.89 12.42 15.36 11.95L17.44 9.87C17.7 9.61 18.1 9.61 18.36 9.87C18.62 10.13 18.62 10.52 18.36 10.78L17.44 14.53Z" fill="currentColor"/>' }, // More accurate path
-            { id: 'rutube', svg: '<path d="M4 12C4 7.58172 7.58172 4 12 4H19C19.5523 4 20 4.44772 20 5V12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12Z" fill="currentColor"/><path d="M10 9L15 12L10 15V9Z" fill="black"/>' }, // Better Rutube
-            { id: 'shopping-bag', svg: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>' } // New!
+            { id: 'vk', svg: '<path d="M15.07 2H8.93C5.1 2 2 5.1 2 8.93V15.07C2 18.9 5.1 22 8.93 22H15.07C18.9 22 22 18.9 22 15.07V8.93C22 5.1 18.9 2 15.07 2ZM17.44 14.53C17.7 14.79 17.7 15.19 17.44 15.44C17.18 15.7 16.79 15.7 16.53 15.44L14.75 13.66C14.28 13.19 13.52 13.19 13.05 13.66C12.58 14.13 12.58 14.89 13.05 15.36L14.5 16.81C14.89 17.2 14.89 17.84 14.5 18.23C14.11 18.62 13.48 18.62 13.09 18.23L11.5 16.64C9.55 14.69 9.55 11.53 11.5 9.58L15.36 5.72C15.75 5.33 16.39 5.33 16.78 5.72C17.17 6.11 17.17 6.74 16.78 7.13L13.66 10.25C13.19 10.72 13.19 11.48 13.66 11.95C14.13 12.42 14.89 12.42 15.36 11.95L17.44 9.87C17.7 9.61 18.1 9.61 18.36 9.87C18.62 10.13 18.62 10.52 18.36 10.78L17.44 14.53Z" fill="currentColor"/>' }, 
+            { id: 'rutube', svg: '<path d="M4 12C4 7.58172 7.58172 4 12 4H19C19.5523 4 20 4.44772 20 5V12C20 16.4183 16.4183 20 12 20C7.58172 20 4 16.4183 4 12Z" fill="currentColor"/><path d="M10 9L15 12L10 15V9Z" fill="black"/>' }, 
+            { id: 'shopping-bag', svg: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>' } 
         ];
 
         const COLOR_LIBRARY = [
@@ -625,27 +623,45 @@
             { id: 'text-green-400', hex: '#39ff14' },
             { id: 'text-yellow-400', hex: '#ffea00' },
             { id: 'text-white', hex: '#ffffff' },
-            { id: 'text-purple', hex: '#6a0dad' }, // New
-            { id: 'text-deep-blue', hex: '#00008b' }, // New
-            { id: 'text-orange', hex: '#ff8c00' }  // New
+            { id: 'text-purple', hex: '#6a0dad' },
+            { id: 'text-deep-blue', hex: '#00008b' },
+            { id: 'text-orange', hex: '#ff8c00' }
         ];
 
+        // 2. Твой личный конфиг (который ты прислала)
         const firebaseConfig = {
-            apiKey: "AIzaSyCiYBslwEecbyuMyW5J05nvTs_sXLlurR4",
-            authDomain: "tg-menu.firebaseapp.com",
-            projectId: "tg-menu",
-            storageBucket: "tg-menu.firebasestorage.app",
-            messagingSenderId: "754545603793",
-            appId: "1:754545603793:web:a466fd9b21a298a69d41f0"
+          apiKey: "AIzaSyCiYBslwEecbyuMyW5J05nvTs_sXLlurR4",
+          authDomain: "tg-menu.firebaseapp.com",
+          projectId: "tg-menu",
+          storageBucket: "tg-menu.firebasestorage.app",
+          messagingSenderId: "754545603793",
+          appId: "1:754545603793:web:a466fd9b21a298a69d41f0"
         };
+        
+        // 3. Инициализация
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const ADMIN_ID = 758556732;
+        
+        // 4. ГЛАВНОЕ: Вход и запуск приложения
+        auth.signInAnonymously()
+          .then(() => {
+            console.log("Авторизация успешна!");
+            // Только ПОСЛЕ входа запускаем слушателей базы данных
+            initAppLogic();
+          })
+          .catch((error) => {
+            console.error("Ошибка входа:", error);
+            alert("База данных недоступна. Проверь интернет!");
+          });
 
         const configDocId = "main_nav_v4_pro"; 
-        let db, auth;
         let appData = { headerTitle: "Навигация", headerSubtitle: "Твой проводник", mainMenu: [] };
 
         document.addEventListener('DOMContentLoaded', () => {
             initTelegram();
-            initApp();
+            // initApp logic removed as it's now handled by the new auth flow above
         });
 
         function initTelegram() {
@@ -675,8 +691,8 @@
             }
         }
 
-        async function initApp() {
-            // МГНОВЕННАЯ ЗАГРУЗКА ИЗ КЭША
+        function initAppLogic() {
+            // МГНОВЕННАЯ ЗАГРУЗКА ИЗ КЭША (Сохраняем старую логику здесь)
             const cachedData = localStorage.getItem('cyber_nav_cache_' + configDocId);
             if (cachedData) {
                 try {
@@ -684,20 +700,7 @@
                     updateUI();
                     console.log("Cache loaded.");
                 } catch(e) { console.error("Cache error", e); }
-            } else {
-                // Если кэша нет, скелетоны уже в HTML
             }
-
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            
-            // FORCE LONG POLLING
-            db.settings({ experimentalForceLongPolling: true, host: "firestore.googleapis.com", ssl: true });
-            
-            try { await db.enablePersistence({ synchronizeTabs: true }); } catch (err) {}
-            
-            auth = firebase.auth();
-            auth.signInAnonymously().catch(e => console.error(e));
             
             db.collection('configs').doc(configDocId).onSnapshot((doc) => {
                 // ПРОВЕРКА ИСТОЧНИКА ДАННЫХ ДЛЯ ИНДИКАТОРА
@@ -1262,6 +1265,7 @@
         }
         function closeAdmin() { document.getElementById('admin-page').classList.replace('active-modal', 'hidden-bottom'); }
 
+        // 5. ПРИМЕР правильной функции сохранения (для Канваса)
         async function saveAdminData() {
             if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
             
@@ -1275,13 +1279,21 @@
             tempAppData.headerSubtitle = document.getElementById('admin-header-subtitle').value;
 
             try {
+                // ВСЕГДА добавляем твой ID, иначе новые правила не пропустят!
+                const secureData = {
+                  ...tempAppData,
+                  adminId: ADMIN_ID, 
+                  updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                };
+                
                 // ПРИНУДИТЕЛЬНАЯ ЗАПИСЬ С ТАЙМАУТОМ (RACE)
-                const savePromise = db.collection('configs').doc(configDocId).set(tempAppData);
+                const savePromise = db.collection('configs').doc(configDocId).set(secureData, { merge: true });
                 const timeoutPromise = new Promise((_, reject) => 
                     setTimeout(() => reject(new Error("Timeout")), 7000)
                 );
                 
                 await Promise.race([savePromise, timeoutPromise]);
+                console.log("Сохранено успешно! ✨");
                 
                 btns.forEach(b => { 
                     b.innerText = "Успешно сохранено! ✅"; 
@@ -1296,8 +1308,8 @@
                 }, 1500);
 
             } catch (error) {
-                console.error("Save error:", error);
-                alert("ОШИБКА СИНХРОНИЗАЦИИ! 🔴\nДанные не ушли в облако. Проверьте интернет и нажмите красную точку для перезапуска.");
+                console.error("Ошибка сохранения:", error);
+                alert("У тебя нет прав на редактирование!");
                 btns.forEach(b => { b.disabled = false; b.innerText = "Ошибка! Повторить"; b.style.background = "#ff4d4d"; });
             }
         }
