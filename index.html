@@ -636,6 +636,131 @@
             text-shadow: 0 0 10px var(--neon-yellow);
         }
 
+        /* --- НОВЫЕ СТИЛИ ДЛЯ ТОВАРОВ (PRODUCTS) --- */
+        .product-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.2s;
+        }
+        .product-card:active { transform: scale(0.97); }
+
+        .product-image {
+            width: 100%;
+            aspect-ratio: 1/1;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .product-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            backdrop-filter: blur(4px);
+            z-index: 2;
+        }
+        .badge-sold { background: rgba(0, 0, 0, 0.6); color: #aaa; border: 1px solid #555; }
+        .badge-wait { background: rgba(255, 165, 0, 0.2); color: orange; border: 1px solid orange; }
+        .badge-order { background: rgba(0, 242, 255, 0.2); color: var(--neon-color); border: 1px solid var(--neon-color); }
+
+        .product-info {
+            padding: 12px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-title {
+            font-weight: 600;
+            font-size: 13px;
+            line-height: 1.3;
+            margin-bottom: 4px;
+            color: white;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-desc-short {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 4;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .price-block {
+            margin-top: auto;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .price-new {
+            color: var(--neon-color);
+            font-weight: 700;
+            font-size: 15px;
+        }
+        .price-old {
+            color: #555;
+            font-size: 11px;
+            text-decoration: line-through;
+        }
+
+        /* Modal Product Slider */
+        .product-slider {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+        .product-slider::-webkit-scrollbar { display: none; }
+        
+        .product-slide {
+            flex: 0 0 100%;
+            scroll-snap-align: center;
+            border-radius: 16px;
+            overflow: hidden;
+            aspect-ratio: 1/1;
+            background: #000;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .product-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover; /* Или contain, если надо целиком */
+        }
+        
+        #product-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(5,5,8,0.98);
+            z-index: 250;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            padding: 0;
+            overflow-y: auto;
+        }
+        #product-modal.active-modal { transform: translateY(0); }
+
     </style>
 </head>
 <body>
@@ -683,6 +808,39 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 Копировать промпт ✨
             </button>
+        </div>
+    </div>
+
+    <!-- NEW PRODUCT MODAL -->
+    <div id="product-modal">
+        <div class="relative w-full h-full flex flex-col">
+            <button onclick="closeProductModal()" class="absolute top-4 right-4 z-50 w-8 h-8 bg-black/50 rounded-full text-white flex items-center justify-center backdrop-blur-md">✕</button>
+            
+            <div class="p-4 pb-0 flex-shrink-0">
+                <div class="product-slider" id="product-modal-slider">
+                    <!-- Слайды JS -->
+                </div>
+                <div class="text-center text-[10px] text-gray-500 mt-2">Листай фото →</div>
+            </div>
+
+            <div class="flex-grow p-5 flex flex-col overflow-y-auto">
+                <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1"></h2>
+                
+                <div class="flex items-baseline gap-3 mb-4">
+                    <span id="product-modal-price" class="text-xl text-[#00f2ff] font-bold"></span>
+                    <span id="product-modal-old-price" class="text-sm text-gray-500 line-through"></span>
+                </div>
+
+                <div class="w-full h-[1px] bg-white/10 mb-4"></div>
+
+                <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap pb-20"></p>
+            </div>
+
+            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent">
+                <button id="product-buy-btn" class="btn-save-cyber shadow-[0_0_20px_rgba(0,242,255,0.3)]">
+                    <!-- Text via JS -->
+                </button>
+            </div>
         </div>
     </div>
 
@@ -838,8 +996,12 @@
                 // Set up back button listener
                 tg.BackButton.onClick(() => {
                     const galleryModal = document.getElementById('gallery-modal');
+                    const productModal = document.getElementById('product-modal');
+                    
                     if (galleryModal.classList.contains('active-modal')) {
                         closeGalleryModal();
+                    } else if (productModal.classList.contains('active-modal')) {
+                        closeProductModal();
                     } else {
                         hideSubPage();
                     }
@@ -947,7 +1109,7 @@
             const container = document.getElementById('main-menu-container');
             container.innerHTML = '';
             (appData.mainMenu || []).forEach((btn) => {
-                const isComplexMode = btn.mode === 'list' || btn.mode === 'gallery' || btn.mode === 'reviews';
+                const isComplexMode = btn.mode === 'list' || btn.mode === 'gallery' || btn.mode === 'reviews' || btn.mode === 'products';
                 
                 const btnEl = document.createElement('div');
                 btnEl.className = 'glass-card p-4 flex items-center cursor-pointer';
@@ -1068,6 +1230,12 @@
                 container.appendChild(gridContainer);
                 renderGalleryItems(allItems, gridContainer);
             } 
+            else if (btnData.mode === 'products') {
+                const gridContainer = document.createElement('div');
+                gridContainer.className = 'gallery-grid pb-24'; // Reuse gallery grid structure (2 col)
+                container.appendChild(gridContainer);
+                renderProductItems(btnData.items || [], gridContainer);
+            }
             else if (btnData.mode === 'reviews') {
                 container.className = 'flex flex-col pb-20';
                 const btn = document.createElement('button');
@@ -1124,6 +1292,49 @@
                     ${overlay}
                 `;
                 container.appendChild(itemEl);
+            });
+        }
+        
+        // --- РЕНДЕР ТОВАРОВ (PRODUCTS) ---
+        function renderProductItems(items, container) {
+            container.innerHTML = '';
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'product-card cursor-pointer animate-pulse-enter';
+                card.onclick = () => openProductModal(item);
+
+                // Badge Logic
+                let badgeHtml = '';
+                if(item.status === 'sold') badgeHtml = `<div class="product-badge badge-sold">Продано</div>`;
+                else if(item.status === 'wait') badgeHtml = `<div class="product-badge badge-wait">Ожидается</div>`;
+                else if(item.status === 'order') badgeHtml = `<div class="product-badge badge-order">Под заказ</div>`;
+
+                // Price Logic
+                let priceHtml = '';
+                if(item.oldPrice) {
+                    priceHtml = `
+                        <div class="price-block">
+                            <span class="price-new">${item.price}</span>
+                            <span class="price-old">${item.oldPrice}</span>
+                        </div>
+                    `;
+                } else {
+                    priceHtml = `<div class="price-block"><span class="price-new">${item.price}</span></div>`;
+                }
+
+                // Main Image (first in array or single field)
+                const mainImg = (item.images && item.images.length > 0) ? item.images[0] : item.imageUrl;
+
+                card.innerHTML = `
+                    ${badgeHtml}
+                    <img src="${mainImg || 'https://placehold.co/400'}" class="product-image" loading="lazy">
+                    <div class="product-info">
+                        <div class="product-title">${escapeHtml(item.title)}</div>
+                        <div class="product-desc-short">${escapeHtml(item.description)}</div>
+                        ${priceHtml}
+                    </div>
+                `;
+                container.appendChild(card);
             });
         }
 
@@ -1264,6 +1475,60 @@
             }, 300);
         }
 
+        // --- PRODUCT MODAL LOGIC ---
+        function openProductModal(item) {
+            tg.HapticFeedback.impactOccurred('medium');
+            
+            // Populate Content
+            document.getElementById('product-modal-title').textContent = item.title;
+            document.getElementById('product-modal-desc').textContent = item.fullDescription || item.description;
+            
+            // Price
+            document.getElementById('product-modal-price').textContent = item.price;
+            const oldPriceEl = document.getElementById('product-modal-old-price');
+            if (item.oldPrice) {
+                oldPriceEl.textContent = item.oldPrice;
+                oldPriceEl.style.display = 'inline';
+            } else {
+                oldPriceEl.style.display = 'none';
+            }
+
+            // Slider
+            const slider = document.getElementById('product-modal-slider');
+            slider.innerHTML = '';
+            const images = (item.images && item.images.length > 0) ? item.images : [item.imageUrl];
+            
+            images.forEach(imgUrl => {
+                if(!imgUrl) return;
+                const slide = document.createElement('div');
+                slide.className = 'product-slide';
+                slide.innerHTML = `<img src="${imgUrl}" loading="lazy">`;
+                slider.appendChild(slide);
+            });
+
+            // Button
+            const btn = document.getElementById('product-buy-btn');
+            btn.textContent = item.buttonText || "Купить";
+            btn.onclick = () => {
+                tg.HapticFeedback.notificationOccurred('success');
+                // Open telegram DM with preset text
+                if (item.buttonLink) {
+                    const cleanLink = item.buttonLink.replace('https://t.me/', '').replace('@', '');
+                    const text = `Привет! Хочу заказать: ${item.title}`;
+                    const fullUrl = `https://t.me/${cleanLink}?text=${encodeURIComponent(text)}`;
+                    tg.openTelegramLink(fullUrl);
+                } else {
+                    tg.showAlert("Связь с продавцом не настроена");
+                }
+            };
+
+            document.getElementById('product-modal').classList.add('active-modal');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.remove('active-modal');
+        }
+
         function copyCurrentPrompt() {
             const text = document.getElementById('modal-prompt-text').textContent;
             navigator.clipboard.writeText(text).then(() => {
@@ -1319,6 +1584,7 @@
 
                 let editBtnText = "Редактировать список";
                 if (btn.mode === 'gallery') editBtnText = "Редактировать ГАЛЕРЕЮ 🎨";
+                if (btn.mode === 'products') editBtnText = "Редактировать ТОВАРЫ 🛍️";
                 if (btn.mode === 'reviews') editBtnText = "Настройка не требуется (AUTO)";
 
                 div.innerHTML = `
@@ -1340,7 +1606,8 @@
                     <select class="admin-select" onchange="tempAppData.mainMenu[${idx}].mode=this.value; renderAdminMainMenu();">
                         <option value="link" ${btn.mode==='link'?'selected':''}>Ссылка</option>
                         <option value="list" ${btn.mode==='list'?'selected':''}>Список (Меню)</option>
-                        <option value="gallery" ${btn.mode==='gallery'?'selected':''}>Галерея</option> <!-- ПЕРЕИМЕНОВАНО -->
+                        <option value="gallery" ${btn.mode==='gallery'?'selected':''}>Галерея</option>
+                        <option value="products" ${btn.mode==='products'?'selected':''}>Витрина Товаров 🛍️</option> <!-- NEW -->
                         <option value="reviews" ${btn.mode==='reviews'?'selected':''}>⭐ ОТЗЫВЫ (LIVE)</option>
                     </select>
 
@@ -1462,16 +1729,32 @@
             const file = input.files[0];
             if (!file) return;
             
-            const btn = input.previousElementSibling; // Кнопка "Загрузить фото" рядом не всегда есть, но мы изменим UI
             // Визуально покажем загрузку в input
-            
             compressImage(file, (base64) => {
-                // Проверка размера (строгий лимит Firestore ~1MB на весь док)
                 if (base64.length > 700000) {
-                   alert("Картинка слишком сложная даже после сжатия. Выберите попроще.");
+                   alert("Картинка слишком сложная. Выберите попроще.");
                    return;
                 }
-                tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = base64;
+                
+                const parentMode = tempAppData.mainMenu[currentEditingIndex].mode;
+                
+                if (parentMode === 'products') {
+                    // Logic for multiple images in products
+                    // input id format: file-prod-${itemIdx}-${imgSlotIdx}
+                    const slot = input.dataset.slot; 
+                    if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) {
+                        tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
+                    }
+                    // Ensure array is big enough
+                    while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) {
+                         tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
+                    }
+                    tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = base64;
+                } else {
+                    // Default logic (Gallery)
+                    tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = base64;
+                }
+                
                 renderSubListItems();
             });
         }
@@ -1611,6 +1894,7 @@
             const parentBtn = tempAppData.mainMenu[currentEditingIndex];
             const items = parentBtn.items || [];
             const isGalleryMode = parentBtn.mode === 'gallery';
+            const isProductMode = parentBtn.mode === 'products';
             
             // ДОБАВЛЕН БЛОК УПРАВЛЕНИЯ КАТЕГОРИЯМИ ЕСЛИ ГАЛЕРЕЯ
             if(isGalleryMode) {
@@ -1636,7 +1920,65 @@
                 div.className = "guide-item-admin";
                 div.id = `item-wrapper-${idx}`;
 
-                if (isGalleryMode) {
+                if (isProductMode) {
+                    // --- ADMIN FOR PRODUCTS ---
+                    const images = item.images || [];
+                    let imgPreviews = '';
+                    for(let i=0; i<3; i++) {
+                        const bg = images[i] ? `background-image: url('${images[i]}')` : '';
+                        imgPreviews += `
+                            <div class="relative w-16 h-16 bg-black/40 border border-white/20 rounded flex items-center justify-center overflow-hidden bg-cover bg-center" style="${bg}">
+                                <input type="file" data-slot="${i}" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileUpload(this, ${idx})">
+                                ${!images[i] ? '<span class="text-xs opacity-50">+</span>' : ''}
+                            </div>
+                        `;
+                    }
+
+                    div.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                             <span class="text-[10px] text-purple-400 font-bold">PRODUCT ${idx+1}</span>
+                             <div class="flex gap-2">
+                                ${upBtn} ${downBtn}
+                                <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
+                             </div>
+                        </div>
+                        
+                        <div class="flex gap-2 mb-2">
+                             ${imgPreviews}
+                        </div>
+                        <div class="text-[9px] text-gray-500 mb-2">Нажми на квадрат, чтобы загрузить (до 3 фото)</div>
+
+                        <input type="text" class="admin-input" value="${item.title || ''}" placeholder="Название товара" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
+                        
+                        <div class="flex gap-2">
+                            <input type="text" class="admin-input" value="${item.price || ''}" placeholder="Цена (1000 ₽)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].price=this.value">
+                            <input type="text" class="admin-input" value="${item.oldPrice || ''}" placeholder="Старая цена (необяз.)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].oldPrice=this.value">
+                        </div>
+
+                        <textarea class="admin-textarea h-16" placeholder="Краткое описание (на витрину)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].description=this.value">${item.description || ''}</textarea>
+                        <textarea class="admin-textarea h-24" placeholder="Полное описание (в карточке)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].fullDescription=this.value">${item.fullDescription || ''}</textarea>
+
+                        <div class="flex gap-2 mt-2">
+                            <div class="flex-1">
+                                <label class="admin-label">Статус</label>
+                                <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].status=this.value">
+                                    <option value="" ${!item.status ? 'selected' : ''}>В наличии</option>
+                                    <option value="sold" ${item.status === 'sold' ? 'selected' : ''}>Продано</option>
+                                    <option value="wait" ${item.status === 'wait' ? 'selected' : ''}>Ожидается</option>
+                                    <option value="order" ${item.status === 'order' ? 'selected' : ''}>Под заказ</option>
+                                </select>
+                            </div>
+                            <div class="flex-1">
+                                <label class="admin-label">Текст кнопки</label>
+                                <input type="text" class="admin-input" value="${item.buttonText || 'Купить'}" placeholder="Купить" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].buttonText=this.value">
+                            </div>
+                        </div>
+                        
+                        <label class="admin-label">Telegram Username продавца (без @)</label>
+                        <input type="text" class="admin-input" value="${item.buttonLink || ''}" placeholder="username" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].buttonLink=this.value">
+                    `;
+
+                } else if (isGalleryMode) {
                     const imgPreview = item.imageUrl ? 
                         `<div class="mb-2 mt-2 w-full h-32 bg-black rounded-lg overflow-hidden border border-white/10 relative">
                             <img src="${item.imageUrl}" class="w-full h-full object-contain">
@@ -1720,16 +2062,35 @@
         }
 
         function addNewSubItem() {
+            const parentMode = tempAppData.mainMenu[currentEditingIndex].mode;
+            let newItem = {};
+
+            if (parentMode === 'products') {
+                newItem = {
+                    title: 'Новый товар',
+                    description: '',
+                    fullDescription: '',
+                    price: '',
+                    oldPrice: '',
+                    status: '', // 'sold', 'wait', 'order'
+                    images: [], // array of base64
+                    buttonText: 'Купить',
+                    buttonLink: ''
+                };
+            } else {
+                 newItem = { 
+                    title: 'Новый пункт', 
+                    link: '', 
+                    icon: '📄',
+                    imageUrl: '',
+                    prompt: '',
+                    category: '',
+                    tgLink: ''
+                };
+            }
+            
             // ИСПОЛЬЗУЕМ UNSHIFT ДЛЯ ДОБАВЛЕНИЯ В НАЧАЛО
-            tempAppData.mainMenu[currentEditingIndex].items.unshift({ 
-                title: 'Новый пункт', 
-                link: '', 
-                icon: '📄',
-                imageUrl: '',
-                prompt: '',
-                category: '',
-                tgLink: ''
-            });
+            tempAppData.mainMenu[currentEditingIndex].items.unshift(newItem);
             renderSubListItems();
         }
 
