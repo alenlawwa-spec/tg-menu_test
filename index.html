@@ -53,6 +53,21 @@
             user-select: text;
         }
 
+        /* UPLOAD PROGRESS STYLES */
+        .upload-progress {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
+            align-items: center; justify-content: center; z-index: 10;
+            backdrop-filter: blur(2px); pointer-events: none;
+        }
+        .progress-bar-bg {
+            width: 80%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; background: var(--neon-color); width: 0%; transition: width 0.2s linear;
+        }
+        .progress-text { font-size: 9px; color: var(--neon-color); margin-top: 4px; font-weight: bold; }
+
         .bg-glow {
             position: fixed;
             top: 0;
@@ -645,7 +660,6 @@
         let isParsing = false;
         let tg;
         let availableCategories = new Set();
-        let activeUploads = 0; // Добавили счетчик активных загрузок
         const ADMIN_ID = 758556732;
 
         document.addEventListener('contextmenu', event => event.preventDefault());
@@ -1217,7 +1231,7 @@
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
                     
-                    const MAX_SIDE = 1000; // ОБНОВЛЕНО: лимит 1000px
+                    const MAX_SIDE = 800; // ЖЕСТКОЕ СЖАТИЕ ДО 800PX
                     if (w > h) {
                         if (w > MAX_SIDE) { h = Math.round(h * (MAX_SIDE / w)); w = MAX_SIDE; }
                     } else {
@@ -1226,57 +1240,112 @@
 
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
                     
-                    callback(canvas.toDataURL('image/jpeg', 0.8)); // ОБНОВЛЕНО: качество 0.8
+                    callback(canvas.toDataURL('image/jpeg', 0.7)); // ЖЕСТКОЕ СЖАТИЕ КАЧЕСТВА 0.7
                 };
             };
         }
 
-        // НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В STORAGE
-        function uploadImageToStorage(base64String, callback) {
+        // НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В STORAGE С ПРОГРЕССОМ
+        function uploadImageToStorage(base64String, onProgress, onSuccess, onError) {
             const ref = storage.ref().child('uploads/' + Date.now() + '_' + Math.floor(Math.random() * 1000) + '.jpg');
-            ref.putString(base64String, 'data_url').then(snapshot => {
-                snapshot.ref.getDownloadURL().then(url => {
-                    callback(url);
-                });
-            }).catch(error => {
-                console.error("Upload error:", error);
-                activeUploads--; // Уменьшаем счетчик при ошибке
-                tg.showAlert("Не удалось загрузить фото в облако!");
-            });
+            const uploadTask = ref.putString(base64String, 'data_url');
+
+            // Timeout logic: Если за 60 секунд не загрузилось - ошибка
+            const timeoutId = setTimeout(() => {
+                uploadTask.cancel();
+                onError(new Error("Timeout: Загрузка длилась более 60 секунд."));
+            }, 60000);
+
+            uploadTask.on('state_changed', 
+                (snapshot) => {
+                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                    onProgress(progress);
+                }, 
+                (error) => {
+                    clearTimeout(timeoutId);
+                    onError(error);
+                }, 
+                () => {
+                    clearTimeout(timeoutId);
+                    uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
+                        onSuccess(downloadURL);
+                    });
+                }
+            );
         }
 
         function handleFileUpload(input, idx) {
-            const file = input.files[0]; if (!file) return;
-            
-            // Больше не блокируем кнопки, просто считаем загрузки
-            activeUploads++;
+            const file = input.files[0]; 
+            if (!file) return;
+
+            // UI Elements: Добавляем прогресс бар в текущий контейнер
+            const container = input.parentElement;
+            const existingOverlay = container.querySelector('.upload-progress');
+            if(existingOverlay) existingOverlay.remove();
+
+            const overlay = document.createElement('div');
+            overlay.className = 'upload-progress';
+            overlay.innerHTML = `
+                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 0%"></div></div>
+                <div class="progress-text">0%</div>
+            `;
+            container.appendChild(overlay);
+
+            const bar = overlay.querySelector('.progress-bar-fill');
+            const txt = overlay.querySelector('.progress-text');
+
+            // Блокируем кнопки
+            const btnGlobal = document.getElementById('btn-save-global');
+            const btnSub = document.getElementById('btn-save-sub');
+            if(btnGlobal) { btnGlobal.disabled = true; btnGlobal.innerText = "⏳ Загрузка фото..."; }
+            if(btnSub) { btnSub.disabled = true; btnSub.innerText = "⏳ Загрузка фото..."; }
 
             compressImage(file, (base64) => {
-                // 1. СРАЗУ ПОКАЗЫВАЕМ ПРЕВЬЮ (чтобы картинка появилась мгновенно)
-                const mode = tempAppData.mainMenu[currentEditingIndex].mode;
-                const setImg = (val) => {
-                    if (mode === 'products' || mode === 'gallery') {
+                uploadImageToStorage(base64, 
+                    (percent) => {
+                        bar.style.width = percent + '%';
+                        txt.textContent = Math.round(percent) + '%';
+                    },
+                    (url) => {
+                        // Success Handler
+                        const mode = tempAppData.mainMenu[currentEditingIndex].mode;
                         const slot = input.dataset.slot;
-                        if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
-                        while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
-                        tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = val;
-                        if(mode === 'gallery' && slot == 0) tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = val;
-                    } else {
-                        tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = val;
+
+                        if (mode === 'products' || mode === 'gallery') {
+                            if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) 
+                                tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
+                            
+                            while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) 
+                                tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
+                            
+                            tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = url;
+                            
+                            if(mode === 'gallery' && slot == 0) 
+                                tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = url;
+                        } else {
+                            tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = url;
+                        }
+
+                        // Сразу показываем фото
+                        container.style.backgroundImage = `url('${url}')`;
+                        overlay.remove();
+
+                        // Разблокируем кнопки
+                        if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
+                        if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
+                    },
+                    (error) => {
+                        // Error Handler
+                        console.error(error);
+                        overlay.remove();
+                        tg.showAlert("Ошибка загрузки: " + error.message);
+                        input.value = ''; // Сброс инпута
+                        
+                        // Разблокируем кнопки
+                        if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
+                        if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
                     }
-                };
-
-                setImg(base64); // Ставим Base64 для моментального отображения
-                renderSubListItems(); // Обновляем вид
-
-                // 2. ЗАПУСКАЕМ ЗАГРУЗКУ В ФОНЕ
-                uploadImageToStorage(base64, (downloadUrl) => {
-                    setImg(downloadUrl); // Заменяем Base64 на реальную ссылку
-                    activeUploads--; // Загрузка завершена
-                    // Можно не перерисовывать, если пользователь пишет текст, но для надежности данных обновим
-                    // renderSubListItems(); // <-- Если это сбивает фокус ввода, можно убрать, данные и так обновятся в памяти
-                    console.log("Фото загружено: " + downloadUrl);
-                });
+                );
             });
         }
 
@@ -1433,12 +1502,6 @@
         async function saveAdminData() {
             if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
             
-            // ПРОВЕРКА: Если фото еще грузятся, не даем сохранить, но не блокируем интерфейс
-            if (activeUploads > 0) {
-                tg.showAlert("⏳ Фото еще загружается в облако. Подождите пару секунд и нажмите снова!");
-                return;
-            }
-
             const btnGlobal = document.getElementById('btn-save-global');
             const btnSub = document.getElementById('btn-save-sub');
             const btns = [btnGlobal, btnSub].filter(b => b);
