@@ -1137,10 +1137,11 @@
                     const canvas = document.getElementById('compress-canvas');
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
-                    // Task 5: 1200px and 0.8 quality
-                    if (w > 1200) { h = Math.round(h * (1200 / w)); w = 1200; }
+                    // ИЗМЕНЕНО: Сжатие до 800px (было 1200) для уменьшения веса
+                    if (w > 800) { h = Math.round(h * (800 / w)); w = 800; }
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
-                    callback(canvas.toDataURL('image/jpeg', 0.8));
+                    // ИЗМЕНЕНО: Качество 0.6 (было 0.8) для уменьшения веса
+                    callback(canvas.toDataURL('image/jpeg', 0.6));
                 };
             };
         }
@@ -1148,6 +1149,7 @@
         function handleFileUpload(input, idx) {
             const file = input.files[0]; if (!file) return;
             compressImage(file, (base64) => {
+                // Оставляем локальную проверку, но теперь она будет проходить легче из-за сжатия
                 if (base64.length > 700000) { alert("Картинка слишком большая"); return; }
                 const mode = tempAppData.mainMenu[currentEditingIndex].mode;
                 if (mode === 'products') {
@@ -1325,6 +1327,21 @@
                     ...tempAppData,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
+
+                // --- ЗАЩИТА ОТ ПЕРЕПОЛНЕНИЯ (НОВАЯ ЛОГИКА) ---
+                // Проверяем примерный размер JSON-строки
+                const dataString = JSON.stringify(secureData);
+                if (dataString.length > 900000) { // Лимит 900Кб
+                    tg.showAlert("Фото всё ещё слишком большое, выбери другое!");
+                    btns.forEach(b => { 
+                        b.disabled = false; 
+                        b.innerText = "Превышен лимит размера!"; 
+                        b.style.background = "#ff4d4d"; 
+                    });
+                    return; // Прерываем сохранение
+                }
+                // ----------------------------------------------
+
                 console.log("Отправляю данные:", secureData); // Для отладки
                 // Сохраняем с merge, чтобы не затереть лишнее
                 const savePromise = db.collection('configs').doc(configDocId).set(secureData, { merge: true });
