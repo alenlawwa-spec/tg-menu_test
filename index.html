@@ -26,17 +26,17 @@
         html, body {
             overscroll-behavior: none !important;
             touch-action: pan-y !important;
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background: #050505;
             color: white;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
             margin: 0;
-            position: fixed;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -138,7 +138,7 @@
             margin: 0 auto;
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
             overflow-y: auto;
-            overscroll-behavior-y: contain; 
+            overscroll-behavior: none; /* ЖЕСТКИЙ СКРОЛЛ */
             padding: calc(24px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom));
             -webkit-overflow-scrolling: touch;
             display: flex;
@@ -375,6 +375,12 @@
             position: absolute; top: 8px; right: 8px; padding: 4px 8px;
             border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase;
             backdrop-filter: blur(8px); z-index: 2; border: 1px solid rgba(255,255,255,0.1);
+            /* ПРАВКА: ОДИНАКОВЫЙ РАЗМЕР ПЛАШЕК */
+            min-width: 70px;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .badge-sold { background: rgba(0, 0, 0, 0.7); color: #ccc; }
         .badge-wait { background: rgba(255, 140, 0, 0.3); color: orange; border-color: orange; }
@@ -385,21 +391,34 @@
             flex-grow: 1;
             display: flex; 
             flex-direction: column; 
+            overflow: hidden; /* Важно для скролла внутри */
         }
         
         .product-title {
             font-weight: 600; font-size: 13px; line-height: 1.3; margin-bottom: 4px; color: white;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
             height: 34px;
+            flex-shrink: 0; /* Статичный, не сжимается */
         }
+        
         .product-desc-short {
-            font-size: 11px; color: #888; margin-bottom: 8px; line-height: 1.4;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+            font-size: 11px; color: #888; line-height: 1.4;
+            /* ПРАВКА: СКРОЛЛ ДЛЯ ОПИСАНИЯ */
             flex-grow: 1;
+            overflow-y: auto;
+            display: block;
+            height: 0; /* Чтобы flex-grow работал корректно в колонке */
+            margin-top: 8px;
+            padding-right: 2px;
         }
+        .product-desc-short::-webkit-scrollbar { width: 2px; }
+        .product-desc-short::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
+
         .price-block { 
-            margin-top: auto;
-            display: flex; align-items: baseline; gap: 6px; 
+            /* ПРАВКА: Цена теперь статична под заголовком */
+            display: flex; align-items: baseline; gap: 6px;
+            flex-shrink: 0;
+            margin-top: 0;
         }
         .price-new { color: var(--neon-color); font-weight: 700; font-size: 15px; }
         .price-old { color: #555; font-size: 11px; text-decoration: line-through; }
@@ -785,17 +804,10 @@
         }
 
         let touchStartX = 0;
-        let touchStartY = 0;
         const subPage = document.getElementById('sub-page');
-        subPage.addEventListener('touchstart', e => { 
-            touchStartX = e.changedTouches[0].screenX; 
-            touchStartY = e.changedTouches[0].screenY;
-        }, { passive: true });
+        subPage.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
         subPage.addEventListener('touchend', e => {
-            const diffX = e.changedTouches[0].screenX - touchStartX;
-            const diffY = Math.abs(e.changedTouches[0].screenY - touchStartY);
-            // СТРОГАЯ ПРОВЕРКА: свайп вправо > 50px И горизонтальное смещение в 2 раза больше вертикального
-            if (diffX > 50 && diffX > diffY * 2) hideSubPage();
+            if (e.changedTouches[0].screenX - touchStartX > 50) hideSubPage();
         }, { passive: true });
 
         function escapeHtml(text) {
@@ -926,13 +938,14 @@
 
                 const mainImg = (item.images && item.images.length > 0) ? item.images[0] : item.imageUrl;
 
+                // ПРАВКА: ИЗМЕНЕН ПОРЯДОК ЭЛЕМЕНТОВ В КАРТОЧКЕ
                 card.innerHTML = `
                     ${badgeHtml}
                     <img src="${mainImg || 'https://placehold.co/400'}" class="product-image" loading="lazy">
                     <div class="product-info">
                         <div class="product-title">${escapeHtml(item.title)}</div>
-                        <div class="product-desc-short">${escapeHtml(item.description)}</div>
                         ${priceHtml}
+                        <div class="product-desc-short">${escapeHtml(item.description)}</div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -1313,11 +1326,10 @@
             
             if (!tgLink) { btn.disabled=false; btn.innerText="ERR"; return; }
             
-            // ИСПОЛЬЗУЕМ БОЛЕЕ БЫСТРЫЙ ПРОКСИ corsproxy.io
-            fetch('https://corsproxy.io/?' + encodeURIComponent(tgLink + '?embed=1&mode=tme'))
-            .then(r => r.text()) // Читаем как текст, а не JSON
-            .then(html => {
-                const doc = new DOMParser().parseFromString(html, "text/html");
+            fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(tgLink + '?embed=1&mode=tme'))
+            .then(r => r.json())
+            .then(data => {
+                const doc = new DOMParser().parseFromString(data.contents, "text/html");
                 const style = doc.querySelector('.tgme_widget_message_photo_wrap')?.getAttribute('style');
                 const img = style?.match(/url\('?(.*?)'?\)/)?.[1];
                 let text = doc.querySelector('.tgme_widget_message_text blockquote')?.innerText.trim() 
@@ -1399,7 +1411,7 @@
                 document.getElementById('save-status').style.opacity = '1';
                 setTimeout(() => { 
                     document.getElementById('save-status').style.opacity = '0'; 
-                    // closeAdmin(); // УБРАЛИ ЗАКРЫТИЕ ПО ПРОСЬБЕ
+                    // ПРАВКА: УБРАНО closeAdmin() - ТЕПЕРЬ АДМИНКА НЕ ЗАКРЫВАЕТСЯ АВТОМАТИЧЕСКИ
                     btns.forEach(b => { b.disabled = false; b.innerText = "💾 Сохранить изменения"; b.style.background = ""; });
                 }, 1500);
 
