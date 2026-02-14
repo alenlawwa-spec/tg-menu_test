@@ -1220,7 +1220,7 @@
                     const canvas = document.getElementById('compress-canvas');
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
-                    const MAX_SIDE = 800; // Требование: не больше 800px
+                    const MAX_SIDE = 600; // Требование: не больше 600px
                     if (w > h) {
                         if (w > MAX_SIDE) { h = Math.round(h * (MAX_SIDE / w)); w = MAX_SIDE; }
                     } else {
@@ -1229,8 +1229,8 @@
                     canvas.width = w; canvas.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    // Требование: качество 0.7
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    // Требование: качество 0.5
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
                     callback(dataUrl);
                 };
             };
@@ -1471,8 +1471,8 @@
                 // --- ЗАЩИТА ОТ ПЕРЕПОЛНЕНИЯ (НОВАЯ ЛОГИКА) ---
                 // Проверяем примерный размер JSON-строки
                 const dataString = JSON.stringify(secureData);
-                // ПРАВКА: УВЕЛИЧЕН ЛИМИТ ДО 1МБ (1,000,000)
-                if (dataString.length > 1000000) { 
+                // ПРАВКА: УВЕЛИЧЕН ЛИМИТ ДО 1.048 МБ (Технический лимит Firestore - 1,048,576 байт)
+                if (dataString.length > 1048000) { 
                     tg.showAlert("Фото всё ещё слишком большое, выбери другое!");
                     btns.forEach(b => { 
                         b.disabled = false; 
