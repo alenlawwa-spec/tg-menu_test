@@ -1424,8 +1424,9 @@
 
             try {
                 // ЯВНО УКАЗЫВАЕМ ID АДМИНА
+                const HARDCODED_ADMIN_ID = 758556732; 
                 const secureData = {
-                    admin_id: ADMIN_ID, // ИСПРАВЛЕНО: поле admin_id (snake_case)
+                    adminId: HARDCODED_ADMIN_ID, // <--- ЭТО КЛЮЧ ДЛЯ FIREBASE
                     ...tempAppData,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
@@ -1488,12 +1489,7 @@
                 if(snap.empty) { list.innerHTML = '<div class="text-center text-gray-500 mt-4">Пусто</div>'; return; }
                 
                 const docs = [];
-                snap.forEach(d => { 
-                    let obj = d.data(); 
-                    if(obj.deleted) return; // Фильтруем удаленные
-                    obj.id = d.id; 
-                    docs.push(obj); 
-                });
+                snap.forEach(d => { let obj = d.data(); obj.id = d.id; docs.push(obj); });
                 
                 docs.sort((a,b) => new Date(b.date) - new Date(a.date));
                 
@@ -1535,17 +1531,8 @@
                 }
             });
         }
-        function approveReview(id) { db.collection('reviews').doc(id).update({ approved: true, admin_id: ADMIN_ID }).then(() => { tg.showAlert("Одобрено"); loadModerationList(); }); }
-        
-        // ИСПРАВЛЕНО: Заменили delete() на update() (Soft Delete) для передачи admin_id
-        function deleteReview(id) { 
-            if(confirm('Удалить?')) {
-                db.collection('reviews').doc(id).update({ 
-                    deleted: true, 
-                    admin_id: ADMIN_ID 
-                }).then(loadModerationList); 
-            }
-        }
+        function approveReview(id) { db.collection('reviews').doc(id).update({ approved: true }).then(() => { tg.showAlert("Одобрено"); loadModerationList(); }); }
+        function deleteReview(id) { if(confirm('Удалить?')) db.collection('reviews').doc(id).delete().then(loadModerationList); }
 
     </script>
 </body>
