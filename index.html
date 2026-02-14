@@ -12,7 +12,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -52,21 +51,6 @@
             -ms-user-select: text;
             user-select: text;
         }
-
-        /* UPLOAD PROGRESS STYLES */
-        .upload-progress {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 10;
-            backdrop-filter: blur(2px); pointer-events: none;
-        }
-        .progress-bar-bg {
-            width: 80%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%; background: var(--neon-color); width: 0%; transition: width 0.2s linear;
-        }
-        .progress-text { font-size: 9px; color: var(--neon-color); margin-top: 4px; font-weight: bold; }
 
         .bg-glow {
             position: fixed;
@@ -703,7 +687,6 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const storage = firebase.storage();
         
         auth.signInAnonymously()
           .then(() => {
@@ -928,10 +911,9 @@
             items.forEach((item) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'gallery-item cursor-pointer animate-pulse-enter';
-                const imgUrl = (item.images && item.images.length > 0) ? item.images[0] : item.imageUrl;
-                itemEl.onclick = () => openGalleryModal(imgUrl, item.prompt);
+                itemEl.onclick = () => openGalleryModal(item.imageUrl, item.prompt);
                 const overlay = item.title ? `<div class="gallery-overlay pointer-events-none"><div class="text-white text-xs font-semibold truncate">${escapeHtml(item.title)}</div></div>` : '';
-                itemEl.innerHTML = `<img src="${imgUrl}" data-tg-link="${item.tgLink || ''}" class="gallery-img" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="tryRepairImage(this)">${overlay}`;
+                itemEl.innerHTML = `<img src="${item.imageUrl}" data-tg-link="${item.tgLink || ''}" class="gallery-img" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="tryRepairImage(this)">${overlay}`;
                 container.appendChild(itemEl);
             });
         }
@@ -1231,7 +1213,7 @@
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
                     
-                    const MAX_SIDE = 800; // ЖЕСТКОЕ СЖАТИЕ ДО 800PX
+                    const MAX_SIDE = 1024;
                     if (w > h) {
                         if (w > MAX_SIDE) { h = Math.round(h * (MAX_SIDE / w)); w = MAX_SIDE; }
                     } else {
@@ -1240,112 +1222,25 @@
 
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
                     
-                    callback(canvas.toDataURL('image/jpeg', 0.7)); // ЖЕСТКОЕ СЖАТИЕ КАЧЕСТВА 0.7
+                    callback(canvas.toDataURL('image/jpeg', 0.8));
                 };
             };
         }
 
-        // НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В STORAGE С ПРОГРЕССОМ
-        function uploadImageToStorage(base64String, onProgress, onSuccess, onError) {
-            const ref = storage.ref().child('uploads/' + Date.now() + '_' + Math.floor(Math.random() * 1000) + '.jpg');
-            const uploadTask = ref.putString(base64String, 'data_url');
-
-            // Timeout logic: Если за 60 секунд не загрузилось - ошибка
-            const timeoutId = setTimeout(() => {
-                uploadTask.cancel();
-                onError(new Error("Timeout: Загрузка длилась более 60 секунд."));
-            }, 60000);
-
-            uploadTask.on('state_changed', 
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    onProgress(progress);
-                }, 
-                (error) => {
-                    clearTimeout(timeoutId);
-                    onError(error);
-                }, 
-                () => {
-                    clearTimeout(timeoutId);
-                    uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-                        onSuccess(downloadURL);
-                    });
-                }
-            );
-        }
-
         function handleFileUpload(input, idx) {
-            const file = input.files[0]; 
-            if (!file) return;
-
-            // UI Elements: Добавляем прогресс бар в текущий контейнер
-            const container = input.parentElement;
-            const existingOverlay = container.querySelector('.upload-progress');
-            if(existingOverlay) existingOverlay.remove();
-
-            const overlay = document.createElement('div');
-            overlay.className = 'upload-progress';
-            overlay.innerHTML = `
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 0%"></div></div>
-                <div class="progress-text">0%</div>
-            `;
-            container.appendChild(overlay);
-
-            const bar = overlay.querySelector('.progress-bar-fill');
-            const txt = overlay.querySelector('.progress-text');
-
-            // Блокируем кнопки
-            const btnGlobal = document.getElementById('btn-save-global');
-            const btnSub = document.getElementById('btn-save-sub');
-            if(btnGlobal) { btnGlobal.disabled = true; btnGlobal.innerText = "⏳ Загрузка фото..."; }
-            if(btnSub) { btnSub.disabled = true; btnSub.innerText = "⏳ Загрузка фото..."; }
-
+            const file = input.files[0]; if (!file) return;
             compressImage(file, (base64) => {
-                uploadImageToStorage(base64, 
-                    (percent) => {
-                        bar.style.width = percent + '%';
-                        txt.textContent = Math.round(percent) + '%';
-                    },
-                    (url) => {
-                        // Success Handler
-                        const mode = tempAppData.mainMenu[currentEditingIndex].mode;
-                        const slot = input.dataset.slot;
-
-                        if (mode === 'products' || mode === 'gallery') {
-                            if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) 
-                                tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
-                            
-                            while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) 
-                                tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
-                            
-                            tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = url;
-                            
-                            if(mode === 'gallery' && slot == 0) 
-                                tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = url;
-                        } else {
-                            tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = url;
-                        }
-
-                        // Сразу показываем фото
-                        container.style.backgroundImage = `url('${url}')`;
-                        overlay.remove();
-
-                        // Разблокируем кнопки
-                        if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
-                        if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
-                    },
-                    (error) => {
-                        // Error Handler
-                        console.error(error);
-                        overlay.remove();
-                        tg.showAlert("Ошибка загрузки: " + error.message);
-                        input.value = ''; // Сброс инпута
-                        
-                        // Разблокируем кнопки
-                        if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
-                        if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
-                    }
-                );
+                if (base64.length > 700000) { alert("Картинка слишком большая"); return; }
+                const mode = tempAppData.mainMenu[currentEditingIndex].mode;
+                if (mode === 'products') {
+                    const slot = input.dataset.slot;
+                    if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
+                    while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
+                    tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = base64;
+                } else {
+                    tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = base64;
+                }
+                renderSubListItems();
             });
         }
 
@@ -1432,14 +1327,7 @@
                 } else if (parentBtn.mode === 'gallery') {
                      let opts = '<option value="">Без категории</option>';
                      Array.from(availableCategories).sort().forEach(cat => opts += `<option value="${cat}" ${item.category===cat?'selected':''}>${cat}</option>`);
-                     
-                     const images = item.images || (item.imageUrl ? [item.imageUrl] : []);
-                     let previews = '';
-                     for(let i=0; i<3; i++) {
-                        const bg = images[i] ? `background-image: url('${images[i]}')` : '';
-                        previews += `<div class="relative w-16 h-16 bg-black/40 border border-white/20 rounded flex items-center justify-center overflow-hidden bg-cover bg-center" style="${bg}"><input type="file" data-slot="${i}" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileUpload(this, ${idx})">${!images[i]?'<span class="text-xs opacity-50">+</span>':''}</div>`;
-                     }
-
+                     // ПРАВКА: ТЕХНИЧЕСКОЕ НАЗВАНИЕ "SLIDE" ЗАМЕНЕНО НА "СЛАЙД"
                      div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
                              <span class="text-[10px] font-bold">СЛАЙД ${idx+1}</span>
@@ -1448,15 +1336,12 @@
                                 <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
                              </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="admin-label mb-2">Фото</label>
-                            <div class="flex gap-2">${previews}</div>
-                        </div>
-
-                        <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
+                        <div class="bg-white/5 p-2 rounded mb-2"><label class="admin-label">Magic Paste</label><div class="flex gap-2"><textarea id="magic-paste-${idx}" class="admin-input h-8 mb-0"></textarea><button id="btn-magic-${idx}" onclick="magicPaste(${idx})" class="magic-btn">OK</button></div></div>
+                        <input type="file" accept="image/*" class="text-xs text-gray-400 w-full mb-2" onchange="handleFileUpload(this, ${idx})">
+                        ${item.imageUrl ? `<img src="${item.imageUrl}" class="w-20 h-20 object-cover rounded mb-2">` : ''}
+                        <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
                         <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].category=this.value">${opts}</select>
-                        <textarea id="prompt-area-${idx}" class="admin-textarea" placeholder="Промпт..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt||''}</textarea>
+                        <textarea id="prompt-area-${idx}" class="admin-textarea" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt||''}</textarea>
                      `;
                 } else {
                      div.innerHTML = `
@@ -1482,6 +1367,32 @@
                 [list[index], list[newIndex]] = [list[newIndex], list[index]];
                 renderSubListItems();
             }
+        }
+
+        function magicPaste(itemIdx) {
+            const btn = document.getElementById(`btn-magic-${itemIdx}`);
+            btn.disabled = true; btn.innerText = "⏳";
+            const raw = document.getElementById(`magic-paste-${itemIdx}`).value.trim();
+            const tgLink = raw.match(/(https:\/\/t\.me\/[\w\/]+)/)?.[0];
+            
+            if (!tgLink) { btn.disabled=false; btn.innerText="ERR"; return; }
+            
+            fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(tgLink + '?embed=1&mode=tme'))
+            .then(r => r.json())
+            .then(data => {
+                const doc = new DOMParser().parseFromString(data.contents, "text/html");
+                const style = doc.querySelector('.tgme_widget_message_photo_wrap')?.getAttribute('style');
+                const img = style?.match(/url\('?(.*?)'?\)/)?.[1];
+                let text = doc.querySelector('.tgme_widget_message_text blockquote')?.innerText.trim() 
+                         || doc.querySelector('.tgme_widget_message_text')?.innerText.trim();
+                
+                if (img) tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = img;
+                if (text) tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = text;
+                tempAppData.mainMenu[currentEditingIndex].items[itemIdx].tgLink = tgLink;
+                
+                renderSubListItems();
+                btn.disabled=false; btn.innerText = "OK";
+            }).catch(() => { btn.disabled=false; btn.innerText = "ERR"; });
         }
 
         function addNewSubItem() {
