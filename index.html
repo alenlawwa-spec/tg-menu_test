@@ -785,10 +785,17 @@
         }
 
         let touchStartX = 0;
+        let touchStartY = 0;
         const subPage = document.getElementById('sub-page');
-        subPage.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        subPage.addEventListener('touchstart', e => { 
+            touchStartX = e.changedTouches[0].screenX; 
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
         subPage.addEventListener('touchend', e => {
-            if (e.changedTouches[0].screenX - touchStartX > 50) hideSubPage();
+            const diffX = e.changedTouches[0].screenX - touchStartX;
+            const diffY = Math.abs(e.changedTouches[0].screenY - touchStartY);
+            // СТРОГАЯ ПРОВЕРКА: свайп вправо > 50px И горизонтальное смещение в 2 раза больше вертикального
+            if (diffX > 50 && diffX > diffY * 2) hideSubPage();
         }, { passive: true });
 
         function escapeHtml(text) {
@@ -1306,10 +1313,11 @@
             
             if (!tgLink) { btn.disabled=false; btn.innerText="ERR"; return; }
             
-            fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(tgLink + '?embed=1&mode=tme'))
-            .then(r => r.json())
-            .then(data => {
-                const doc = new DOMParser().parseFromString(data.contents, "text/html");
+            // ИСПОЛЬЗУЕМ БОЛЕЕ БЫСТРЫЙ ПРОКСИ corsproxy.io
+            fetch('https://corsproxy.io/?' + encodeURIComponent(tgLink + '?embed=1&mode=tme'))
+            .then(r => r.text()) // Читаем как текст, а не JSON
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, "text/html");
                 const style = doc.querySelector('.tgme_widget_message_photo_wrap')?.getAttribute('style');
                 const img = style?.match(/url\('?(.*?)'?\)/)?.[1];
                 let text = doc.querySelector('.tgme_widget_message_text blockquote')?.innerText.trim() 
@@ -1391,7 +1399,7 @@
                 document.getElementById('save-status').style.opacity = '1';
                 setTimeout(() => { 
                     document.getElementById('save-status').style.opacity = '0'; 
-                    closeAdmin();
+                    // closeAdmin(); // УБРАЛИ ЗАКРЫТИЕ ПО ПРОСЬБЕ
                     btns.forEach(b => { b.disabled = false; b.innerText = "💾 Сохранить изменения"; b.style.background = ""; });
                 }, 1500);
 
