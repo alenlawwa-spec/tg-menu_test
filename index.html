@@ -1021,19 +1021,33 @@
             document.getElementById('review-write-modal').classList.add('active-modal');
         }
         function closeReviewModal() { document.getElementById('review-write-modal').classList.remove('active-modal'); }
+        
+        // ПРАВКА: ПОЛНОСТЬЮ ОБНОВЛЕННАЯ ФУНКЦИЯ ОТПРАВКИ ОТЗЫВА
         function submitReview() {
             const name = document.getElementById('review-name-input').value;
             const text = document.getElementById('review-text-input').value;
             const ratingEl = document.querySelector('input[name="rating"]:checked');
-            if(!ratingEl) return tg.showAlert("Поставьте оценку! ⭐");
-            if(!text) return tg.showAlert("Напишите хоть пару слов...");
+            
+            if(!ratingEl) { tg.showAlert("Поставьте оценку! ⭐"); return; }
+            if(!text) { tg.showAlert("Напишите хоть пару слов..."); return; }
             
             db.collection('reviews').add({
                 name: name, text: text, rating: parseInt(ratingEl.value),
                 approved: false, date: new Date().toISOString(), userId: tg.initDataUnsafe?.user?.id || 'anon'
-            }).then(() => {
-                closeReviewModal(); tg.showAlert("Ваш отзыв отправлен! ✨");
+            })
+            .then(() => {
+                closeReviewModal(); 
+                // ПО ТВОЕМУ ЗАПРОСУ: ЧЕТКОЕ СООБЩЕНИЕ
+                tg.showAlert("Комментарий отправлен на модерацию! ⏳");
+                
+                // Очистка формы
                 document.getElementById('review-text-input').value = '';
+                const checkedRadio = document.querySelector('input[name="rating"]:checked');
+                if (checkedRadio) checkedRadio.checked = false;
+            })
+            .catch((error) => {
+                console.error("Error adding review: ", error);
+                tg.showAlert("Ошибка отправки, попробуйте позже.");
             });
         }
 
