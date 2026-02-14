@@ -913,9 +913,10 @@
             items.forEach((item) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'gallery-item cursor-pointer animate-pulse-enter';
-                itemEl.onclick = () => openGalleryModal(item.imageUrl, item.prompt);
+                const imgUrl = (item.images && item.images.length > 0) ? item.images[0] : item.imageUrl;
+                itemEl.onclick = () => openGalleryModal(imgUrl, item.prompt);
                 const overlay = item.title ? `<div class="gallery-overlay pointer-events-none"><div class="text-white text-xs font-semibold truncate">${escapeHtml(item.title)}</div></div>` : '';
-                itemEl.innerHTML = `<img src="${item.imageUrl}" data-tg-link="${item.tgLink || ''}" class="gallery-img" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="tryRepairImage(this)">${overlay}`;
+                itemEl.innerHTML = `<img src="${imgUrl}" data-tg-link="${item.tgLink || ''}" class="gallery-img" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="tryRepairImage(this)">${overlay}`;
                 container.appendChild(itemEl);
             });
         }
@@ -1258,11 +1259,12 @@
             compressImage(file, (base64) => {
                 uploadImageToStorage(base64, (downloadUrl) => {
                     const mode = tempAppData.mainMenu[currentEditingIndex].mode;
-                    if (mode === 'products') {
+                    if (mode === 'products' || mode === 'gallery') {
                         const slot = input.dataset.slot;
                         if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
                         while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
                         tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = downloadUrl;
+                        if(mode === 'gallery' && slot == 0) tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = downloadUrl;
                     } else {
                         tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = downloadUrl;
                     }
@@ -1359,7 +1361,14 @@
                 } else if (parentBtn.mode === 'gallery') {
                      let opts = '<option value="">Без категории</option>';
                      Array.from(availableCategories).sort().forEach(cat => opts += `<option value="${cat}" ${item.category===cat?'selected':''}>${cat}</option>`);
-                     // ПРАВКА: ИЗМЕНЕН ИНТЕРФЕЙС ЗАГРУЗКИ (КАК В ТОВАРАХ)
+                     
+                     const images = item.images || (item.imageUrl ? [item.imageUrl] : []);
+                     let previews = '';
+                     for(let i=0; i<3; i++) {
+                        const bg = images[i] ? `background-image: url('${images[i]}')` : '';
+                        previews += `<div class="relative w-16 h-16 bg-black/40 border border-white/20 rounded flex items-center justify-center overflow-hidden bg-cover bg-center" style="${bg}"><input type="file" data-slot="${i}" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileUpload(this, ${idx})">${!images[i]?'<span class="text-xs opacity-50">+</span>':''}</div>`;
+                     }
+
                      div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
                              <span class="text-[10px] font-bold">СЛАЙД ${idx+1}</span>
@@ -1370,11 +1379,8 @@
                         </div>
                         
                         <div class="mb-3">
-                            <label class="admin-label mb-2">Фото (Нажми чтобы загрузить)</label>
-                            <div class="relative w-full h-48 bg-black/40 border border-white/20 rounded-xl flex items-center justify-center overflow-hidden bg-cover bg-center" style="${item.imageUrl ? `background-image: url('${item.imageUrl}')` : ''}">
-                                <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="handleFileUpload(this, ${idx})">
-                                ${!item.imageUrl ? '<div class="flex flex-col items-center opacity-50"><span class="text-2xl mb-1">+</span><span class="text-[10px]">Загрузить фото</span></div>' : ''}
-                            </div>
+                            <label class="admin-label mb-2">Фото</label>
+                            <div class="flex gap-2">${previews}</div>
                         </div>
 
                         <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
