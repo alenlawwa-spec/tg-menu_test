@@ -645,6 +645,7 @@
         let isParsing = false;
         let tg;
         let availableCategories = new Set();
+        let activeUploads = 0; // Добавили счетчик активных загрузок
         const ADMIN_ID = 758556732;
 
         document.addEventListener('contextmenu', event => event.preventDefault());
@@ -1239,10 +1240,7 @@
                 });
             }).catch(error => {
                 console.error("Upload error:", error);
-                const btnGlobal = document.getElementById('btn-save-global');
-                const btnSub = document.getElementById('btn-save-sub');
-                if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "Ошибка загрузки"; }
-                if(btnSub) { btnSub.disabled = false; btnSub.innerText = "Ошибка загрузки"; }
+                activeUploads--; // Уменьшаем счетчик при ошибке
                 tg.showAlert("Не удалось загрузить фото в облако!");
             });
         }
@@ -1250,30 +1248,34 @@
         function handleFileUpload(input, idx) {
             const file = input.files[0]; if (!file) return;
             
-            // Блокируем кнопки сохранения пока идет загрузка
-            const btnGlobal = document.getElementById('btn-save-global');
-            const btnSub = document.getElementById('btn-save-sub');
-            if(btnGlobal) { btnGlobal.disabled = true; btnGlobal.innerText = "Сжатие и загрузка..."; }
-            if(btnSub) { btnSub.disabled = true; btnSub.innerText = "Сжатие и загрузка..."; }
+            // Больше не блокируем кнопки, просто считаем загрузки
+            activeUploads++;
 
             compressImage(file, (base64) => {
-                uploadImageToStorage(base64, (downloadUrl) => {
-                    const mode = tempAppData.mainMenu[currentEditingIndex].mode;
+                // 1. СРАЗУ ПОКАЗЫВАЕМ ПРЕВЬЮ (чтобы картинка появилась мгновенно)
+                const mode = tempAppData.mainMenu[currentEditingIndex].mode;
+                const setImg = (val) => {
                     if (mode === 'products' || mode === 'gallery') {
                         const slot = input.dataset.slot;
                         if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
                         while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
-                        tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = downloadUrl;
-                        if(mode === 'gallery' && slot == 0) tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = downloadUrl;
+                        tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = val;
+                        if(mode === 'gallery' && slot == 0) tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = val;
                     } else {
-                        tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = downloadUrl;
+                        tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = val;
                     }
-                    
-                    renderSubListItems();
-                    
-                    // Разблокируем кнопки
-                    if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
-                    if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
+                };
+
+                setImg(base64); // Ставим Base64 для моментального отображения
+                renderSubListItems(); // Обновляем вид
+
+                // 2. ЗАПУСКАЕМ ЗАГРУЗКУ В ФОНЕ
+                uploadImageToStorage(base64, (downloadUrl) => {
+                    setImg(downloadUrl); // Заменяем Base64 на реальную ссылку
+                    activeUploads--; // Загрузка завершена
+                    // Можно не перерисовывать, если пользователь пишет текст, но для надежности данных обновим
+                    // renderSubListItems(); // <-- Если это сбивает фокус ввода, можно убрать, данные и так обновятся в памяти
+                    console.log("Фото загружено: " + downloadUrl);
                 });
             });
         }
@@ -1431,6 +1433,12 @@
         async function saveAdminData() {
             if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
             
+            // ПРОВЕРКА: Если фото еще грузятся, не даем сохранить, но не блокируем интерфейс
+            if (activeUploads > 0) {
+                tg.showAlert("⏳ Фото еще загружается в облако. Подождите пару секунд и нажмите снова!");
+                return;
+            }
+
             const btnGlobal = document.getElementById('btn-save-global');
             const btnSub = document.getElementById('btn-save-sub');
             const btns = [btnGlobal, btnSub].filter(b => b);
