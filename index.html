@@ -12,6 +12,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -687,6 +688,7 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
+        const storage = firebase.storage();
         
         auth.signInAnonymously()
           .then(() => {
@@ -1213,7 +1215,7 @@
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
                     
-                    const MAX_SIDE = 1024;
+                    const MAX_SIDE = 1000; // ОБНОВЛЕНО: лимит 1000px
                     if (w > h) {
                         if (w > MAX_SIDE) { h = Math.round(h * (MAX_SIDE / w)); w = MAX_SIDE; }
                     } else {
@@ -1222,25 +1224,55 @@
 
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
                     
-                    callback(canvas.toDataURL('image/jpeg', 0.8));
+                    callback(canvas.toDataURL('image/jpeg', 0.8)); // ОБНОВЛЕНО: качество 0.8
                 };
             };
         }
 
+        // НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В STORAGE
+        function uploadImageToStorage(base64String, callback) {
+            const ref = storage.ref().child('uploads/' + Date.now() + '_' + Math.floor(Math.random() * 1000) + '.jpg');
+            ref.putString(base64String, 'data_url').then(snapshot => {
+                snapshot.ref.getDownloadURL().then(url => {
+                    callback(url);
+                });
+            }).catch(error => {
+                console.error("Upload error:", error);
+                const btnGlobal = document.getElementById('btn-save-global');
+                const btnSub = document.getElementById('btn-save-sub');
+                if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "Ошибка загрузки"; }
+                if(btnSub) { btnSub.disabled = false; btnSub.innerText = "Ошибка загрузки"; }
+                tg.showAlert("Не удалось загрузить фото в облако!");
+            });
+        }
+
         function handleFileUpload(input, idx) {
             const file = input.files[0]; if (!file) return;
+            
+            // Блокируем кнопки сохранения пока идет загрузка
+            const btnGlobal = document.getElementById('btn-save-global');
+            const btnSub = document.getElementById('btn-save-sub');
+            if(btnGlobal) { btnGlobal.disabled = true; btnGlobal.innerText = "Сжатие и загрузка..."; }
+            if(btnSub) { btnSub.disabled = true; btnSub.innerText = "Сжатие и загрузка..."; }
+
             compressImage(file, (base64) => {
-                if (base64.length > 700000) { alert("Картинка слишком большая"); return; }
-                const mode = tempAppData.mainMenu[currentEditingIndex].mode;
-                if (mode === 'products') {
-                    const slot = input.dataset.slot;
-                    if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
-                    while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
-                    tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = base64;
-                } else {
-                    tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = base64;
-                }
-                renderSubListItems();
+                uploadImageToStorage(base64, (downloadUrl) => {
+                    const mode = tempAppData.mainMenu[currentEditingIndex].mode;
+                    if (mode === 'products') {
+                        const slot = input.dataset.slot;
+                        if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
+                        while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
+                        tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = downloadUrl;
+                    } else {
+                        tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = downloadUrl;
+                    }
+                    
+                    renderSubListItems();
+                    
+                    // Разблокируем кнопки
+                    if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
+                    if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
+                });
             });
         }
 
@@ -1327,7 +1359,7 @@
                 } else if (parentBtn.mode === 'gallery') {
                      let opts = '<option value="">Без категории</option>';
                      Array.from(availableCategories).sort().forEach(cat => opts += `<option value="${cat}" ${item.category===cat?'selected':''}>${cat}</option>`);
-                     // ПРАВКА: ТЕХНИЧЕСКОЕ НАЗВАНИЕ "SLIDE" ЗАМЕНЕНО НА "СЛАЙД"
+                     // ПРАВКА: УБРАН MAGIC PASTE, ДОБАВЛЕНА ПРЯМАЯ ЗАГРУЗКА
                      div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
                              <span class="text-[10px] font-bold">СЛАЙД ${idx+1}</span>
@@ -1336,12 +1368,16 @@
                                 <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
                              </div>
                         </div>
-                        <div class="bg-white/5 p-2 rounded mb-2"><label class="admin-label">Magic Paste</label><div class="flex gap-2"><textarea id="magic-paste-${idx}" class="admin-input h-8 mb-0"></textarea><button id="btn-magic-${idx}" onclick="magicPaste(${idx})" class="magic-btn">OK</button></div></div>
-                        <input type="file" accept="image/*" class="text-xs text-gray-400 w-full mb-2" onchange="handleFileUpload(this, ${idx})">
-                        ${item.imageUrl ? `<img src="${item.imageUrl}" class="w-20 h-20 object-cover rounded mb-2">` : ''}
-                        <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
+                        
+                        <div class="bg-black/30 p-2 rounded mb-3 border border-white/10">
+                            <label class="admin-label mb-2">Фото (Загрузка в облако)</label>
+                            <input type="file" accept="image/*" class="text-xs text-gray-400 w-full mb-2" onchange="handleFileUpload(this, ${idx})">
+                            ${item.imageUrl ? `<div class="w-full h-24 bg-cover bg-center rounded border border-white/20" style="background-image: url('${item.imageUrl}')"></div>` : '<div class="text-[10px] text-gray-600 text-center py-2">Нет фото</div>'}
+                        </div>
+
+                        <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
                         <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].category=this.value">${opts}</select>
-                        <textarea id="prompt-area-${idx}" class="admin-textarea" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt||''}</textarea>
+                        <textarea id="prompt-area-${idx}" class="admin-textarea" placeholder="Промпт..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt||''}</textarea>
                      `;
                 } else {
                      div.innerHTML = `
@@ -1367,32 +1403,6 @@
                 [list[index], list[newIndex]] = [list[newIndex], list[index]];
                 renderSubListItems();
             }
-        }
-
-        function magicPaste(itemIdx) {
-            const btn = document.getElementById(`btn-magic-${itemIdx}`);
-            btn.disabled = true; btn.innerText = "⏳";
-            const raw = document.getElementById(`magic-paste-${itemIdx}`).value.trim();
-            const tgLink = raw.match(/(https:\/\/t\.me\/[\w\/]+)/)?.[0];
-            
-            if (!tgLink) { btn.disabled=false; btn.innerText="ERR"; return; }
-            
-            fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(tgLink + '?embed=1&mode=tme'))
-            .then(r => r.json())
-            .then(data => {
-                const doc = new DOMParser().parseFromString(data.contents, "text/html");
-                const style = doc.querySelector('.tgme_widget_message_photo_wrap')?.getAttribute('style');
-                const img = style?.match(/url\('?(.*?)'?\)/)?.[1];
-                let text = doc.querySelector('.tgme_widget_message_text blockquote')?.innerText.trim() 
-                         || doc.querySelector('.tgme_widget_message_text')?.innerText.trim();
-                
-                if (img) tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = img;
-                if (text) tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = text;
-                tempAppData.mainMenu[currentEditingIndex].items[itemIdx].tgLink = tgLink;
-                
-                renderSubListItems();
-                btn.disabled=false; btn.innerText = "OK";
-            }).catch(() => { btn.disabled=false; btn.innerText = "ERR"; });
         }
 
         function addNewSubItem() {
