@@ -12,7 +12,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -27,17 +26,17 @@
         html, body {
             overscroll-behavior: none !important;
             touch-action: pan-y !important;
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
         }
 
         body {
             font-family: 'Inter', sans-serif;
             background: #050505;
             color: white;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
             margin: 0;
+            position: fixed;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -52,21 +51,6 @@
             -ms-user-select: text;
             user-select: text;
         }
-
-        /* UPLOAD PROGRESS STYLES */
-        .upload-progress {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 10;
-            backdrop-filter: blur(2px); pointer-events: none;
-        }
-        .progress-bar-bg {
-            width: 80%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; overflow: hidden;
-        }
-        .progress-bar-fill {
-            height: 100%; background: var(--neon-color); width: 0%; transition: width 0.2s linear;
-        }
-        .progress-text { font-size: 9px; color: var(--neon-color); margin-top: 4px; font-weight: bold; }
 
         .bg-glow {
             position: fixed;
@@ -147,15 +131,15 @@
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
+            right: 0; /* Centers for max-width */
             width: 100%;
             height: 100%;
-            max-width: 600px;
-            margin: 0 auto;
+            max-width: 600px; /* Task 4: Max width */
+            margin: 0 auto;   /* Task 4: Center */
             transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s ease;
             overflow-y: auto;
-            overscroll-behavior: none; /* ЖЕСТКИЙ СКРОЛЛ */
-            padding: calc(24px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom));
+            overscroll-behavior-y: contain; 
+            padding: calc(24px + env(safe-area-inset-top)) 20px calc(40px + env(safe-area-inset-bottom)); /* Task 4: Safe area */
             -webkit-overflow-scrolling: touch;
             display: flex;
             flex-direction: column;
@@ -376,8 +360,8 @@
             backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 22px;
             overflow: hidden; position: relative; 
-            display: flex; flex-direction: column;
-            height: 100%;
+            display: flex; flex-direction: column; /* Task 3: Flex column */
+            height: 100%; /* Task 3: Height 100% */
             transition: transform 0.2s;
         }
         .product-card:active { transform: scale(0.97); }
@@ -391,13 +375,6 @@
             position: absolute; top: 8px; right: 8px; padding: 4px 8px;
             border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase;
             backdrop-filter: blur(8px); z-index: 2; border: 1px solid rgba(255,255,255,0.1);
-            /* ПРАВКА: ОДИНАКОВЫЙ РАЗМЕР ПЛАШЕК И ЦЕНТРОВКА */
-            min-width: 80px;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         .badge-sold { background: rgba(0, 0, 0, 0.7); color: #ccc; }
         .badge-wait { background: rgba(255, 140, 0, 0.3); color: orange; border-color: orange; }
@@ -405,76 +382,37 @@
         
         .product-info { 
             padding: 12px; 
-            flex-grow: 1;
+            flex-grow: 1; /* Task 3: Flex grow */
             display: flex; 
             flex-direction: column; 
-            overflow: hidden; 
         }
         
         .product-title {
             font-weight: 600; font-size: 13px; line-height: 1.3; margin-bottom: 4px; color: white;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
             height: 34px;
-            flex-shrink: 0; 
         }
-        
         .product-desc-short {
-            font-size: 11px; color: #888; line-height: 1.4;
-            /* ПРАВКА: ВЕРНУЛА ОПИСАНИЕ, ЗАДАЛА ВЫСОТУ И СКРОЛЛ */
-            display: block;
-            height: 45px; /* Фиксированная высота для 2-3 строк */
-            overflow-y: auto; /* Скролл если длиннее */
-            margin-top: 8px;
-            padding-right: 2px;
-            flex-shrink: 0;
+            font-size: 11px; color: #888; margin-bottom: 8px; line-height: 1.4;
+            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+            flex-grow: 1;
         }
-        .product-desc-short::-webkit-scrollbar { width: 2px; }
-        .product-desc-short::-webkit-scrollbar-thumb { background: #444; border-radius: 2px; }
-
         .price-block { 
-            display: flex; align-items: baseline; gap: 6px;
-            flex-shrink: 0;
-            margin-top: 0;
+            margin-top: auto; /* Task 3: Button/Price at bottom */
+            display: flex; align-items: baseline; gap: 6px; 
         }
         .price-new { color: var(--neon-color); font-weight: 700; font-size: 15px; }
         .price-old { color: #555; font-size: 11px; text-decoration: line-through; }
 
         .product-slider { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; gap: 10px; padding-bottom: 10px; }
         .product-slider::-webkit-scrollbar { display: none; }
-        
-        .product-slide { 
-            flex: 0 0 100%; 
-            scroll-snap-align: center; 
-            border-radius: 16px; 
-            overflow: hidden; 
-            aspect-ratio: 1/1; 
-            background: #000; 
-            border: 1px solid rgba(255,255,255,0.1); 
-        }
+        .product-slide { flex: 0 0 100%; scroll-snap-align: center; border-radius: 16px; overflow: hidden; aspect-ratio: 1/1; background: #000; border: 1px solid rgba(255,255,255,0.1); }
         .product-slide img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* FIX FOR TABLETS / LANDSCAPE MODE */
-        @media (orientation: landscape) {
-            #product-modal-slider {
-                display: flex;
-                justify-content: center;
-            }
-            .product-slide {
-                flex: 0 0 auto;
-                height: 50vh; /* Ограничиваем высоту фото, чтобы было место для текста */
-                width: auto;
-                aspect-ratio: 1/1;
-            }
-            .product-slide img {
-                height: 100%;
-                width: auto;
-            }
-        }
         
         #product-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(5,5,8,0.98);
             z-index: 250; display: flex; flex-direction: column; transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); padding: 0; overflow-y: hidden; /* ПРАВКА: Убрала скролл с контейнера */
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); padding: 0; overflow-y: auto;
         }
         #product-modal.active-modal { transform: translateY(0); }
 
@@ -540,34 +478,29 @@
         </div>
     </div>
 
-    <!-- ПРАВКА: ИЗМЕНЕНА СТРУКТУРА МОДАЛКИ ТОВАРА -->
     <div id="product-modal">
         <div class="relative w-full h-full flex flex-col">
             <button onclick="closeProductModal()" class="absolute top-4 right-4 z-50 w-8 h-8 bg-black/50 rounded-full text-white flex items-center justify-center backdrop-blur-md">✕</button>
             
-            <!-- Слайдер (статичен) -->
             <div class="p-4 pb-0 flex-shrink-0">
                 <div class="product-slider" id="product-modal-slider"></div>
                 <div class="text-center text-[10px] text-gray-500 mt-2">Листай фото →</div>
             </div>
 
-            <!-- Заголовок и Цена (ЗАКРЕПЛЕНЫ) -->
-            <div class="p-5 pb-2 flex-shrink-0 bg-[#050508]/90 z-10">
+            <div class="flex-grow p-5 flex flex-col overflow-y-auto">
                 <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1"></h2>
                 
-                <div class="flex items-baseline gap-3 mb-2">
+                <div class="flex items-baseline gap-3 mb-4">
                     <span id="product-modal-price" class="text-xl text-[#00f2ff] font-bold"></span>
                     <span id="product-modal-old-price" class="text-sm text-gray-500 line-through"></span>
                 </div>
-                <div class="w-full h-[1px] bg-white/10"></div>
+
+                <div class="w-full h-[1px] bg-white/10 mb-4"></div>
+
+                <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap pb-20"></p>
             </div>
 
-            <!-- Описание (СКРОЛЛИТСЯ) -->
-            <div class="px-5 pb-20 flex-grow overflow-y-auto">
-                <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap pt-2"></p>
-            </div>
-
-            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent z-20">
+            <div class="absolute bottom-0 left-0 w-full p-4 bg-gradient-to-t from-black via-black/90 to-transparent">
                 <button id="product-buy-btn" class="btn-save-cyber shadow-[0_0_20px_rgba(0,242,255,0.3)]">
                 </button>
             </div>
@@ -703,7 +636,6 @@
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
-        const storage = firebase.storage();
         
         auth.signInAnonymously()
           .then(() => {
@@ -727,6 +659,8 @@
                 tg = window.Telegram.WebApp;
                 tg.expand();
                 if (tg.disableVerticalSwipes) tg.disableVerticalSwipes();
+                tg.isClosingConfirmationEnabled = true; // Task 2: Explicitly set property
+                tg.enableClosingConfirmation(); // Task 2: Call method for robustness
                 tg.ready();
                 tg.BackButton.onClick(() => {
                     const galleryModal = document.getElementById('gallery-modal');
@@ -739,6 +673,7 @@
                 tg = {
                     initDataUnsafe: { user: { id: 0, first_name: "BrowserUser" } },
                     expand: () => {}, ready: () => {}, disableVerticalSwipes: () => {},
+                    enableClosingConfirmation: () => {}, 
                     HapticFeedback: { impactOccurred: () => {}, notificationOccurred: () => {}, selectionChanged: () => {} },
                     BackButton: { show: () => {}, hide: () => {}, onClick: () => {} },
                     openLink: (url) => window.open(url, '_blank'),
@@ -751,7 +686,7 @@
 
         function initAppLogic() {
             const cachedData = localStorage.getItem('cyber_nav_cache_' + configDocId);
-            if (cachedData) {
+            if (cachedData) { // Task 6: Hydration from cache
                 try {
                     appData = JSON.parse(cachedData);
                     updateUI();
@@ -928,10 +863,9 @@
             items.forEach((item) => {
                 const itemEl = document.createElement('div');
                 itemEl.className = 'gallery-item cursor-pointer animate-pulse-enter';
-                const imgUrl = (item.images && item.images.length > 0) ? item.images[0] : item.imageUrl;
-                itemEl.onclick = () => openGalleryModal(imgUrl, item.prompt);
+                itemEl.onclick = () => openGalleryModal(item.imageUrl, item.prompt);
                 const overlay = item.title ? `<div class="gallery-overlay pointer-events-none"><div class="text-white text-xs font-semibold truncate">${escapeHtml(item.title)}</div></div>` : '';
-                itemEl.innerHTML = `<img src="${imgUrl}" data-tg-link="${item.tgLink || ''}" class="gallery-img" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="tryRepairImage(this)">${overlay}`;
+                itemEl.innerHTML = `<img src="${item.imageUrl}" data-tg-link="${item.tgLink || ''}" class="gallery-img" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="tryRepairImage(this)">${overlay}`;
                 container.appendChild(itemEl);
             });
         }
@@ -945,16 +879,6 @@
             'open': { label: 'Запись открыта', class: 'badge-order' },
             'empty': { label: 'Пусто', class: 'badge-sold' }
         };
-        
-        // ПРАВКА: ЦВЕТА ДЛЯ ПЛАШЕК
-        const BADGE_COLORS = {
-            'red': { bg: '#ff4d4d', color: '#fff', border: '#ff4d4d' },
-            'green': { bg: '#39ff14', color: '#000', border: '#39ff14' },
-            'blue': { bg: '#0066ff', color: '#fff', border: '#0066ff' },
-            'white': { bg: '#ffffff', color: '#000', border: '#ffffff' },
-            'yellow': { bg: '#ffea00', color: '#000', border: '#ffea00' },
-            'cyan': { bg: '#00f2ff', color: '#000', border: '#00f2ff' }
-        };
 
         function renderProductItems(items, container) {
             container.innerHTML = '';
@@ -964,23 +888,7 @@
                 card.onclick = () => openProductModal(item);
 
                 const statusData = STATUS_MAP[item.status];
-                
-                // ПРАВКА: ЛОГИКА ПЛАШКИ С ЦВЕТОМ
-                let badgeHtml = '';
-                if (statusData) {
-                    let styleAttr = '';
-                    if (item.badgeColor && BADGE_COLORS[item.badgeColor]) {
-                        const c = BADGE_COLORS[item.badgeColor];
-                        styleAttr = `style="background: ${c.bg}; color: ${c.color}; border-color: ${c.border};"`;
-                    } else {
-                        // Если цвет не выбран, берем класс из карты
-                        styleAttr = `class="product-badge ${statusData.class}"`;
-                    }
-                    // Если цвет выбран, класс product-badge всё равно нужен для базы
-                    if (styleAttr.startsWith('style')) styleAttr = `class="product-badge" ` + styleAttr;
-                    
-                    badgeHtml = `<div ${styleAttr}>${statusData.label}</div>`;
-                }
+                const badgeHtml = statusData ? `<div class="product-badge ${statusData.class}">${statusData.label}</div>` : '';
                 
                 let priceHtml = `<div class="price-block"><span class="price-new">${item.price}</span></div>`;
                 if(item.oldPrice) priceHtml = `<div class="price-block"><span class="price-new">${item.price}</span><span class="price-old">${item.oldPrice}</span></div>`;
@@ -992,8 +900,8 @@
                     <img src="${mainImg || 'https://placehold.co/400'}" class="product-image" loading="lazy">
                     <div class="product-info">
                         <div class="product-title">${escapeHtml(item.title)}</div>
-                        ${priceHtml}
                         <div class="product-desc-short">${escapeHtml(item.description)}</div>
+                        ${priceHtml}
                     </div>
                 `;
                 container.appendChild(card);
@@ -1145,10 +1053,9 @@
                 const upBtn = idx > 0 ? `<button onclick="moveMainMenuButton(${idx}, -1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▲</button>` : `<span class="px-2 opacity-0">▲</span>`;
                 const downBtn = idx < total - 1 ? `<button onclick="moveMainMenuButton(${idx}, 1)" class="px-2 text-gray-500 hover:text-cyan-400 transition">▼</button>` : `<span class="px-2 opacity-0">▼</span>`;
 
-                // ПРАВКА: ИСПРАВЛЕНЫ НАЗВАНИЯ "BUTTON" НА "БЛОК"
                 div.innerHTML = `
                     <div class="flex justify-between items-center mb-4">
-                        <span class="text-[10px] text-cyan-400">БЛОК ${idx+1}</span>
+                        <span class="text-[10px] text-cyan-400">BUTTON ${idx+1}</span>
                         <div class="flex items-center">
                              ${upBtn}
                              ${downBtn}
@@ -1230,151 +1137,29 @@
                     const canvas = document.getElementById('compress-canvas');
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
-                    
-                    const MAX_SIDE = 800; // ЖЕСТКОЕ СЖАТИЕ ДО 800PX
-                    if (w > h) {
-                        if (w > MAX_SIDE) { h = Math.round(h * (MAX_SIDE / w)); w = MAX_SIDE; }
-                    } else {
-                        if (h > MAX_SIDE) { w = Math.round(w * (MAX_SIDE / h)); h = MAX_SIDE; }
-                    }
-
+                    // Task 5: 1200px and 0.8 quality
+                    if (w > 1200) { h = Math.round(h * (1200 / w)); w = 1200; }
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
-                    
-                    // ПРАВКА: УМНОЕ СЖАТИЕ (РЕКУРСИЯ)
-                    let quality = 0.5; // СТАРТ С 0.5 КАК ПРОСИЛИ
-                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
-                    
-                    // ЕСЛИ БОЛЬШЕ 900КБ - УМЕНЬШАЕМ КАЧЕСТВО ЕЩЕ
-                    while (dataUrl.length > 900000 && quality > 0.1) {
-                        quality -= 0.1;
-                        dataUrl = canvas.toDataURL('image/jpeg', quality);
-                        console.log("Re-compressing to quality:", quality);
-                    }
-                    
-                    callback(dataUrl); 
+                    callback(canvas.toDataURL('image/jpeg', 0.8));
                 };
             };
         }
 
-        // НОВАЯ ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ В STORAGE С ПРОГРЕССОМ
-        function uploadImageToStorage(base64String, onProgress, onSuccess, onError) {
-            const ref = storage.ref().child('uploads/' + Date.now() + '_' + Math.floor(Math.random() * 1000) + '.jpg');
-            const uploadTask = ref.putString(base64String, 'data_url');
-
-            // Timeout logic: Если за 60 секунд не загрузилось - ошибка
-            const timeoutId = setTimeout(() => {
-                uploadTask.cancel();
-                onError(new Error("Timeout: Загрузка длилась более 60 секунд."));
-            }, 60000);
-
-            uploadTask.on('state_changed', 
-                (snapshot) => {
-                    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                    onProgress(progress);
-                }, 
-                (error) => {
-                    clearTimeout(timeoutId);
-                    onError(error);
-                }, 
-                () => {
-                    clearTimeout(timeoutId);
-                    uploadTask.snapshot.ref.getDownloadURL().then(downloadURL => {
-                        onSuccess(downloadURL);
-                    });
-                }
-            );
-        }
-
         function handleFileUpload(input, idx) {
-            const file = input.files[0]; 
-            if (!file) return;
-
-            // UI Elements: Добавляем прогресс бар в текущий контейнер
-            const container = input.parentElement;
-            const existingOverlay = container.querySelector('.upload-progress');
-            if(existingOverlay) existingOverlay.remove();
-
-            const overlay = document.createElement('div');
-            overlay.className = 'upload-progress';
-            overlay.innerHTML = `
-                <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 0%"></div></div>
-                <div class="progress-text">0%</div>
-            `;
-            container.appendChild(overlay);
-
-            const bar = overlay.querySelector('.progress-bar-fill');
-            const txt = overlay.querySelector('.progress-text');
-
-            // Блокируем кнопки
-            const btnGlobal = document.getElementById('btn-save-global');
-            const btnSub = document.getElementById('btn-save-sub');
-            if(btnGlobal) { btnGlobal.disabled = true; btnGlobal.innerText = "⏳ Загрузка фото..."; }
-            if(btnSub) { btnSub.disabled = true; btnSub.innerText = "⏳ Загрузка фото..."; }
-
+            const file = input.files[0]; if (!file) return;
             compressImage(file, (base64) => {
-                uploadImageToStorage(base64, 
-                    (percent) => {
-                        bar.style.width = percent + '%';
-                        txt.textContent = Math.round(percent) + '%';
-                    },
-                    (url) => {
-                        // Success Handler
-                        const mode = tempAppData.mainMenu[currentEditingIndex].mode;
-                        const slot = input.dataset.slot;
-
-                        if (mode === 'products' || mode === 'gallery') {
-                            if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) 
-                                tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
-                            
-                            while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) 
-                                tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
-                            
-                            tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = url;
-                            
-                            if(mode === 'gallery' && slot == 0) 
-                                tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = url;
-                        } else {
-                            tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = url;
-                        }
-
-                        // Сразу показываем фото
-                        container.style.backgroundImage = `url('${url}')`;
-                        overlay.remove();
-
-                        // Разблокируем кнопки
-                        if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
-                        if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; renderSubListItems(); } // ПРАВКА: ПЕРЕРИСОВКА ЧТОБЫ ПОЯВИЛСЯ КРЕСТИК
-                    },
-                    (error) => {
-                        // Error Handler
-                        console.error(error);
-                        overlay.remove();
-                        tg.showAlert("Ошибка загрузки: " + error.message);
-                        input.value = ''; // Сброс инпута
-                        
-                        // Разблокируем кнопки
-                        if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
-                        if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
-                    }
-                );
-            });
-        }
-        
-        // ПРАВКА: НОВАЯ ФУНКЦИЯ УДАЛЕНИЯ ФОТО
-        function removeImage(itemIdx, imgSlot) {
-            if(confirm('Удалить фото?')) {
-                const item = tempAppData.mainMenu[currentEditingIndex].items[itemIdx];
-                if(item.images && item.images[imgSlot]) {
-                     item.images[imgSlot] = '';
-                     // Если удаляем главное фото галереи (слот 0), чистим и imageUrl
-                     if(tempAppData.mainMenu[currentEditingIndex].mode === 'gallery' && imgSlot === 0) {
-                         item.imageUrl = '';
-                     }
-                } else if (imgSlot === 0) {
-                    item.imageUrl = '';
+                if (base64.length > 700000) { alert("Картинка слишком большая"); return; }
+                const mode = tempAppData.mainMenu[currentEditingIndex].mode;
+                if (mode === 'products') {
+                    const slot = input.dataset.slot;
+                    if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
+                    while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
+                    tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = base64;
+                } else {
+                    tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = base64;
                 }
                 renderSubListItems();
-            }
+            });
         }
 
         function addNewGlobalCategory() {
@@ -1407,16 +1192,11 @@
                     let previews = '';
                     for(let i=0; i<3; i++) {
                         const bg = images[i] ? `background-image: url('${images[i]}')` : '';
-                        // ПРАВКА: ДОБАВЛЕН КРЕСТИК УДАЛЕНИЯ (КРАСНАЯ КНОПКА)
-                        const deleteBtn = images[i] ? `<button onclick="removeImage(${idx}, ${i})" class="absolute top-0 right-0 bg-red-500/80 text-white w-5 h-5 flex items-center justify-center rounded-bl-lg hover:bg-red-600 transition z-20">×</button>` : '';
-                        previews += `<div class="relative w-16 h-16 bg-black/40 border border-white/20 rounded flex items-center justify-center overflow-hidden bg-cover bg-center" style="${bg}">${deleteBtn}<input type="file" data-slot="${i}" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileUpload(this, ${idx})">${!images[i]?'<span class="text-xs opacity-50">+</span>':''}</div>`;
+                        previews += `<div class="relative w-16 h-16 bg-black/40 border border-white/20 rounded flex items-center justify-center overflow-hidden bg-cover bg-center" style="${bg}"><input type="file" data-slot="${i}" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileUpload(this, ${idx})">${!images[i]?'<span class="text-xs opacity-50">+</span>':''}</div>`;
                     }
-                    
-                    // ПРАВКА: ТЕХНИЧЕСКОЕ НАЗВАНИЕ "ITEM" ЗАМЕНЕНО НА "ТОВАР"
-                    // ПРАВКА: ДОБАВЛЕН ВЫБОР ЦВЕТА ПЛАШКИ
                     div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
-                             <span class="text-[10px] text-purple-400 font-bold">ТОВАР ${idx+1}</span>
+                             <span class="text-[10px] text-purple-400 font-bold">ITEM ${idx+1}</span>
                              <div class="flex gap-2">
                                 ${upBtn} ${downBtn}
                                 <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
@@ -1427,68 +1207,36 @@
                         <div class="flex gap-2"><input type="text" class="admin-input" value="${item.price||''}" placeholder="Цена" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].price=this.value"><input type="text" class="admin-input" value="${item.oldPrice||''}" placeholder="Старая цена" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].oldPrice=this.value"></div>
                         <textarea class="admin-textarea h-16" placeholder="Краткое описание" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].description=this.value">${item.description||''}</textarea>
                         <textarea class="admin-textarea h-24" placeholder="Полное описание" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].fullDescription=this.value">${item.fullDescription||''}</textarea>
-                        
-                        <div class="grid grid-cols-2 gap-2">
-                            <div>
-                                <label class="admin-label">Статус</label>
-                                <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].status=this.value">
-                                    <option value="" ${!item.status?'selected':''}>Обычный</option>
-                                    <option value="sold" ${item.status==='sold'?'selected':''}>Продано</option>
-                                    <option value="wait" ${item.status==='wait'?'selected':''}>Ожидается</option>
-                                    <option value="order" ${item.status==='order'?'selected':''}>Под заказ</option>
-                                    <option value="noseats" ${item.status==='noseats'?'selected':''}>Мест нет</option>
-                                    <option value="soon" ${item.status==='soon'?'selected':''}>Скоро старт</option>
-                                    <option value="open" ${item.status==='open'?'selected':''}>Запись открыта</option>
-                                    <option value="empty" ${item.status==='empty'?'selected':''}>Пусто</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="admin-label">Цвет плашки</label>
-                                <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].badgeColor=this.value">
-                                    <option value="" ${!item.badgeColor?'selected':''}>Стандарт</option>
-                                    <option value="red" ${item.badgeColor==='red'?'selected':''}>🔴 Красный</option>
-                                    <option value="green" ${item.badgeColor==='green'?'selected':''}>🟢 Зеленый</option>
-                                    <option value="blue" ${item.badgeColor==='blue'?'selected':''}>🔵 Синий</option>
-                                    <option value="white" ${item.badgeColor==='white'?'selected':''}>⚪ Белый</option>
-                                    <option value="yellow" ${item.badgeColor==='yellow'?'selected':''}>🟡 Желтый</option>
-                                    <option value="cyan" ${item.badgeColor==='cyan'?'selected':''}>💠 Голубой</option>
-                                </select>
-                            </div>
-                        </div>
-
+                        <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].status=this.value">
+                            <option value="" ${!item.status?'selected':''}>В наличии (Без плашки)</option>
+                            <option value="sold" ${item.status==='sold'?'selected':''}>Продано</option>
+                            <option value="wait" ${item.status==='wait'?'selected':''}>Ожидается</option>
+                            <option value="order" ${item.status==='order'?'selected':''}>Под заказ</option>
+                            <option value="noseats" ${item.status==='noseats'?'selected':''}>Мест нет</option>
+                            <option value="soon" ${item.status==='soon'?'selected':''}>Скоро старт</option>
+                            <option value="open" ${item.status==='open'?'selected':''}>Запись открыта</option>
+                            <option value="empty" ${item.status==='empty'?'selected':''}>Пусто</option>
+                        </select>
                         <input type="text" class="admin-input" value="${item.buttonText||'Купить'}" placeholder="Текст кнопки" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].buttonText=this.value">
                         <input type="text" class="admin-input" value="${item.buttonLink||''}" placeholder="TG Username" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].buttonLink=this.value">
                     `;
                 } else if (parentBtn.mode === 'gallery') {
                      let opts = '<option value="">Без категории</option>';
                      Array.from(availableCategories).sort().forEach(cat => opts += `<option value="${cat}" ${item.category===cat?'selected':''}>${cat}</option>`);
-                     
-                     const images = item.images || (item.imageUrl ? [item.imageUrl] : []);
-                     let previews = '';
-                     for(let i=0; i<3; i++) {
-                        const bg = images[i] ? `background-image: url('${images[i]}')` : '';
-                        // ПРАВКА: ДОБАВЛЕН КРЕСТИК УДАЛЕНИЯ (КРАСНАЯ КНОПКА)
-                        const deleteBtn = images[i] ? `<button onclick="removeImage(${idx}, ${i})" class="absolute top-0 right-0 bg-red-500/80 text-white w-5 h-5 flex items-center justify-center rounded-bl-lg hover:bg-red-600 transition z-20">×</button>` : '';
-                        previews += `<div class="relative w-16 h-16 bg-black/40 border border-white/20 rounded flex items-center justify-center overflow-hidden bg-cover bg-center" style="${bg}">${deleteBtn}<input type="file" data-slot="${i}" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer" onchange="handleFileUpload(this, ${idx})">${!images[i]?'<span class="text-xs opacity-50">+</span>':''}</div>`;
-                     }
-
                      div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
-                             <span class="text-[10px] font-bold">СЛАЙД ${idx+1}</span>
+                             <span class="text-[10px] font-bold">SLIDE ${idx+1}</span>
                              <div class="flex gap-2">
                                 ${upBtn} ${downBtn}
                                 <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
                              </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="admin-label mb-2">Фото</label>
-                            <div class="flex gap-2">${previews}</div>
-                        </div>
-
-                        <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
+                        <div class="bg-white/5 p-2 rounded mb-2"><label class="admin-label">Magic Paste</label><div class="flex gap-2"><textarea id="magic-paste-${idx}" class="admin-input h-8 mb-0"></textarea><button id="btn-magic-${idx}" onclick="magicPaste(${idx})" class="magic-btn">OK</button></div></div>
+                        <input type="file" accept="image/*" class="text-xs text-gray-400 w-full mb-2" onchange="handleFileUpload(this, ${idx})">
+                        ${item.imageUrl ? `<img src="${item.imageUrl}" class="w-20 h-20 object-cover rounded mb-2">` : ''}
+                        <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
                         <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].category=this.value">${opts}</select>
-                        <textarea id="prompt-area-${idx}" class="admin-textarea" placeholder="Промпт..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt||''}</textarea>
+                        <textarea id="prompt-area-${idx}" class="admin-textarea" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt||''}</textarea>
                      `;
                 } else {
                      div.innerHTML = `
@@ -1514,6 +1262,32 @@
                 [list[index], list[newIndex]] = [list[newIndex], list[index]];
                 renderSubListItems();
             }
+        }
+
+        function magicPaste(itemIdx) {
+            const btn = document.getElementById(`btn-magic-${itemIdx}`);
+            btn.disabled = true; btn.innerText = "⏳";
+            const raw = document.getElementById(`magic-paste-${itemIdx}`).value.trim();
+            const tgLink = raw.match(/(https:\/\/t\.me\/[\w\/]+)/)?.[0];
+            
+            if (!tgLink) { btn.disabled=false; btn.innerText="ERR"; return; }
+            
+            fetch('https://api.allorigins.win/get?url=' + encodeURIComponent(tgLink + '?embed=1&mode=tme'))
+            .then(r => r.json())
+            .then(data => {
+                const doc = new DOMParser().parseFromString(data.contents, "text/html");
+                const style = doc.querySelector('.tgme_widget_message_photo_wrap')?.getAttribute('style');
+                const img = style?.match(/url\('?(.*?)'?\)/)?.[1];
+                let text = doc.querySelector('.tgme_widget_message_text blockquote')?.innerText.trim() 
+                         || doc.querySelector('.tgme_widget_message_text')?.innerText.trim();
+                
+                if (img) tempAppData.mainMenu[currentEditingIndex].items[itemIdx].imageUrl = img;
+                if (text) tempAppData.mainMenu[currentEditingIndex].items[itemIdx].prompt = text;
+                tempAppData.mainMenu[currentEditingIndex].items[itemIdx].tgLink = tgLink;
+                
+                renderSubListItems();
+                btn.disabled=false; btn.innerText = "OK";
+            }).catch(() => { btn.disabled=false; btn.innerText = "ERR"; });
         }
 
         function addNewSubItem() {
@@ -1545,27 +1319,12 @@
 
             try {
                 // ЯВНО УКАЗЫВАЕМ ID АДМИНА
+                const HARDCODED_ADMIN_ID = 758556732; 
                 const secureData = {
-                    admin_id: ADMIN_ID, // ИСПРАВЛЕНО: поле admin_id (snake_case)
+                    adminId: HARDCODED_ADMIN_ID, // <--- ЭТО КЛЮЧ ДЛЯ FIREBASE
                     ...tempAppData,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
-
-                // --- ЗАЩИТА ОТ ПЕРЕПОЛНЕНИЯ (НОВАЯ ЛОГИКА) ---
-                // Проверяем примерный размер JSON-строки
-                const dataString = JSON.stringify(secureData);
-                // ПРАВКА: УВЕЛИЧЕН ЛИМИТ ДО 1МБ (1,000,000)
-                if (dataString.length > 1000000) { 
-                    tg.showAlert("Фото всё ещё слишком большое, выбери другое!");
-                    btns.forEach(b => { 
-                        b.disabled = false; 
-                        b.innerText = "Превышен лимит размера!"; 
-                        b.style.background = "#ff4d4d"; 
-                    });
-                    return; // Прерываем сохранение
-                }
-                // ----------------------------------------------
-
                 console.log("Отправляю данные:", secureData); // Для отладки
                 // Сохраняем с merge, чтобы не затереть лишнее
                 const savePromise = db.collection('configs').doc(configDocId).set(secureData, { merge: true });
@@ -1583,7 +1342,7 @@
                 document.getElementById('save-status').style.opacity = '1';
                 setTimeout(() => { 
                     document.getElementById('save-status').style.opacity = '0'; 
-                    // ПРАВКА: УБРАНО closeAdmin() - ТЕПЕРЬ АДМИНКА НЕ ЗАКРЫВАЕТСЯ АВТОМАТИЧЕСКИ
+                    closeAdmin();
                     btns.forEach(b => { b.disabled = false; b.innerText = "💾 Сохранить изменения"; b.style.background = ""; });
                 }, 1500);
 
@@ -1610,12 +1369,7 @@
                 if(snap.empty) { list.innerHTML = '<div class="text-center text-gray-500 mt-4">Пусто</div>'; return; }
                 
                 const docs = [];
-                snap.forEach(d => { 
-                    let obj = d.data(); 
-                    if(obj.deleted) return; // Фильтруем удаленные
-                    obj.id = d.id; 
-                    docs.push(obj); 
-                });
+                snap.forEach(d => { let obj = d.data(); obj.id = d.id; docs.push(obj); });
                 
                 docs.sort((a,b) => new Date(b.date) - new Date(a.date));
                 
@@ -1657,17 +1411,8 @@
                 }
             });
         }
-        function approveReview(id) { db.collection('reviews').doc(id).update({ approved: true, admin_id: ADMIN_ID }).then(() => { tg.showAlert("Одобрено"); loadModerationList(); }); }
-        
-        // ИСПРАВЛЕНО: Заменили delete() на update() (Soft Delete) для передачи admin_id
-        function deleteReview(id) { 
-            if(confirm('Удалить?')) {
-                db.collection('reviews').doc(id).update({ 
-                    deleted: true, 
-                    admin_id: ADMIN_ID 
-                }).then(loadModerationList); 
-            }
-        }
+        function approveReview(id) { db.collection('reviews').doc(id).update({ approved: true }).then(() => { tg.showAlert("Одобрено"); loadModerationList(); }); }
+        function deleteReview(id) { if(confirm('Удалить?')) db.collection('reviews').doc(id).delete().then(loadModerationList); }
 
     </script>
 </body>
