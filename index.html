@@ -1359,7 +1359,7 @@
                 } else if (parentBtn.mode === 'gallery') {
                      let opts = '<option value="">Без категории</option>';
                      Array.from(availableCategories).sort().forEach(cat => opts += `<option value="${cat}" ${item.category===cat?'selected':''}>${cat}</option>`);
-                     // ПРАВКА: УБРАН MAGIC PASTE, ДОБАВЛЕНА ПРЯМАЯ ЗАГРУЗКА
+                     // ПРАВКА: ИЗМЕНЕН ИНТЕРФЕЙС ЗАГРУЗКИ (КАК В ТОВАРАХ)
                      div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
                              <span class="text-[10px] font-bold">СЛАЙД ${idx+1}</span>
@@ -1369,10 +1369,12 @@
                              </div>
                         </div>
                         
-                        <div class="bg-black/30 p-2 rounded mb-3 border border-white/10">
-                            <label class="admin-label mb-2">Фото (Загрузка в облако)</label>
-                            <input type="file" accept="image/*" class="text-xs text-gray-400 w-full mb-2" onchange="handleFileUpload(this, ${idx})">
-                            ${item.imageUrl ? `<div class="w-full h-24 bg-cover bg-center rounded border border-white/20" style="background-image: url('${item.imageUrl}')"></div>` : '<div class="text-[10px] text-gray-600 text-center py-2">Нет фото</div>'}
+                        <div class="mb-3">
+                            <label class="admin-label mb-2">Фото (Нажми чтобы загрузить)</label>
+                            <div class="relative w-full h-48 bg-black/40 border border-white/20 rounded-xl flex items-center justify-center overflow-hidden bg-cover bg-center" style="${item.imageUrl ? `background-image: url('${item.imageUrl}')` : ''}">
+                                <input type="file" accept="image/*" class="absolute inset-0 opacity-0 cursor-pointer z-10" onchange="handleFileUpload(this, ${idx})">
+                                ${!item.imageUrl ? '<div class="flex flex-col items-center opacity-50"><span class="text-2xl mb-1">+</span><span class="text-[10px]">Загрузить фото</span></div>' : ''}
+                            </div>
                         </div>
 
                         <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
