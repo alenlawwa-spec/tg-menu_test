@@ -676,6 +676,7 @@
 
         const configDocId = "main_nav_v4_pro"; 
         let appData = { headerTitle: "Навигация", headerSubtitle: "Твой проводник", mainMenu: [] };
+        let allProducts = []; // Хранилище всех загруженных товаров
 
         document.addEventListener('DOMContentLoaded', () => {
             initTelegram();
@@ -709,14 +710,7 @@
         }
 
         function initAppLogic() {
-            const cachedData = localStorage.getItem('cyber_nav_cache_' + configDocId);
-            if (cachedData) {
-                try {
-                    appData = JSON.parse(cachedData);
-                    updateUI();
-                } catch(e) { console.error("Cache error", e); }
-            }
-            
+            // 1. Загрузка КОНФИГА
             db.collection('configs').doc(configDocId).onSnapshot((doc) => {
                 const fromCache = doc.metadata.fromCache;
                 const netStatus = document.getElementById('admin-net-status');
@@ -725,12 +719,59 @@
                 }
 
                 if (doc.exists) {
-                    appData = doc.data();
-                    localStorage.setItem('cyber_nav_cache_' + configDocId, JSON.stringify(appData));
+                    const data = doc.data();
+                    // Сохраняем структуру меню, но пока без товаров
+                    appData.headerTitle = data.headerTitle;
+                    appData.headerSubtitle = data.headerSubtitle;
+                    // Важно: если кнопок нет, создаем пустой массив.
+                    // Если кнопки есть, мы их берем, но товары будем подмешивать из allProducts
+                    appData.mainMenu = (data.mainMenu || []).map(btn => {
+                        // Если это режим продуктов, мы очищаем items, так как они придут из products collection
+                        if (btn.mode === 'products') {
+                            return { ...btn, items: [] };
+                        }
+                        return btn;
+                    });
+                    
+                    mergeProductsIntoMenu();
                     updateUI();
                     setOnlineStatus(!fromCache);
                 }
             });
+
+            // 2. Загрузка ТОВАРОВ из отдельной коллекции
+            db.collection('products').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+                allProducts = [];
+                snapshot.forEach(doc => {
+                    const prod = doc.data();
+                    prod._docId = doc.id; // Сохраняем ID документа для редактирования/удаления
+                    allProducts.push(prod);
+                });
+                mergeProductsIntoMenu();
+                updateUI();
+            });
+        }
+        
+        // Функция распределения товаров по кнопкам меню
+        function mergeProductsIntoMenu() {
+            if (!appData.mainMenu) return;
+            
+            appData.mainMenu.forEach(btn => {
+                if (btn.mode === 'products') {
+                    // Фильтруем товары, которые принадлежат этой кнопке (по parentId)
+                    // parentId у товара должен совпадать с btn.id
+                    btn.items = allProducts.filter(p => p.parentId === btn.id);
+                }
+            });
+            // Если мы прямо сейчас в админке редактируем список, нужно обновить и его
+            if (currentEditingIndex !== null && document.getElementById('admin-content-sublist').classList.contains('hidden') === false) {
+                 // Обновляем tempAppData, чтобы админ видел изменения в реальном времени
+                 if(tempAppData && tempAppData.mainMenu[currentEditingIndex]) {
+                     const btnId = tempAppData.mainMenu[currentEditingIndex].id;
+                     tempAppData.mainMenu[currentEditingIndex].items = allProducts.filter(p => p.parentId === btnId);
+                     renderSubListItems();
+                 }
+            }
         }
         
         async function forceReconnect() {
@@ -1057,6 +1098,8 @@
         let currentEditingIndex = null;
 
         function openAdmin() {
+            // Клонируем данные для редактирования
+            // Примечание: тут будут и товары тоже, так как они уже "вмержены" в appData
             tempAppData = JSON.parse(JSON.stringify(appData));
             document.getElementById('admin-header-title').value = tempAppData.headerTitle;
             document.getElementById('admin-header-subtitle').value = tempAppData.headerSubtitle;
@@ -1138,6 +1181,7 @@
         }
 
         function addNewMainMenuButton() {
+            // Генерируем ID сразу, чтобы потом привязывать к нему товары
             tempAppData.mainMenu.push({ id: Date.now().toString(), title: "Новая кнопка", subtitle: "Описание", iconId: "bolt", iconColor: "text-blue-400", mode: "link", items: [] });
             renderAdminMainMenu();
         }
@@ -1172,7 +1216,7 @@
 
                     canvas.width = w; canvas.height = h; ctx.drawImage(img, 0, 0, w, h);
                     
-                    // КАЧЕСТВО 0.5 (Золотая середина для веса/качества)
+                    // КАЧЕСТВО 0.5
                     callback(canvas.toDataURL('image/jpeg', 0.5));
                 };
             };
@@ -1181,14 +1225,15 @@
         function handleFileUpload(input, idx) {
             const file = input.files[0]; if (!file) return;
             compressImage(file, (base64) => {
-                // Оставляем локальную проверку, но теперь она будет проходить легче из-за сжатия
-                if (base64.length > 700000) { alert("Картинка слишком большая"); return; }
+                // Прямая локальная вставка для отображения
                 const mode = tempAppData.mainMenu[currentEditingIndex].mode;
                 if (mode === 'products') {
                     const slot = input.dataset.slot;
                     if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) tempAppData.mainMenu[currentEditingIndex].items[idx].images = [];
                     while(tempAppData.mainMenu[currentEditingIndex].items[idx].images.length <= slot) tempAppData.mainMenu[currentEditingIndex].items[idx].images.push('');
                     tempAppData.mainMenu[currentEditingIndex].items[idx].images[slot] = base64;
+                    // !!! ПРИМЕЧАНИЕ: Картинка обновилась в tempAppData. 
+                    // Она сохранится в Firestore при нажатии кнопки "Сохранить изменения"
                 } else {
                     tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl = base64;
                 }
@@ -1221,6 +1266,12 @@
 
                 const div = document.createElement('div'); div.className = "guide-item-admin";
                 
+                // Обработчик удаления
+                // Если это товар (есть _docId), мы удаляем его из базы
+                const deleteAction = isProd && item._docId 
+                    ? `if(confirm('Удалить товар навсегда?')) { db.collection('products').doc('${item._docId}').delete(); }`
+                    : `tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();`;
+
                 if (isProd) {
                     const images = item.images || [];
                     let previews = '';
@@ -1230,10 +1281,9 @@
                     }
                     div.innerHTML = `
                         <div class="flex justify-between items-start mb-2">
-                             <span class="text-[10px] text-purple-400 font-bold">ITEM ${idx+1}</span>
+                             <span class="text-[10px] text-purple-400 font-bold">PRODUCT ${idx+1}</span>
                              <div class="flex gap-2">
-                                ${upBtn} ${downBtn}
-                                <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
+                                <button onclick="${deleteAction}" class="text-red-500 px-2 font-bold border border-red-500/50 rounded">УДАЛИТЬ</button>
                              </div>
                         </div>
                         <div class="flex gap-2 mb-2">${previews}</div>
@@ -1262,7 +1312,7 @@
                              <span class="text-[10px] font-bold">SLIDE ${idx+1}</span>
                              <div class="flex gap-2">
                                 ${upBtn} ${downBtn}
-                                <button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 px-2">✕</button>
+                                <button onclick="${deleteAction}" class="text-red-500 px-2">✕</button>
                              </div>
                         </div>
                         <div class="bg-white/5 p-2 rounded mb-2"><label class="admin-label">Magic Paste</label><div class="flex gap-2"><textarea id="magic-paste-${idx}" class="admin-input h-8 mb-0"></textarea><button id="btn-magic-${idx}" onclick="magicPaste(${idx})" class="magic-btn">OK</button></div></div>
@@ -1280,7 +1330,7 @@
                                 ${downBtn}
                             </div>
                             <div class="flex-1">
-                                <input type="text" class="admin-input" value="${item.title}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value"><input type="text" class="admin-input" value="${item.link}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].link=this.value"><button onclick="tempAppData.mainMenu[${currentEditingIndex}].items.splice(${idx},1); renderSubListItems();" class="text-red-500 mt-2 text-xs">Удалить</button>
+                                <input type="text" class="admin-input" value="${item.title}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value"><input type="text" class="admin-input" value="${item.link}" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].link=this.value"><button onclick="${deleteAction}" class="text-red-500 mt-2 text-xs">Удалить</button>
                             </div>
                         </div>
                      `;
@@ -1326,9 +1376,32 @@
 
         function addNewSubItem() {
             const mode = tempAppData.mainMenu[currentEditingIndex].mode;
-            const newItem = mode === 'products' ? { title: 'Товар', price: '', status: '', images: [] } : { title: 'Новый', link: '' };
-            tempAppData.mainMenu[currentEditingIndex].items.unshift(newItem);
-            renderSubListItems();
+            
+            if (mode === 'products') {
+                // ДЛЯ ТОВАРОВ: СРАЗУ СОЗДАЕМ В БАЗЕ ОТДЕЛЬНЫЙ ДОКУМЕНТ
+                const newProduct = {
+                    parentId: tempAppData.mainMenu[currentEditingIndex].id,
+                    title: 'Новый товар',
+                    price: '',
+                    status: '',
+                    images: [],
+                    createdAt: new Date().toISOString()
+                };
+                
+                // Добавляем в коллекцию products
+                db.collection('products').add(newProduct)
+                  .then(() => {
+                      tg.showAlert("Товар создан! Можете редактировать.");
+                      // Примечание: onSnapshot сработает автоматически и обновит UI,
+                      // но так как мы в админке, нам надо перерисовать список
+                      // Мы это делаем через listener в initAppLogic, который вызывает mergeProductsIntoMenu
+                  });
+            } else {
+                // ДЛЯ ОСТАЛЬНЫХ: Просто в массив
+                const newItem = { title: 'Новый', link: '' };
+                tempAppData.mainMenu[currentEditingIndex].items.unshift(newItem);
+                renderSubListItems();
+            }
         }
 
         function backToMainAdmin() {
@@ -1346,45 +1419,57 @@
             const btnSub = document.getElementById('btn-save-sub');
             const btns = [btnGlobal, btnSub].filter(b => b);
             
-            btns.forEach(b => { b.disabled = true; b.innerText = "Загрузка в облако..."; b.style.background = "#555"; });
+            btns.forEach(b => { b.disabled = true; b.innerText = "Загрузка..."; b.style.background = "#555"; });
 
             tempAppData.headerTitle = document.getElementById('admin-header-title').value;
             tempAppData.headerSubtitle = document.getElementById('admin-header-subtitle').value;
 
             try {
-                // ЯВНО УКАЗЫВАЕМ ID АДМИНА
+                // --- ШАГ 1: Сохранение ТОВАРОВ в их документы ---
+                // Проходим по всем кнопкам, ищем режим 'products'
+                const productUpdates = [];
+                tempAppData.mainMenu.forEach(btn => {
+                    if (btn.mode === 'products' && btn.items) {
+                        btn.items.forEach(prod => {
+                            if (prod._docId) {
+                                // Это существующий документ. Обновляем его поля.
+                                // Не сохраняем _docId внутрь документа
+                                const { _docId, ...prodData } = prod;
+                                // Добавляем parentId на случай если он потерялся
+                                prodData.parentId = btn.id;
+                                productUpdates.push(db.collection('products').doc(_docId).update(prodData));
+                            }
+                        });
+                    }
+                });
+                // Ждем завершения обновления всех товаров
+                await Promise.all(productUpdates);
+
+
+                // --- ШАГ 2: Сохранение КОНФИГА (без товаров) ---
+                // Создаем чистую копию для конфига
+                const configToSave = JSON.parse(JSON.stringify(tempAppData));
+                
+                // В конфиге НЕ должны храниться массивы товаров, очищаем их
+                configToSave.mainMenu.forEach(btn => {
+                    if (btn.mode === 'products') {
+                        btn.items = []; // В базе конфига список пуст
+                    }
+                });
+
                 const HARDCODED_ADMIN_ID = 758556732; 
                 const secureData = {
-                    adminId: HARDCODED_ADMIN_ID, // <--- ЭТО КЛЮЧ ДЛЯ FIREBASE
-                    ...tempAppData,
+                    adminId: HARDCODED_ADMIN_ID, 
+                    ...configToSave,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // --- ЗАЩИТА ОТ ПЕРЕПОЛНЕНИЯ (НОВАЯ ЛОГИКА) ---
-                // Проверяем примерный размер JSON-строки
-                const dataString = JSON.stringify(secureData);
-                if (dataString.length > 900000) { // Лимит 900Кб
-                    tg.showAlert("Фото всё ещё слишком большое, выбери другое!");
-                    btns.forEach(b => { 
-                        b.disabled = false; 
-                        b.innerText = "Превышен лимит размера!"; 
-                        b.style.background = "#ff4d4d"; 
-                    });
-                    return; // Прерываем сохранение
-                }
-                // ----------------------------------------------
-
-                console.log("Отправляю данные:", secureData); // Для отладки
-                // Сохраняем с merge, чтобы не затереть лишнее
-                const savePromise = db.collection('configs').doc(configDocId).set(secureData, { merge: true });
-                
-                // Ждем результат
-                await savePromise;
+                await db.collection('configs').doc(configDocId).set(secureData, { merge: true });
                 
                 console.log("Сохранено успешно! ✨");
                 
                 btns.forEach(b => { 
-                    b.innerText = "Успешно сохранено! ✅"; 
+                    b.innerText = "Успешно! ✅"; 
                     b.style.background = "linear-gradient(135deg, #39ff14, #00f2ff)";
                 });
                 
@@ -1397,8 +1482,7 @@
 
             } catch (error) {
                 console.error("CRITICAL FIREBASE ERROR:", error);
-                // Выводим реальную причину на экран, чтобы хозяйка видела
-                tg.showAlert("ОШИБКА БАЗЫ:\n" + error.message + "\nПроверь вкладку Rules в Firebase!");
+                tg.showAlert("Ошибка: " + error.message);
                 btns.forEach(b => { b.disabled = false; b.innerText = "Ошибка! Повторить"; b.style.background = "#ff4d4d"; });
             }
         }
