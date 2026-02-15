@@ -754,7 +754,7 @@
                 } catch(e) { console.error("Cache error", e); }
             }
             
-            db.collection('configs').doc(configDocId).onSnapshot((doc) => {
+            db.collection('configs').doc(configDocId).onSnapshot(async (doc) => {
                 const fromCache = doc.metadata.fromCache;
                 const netStatus = document.getElementById('admin-net-status');
                 if(netStatus) {
@@ -763,11 +763,41 @@
 
                 if (doc.exists) {
                     appData = doc.data();
+                    // АСИНХРОННАЯ ЗАГРУЗКА ТЯЖЕЛЫХ ДАННЫХ
+                    await loadHeavyContent();
+                    
                     localStorage.setItem('cyber_nav_cache_' + configDocId, JSON.stringify(appData));
                     updateUI();
                     setOnlineStatus(!fromCache);
                 }
             });
+        }
+        
+        async function loadHeavyContent() {
+            if (!appData.mainMenu) return;
+            
+            const promises = appData.mainMenu.map(async (btn) => {
+                if (['gallery', 'products'].includes(btn.mode) && btn.id) {
+                    const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
+                    try {
+                        const snap = await db.collection(colName).where('parentId', '==', btn.id).get();
+                        const items = [];
+                        snap.forEach(d => {
+                            let item = d.data();
+                            item.id = d.id;
+                            items.push(item);
+                        });
+                        // Сортировка по порядку (если есть index, иначе по добавлению)
+                        // Для простоты оставим как есть, или можно добавить поле orderIndex в будущем
+                        btn.items = items;
+                    } catch (e) {
+                        console.error(`Error loading ${colName} for ${btn.id}`, e);
+                        btn.items = [];
+                    }
+                }
+            });
+            
+            await Promise.all(promises);
         }
         
         async function forceReconnect() {
@@ -1227,7 +1257,7 @@
                     const canvas = document.getElementById('compress-canvas');
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
-                    const MAX_SIDE = 500; // ПРАВКА: Уменьшил до 500px, чтобы точно влезало
+                    const MAX_SIDE = 800; // НОВЫЙ ЛИМИТ
                     if (w > h) {
                         if (w > MAX_SIDE) { h = Math.round(h * (MAX_SIDE / w)); w = MAX_SIDE; }
                     } else {
@@ -1236,8 +1266,15 @@
                     canvas.width = w; canvas.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    // ПРАВКА: Качество 0.4 для максимальной совместимости с лимитом
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
+                    // Усиленное сжатие 0.5
+                    let quality = 0.5;
+                    let dataUrl = canvas.toDataURL('image/jpeg', quality);
+
+                    while (dataUrl.length > 900000 && quality > 0.1) {
+                        quality -= 0.1;
+                        dataUrl = canvas.toDataURL('image/jpeg', quality);
+                    }
+                    
                     callback(dataUrl);
                 };
             };
@@ -1455,26 +1492,62 @@
             const btnSub = document.getElementById('btn-save-sub');
             const btns = [btnGlobal, btnSub].filter(b => b);
             
-            btns.forEach(b => { b.disabled = true; b.innerText = "Загрузка в облако..."; b.style.background = "#555"; });
+            btns.forEach(b => { b.disabled = true; b.innerText = "РАЗДЕЛЕНИЕ ДАННЫХ..."; b.style.background = "#555"; });
 
-            tempAppData.headerTitle = document.getElementById('admin-header-title').value;
-            tempAppData.headerSubtitle = document.getElementById('admin-header-subtitle').value;
+            // Подготовка данных для сохранения
+            // Мы модифицируем копию, чтобы не ломать UI
+            const dataToSave = JSON.parse(JSON.stringify(tempAppData));
+            dataToSave.headerTitle = document.getElementById('admin-header-title').value;
+            dataToSave.headerSubtitle = document.getElementById('admin-header-subtitle').value;
 
             try {
+                // 1. Проходим по всем пунктам меню
+                // Отделяем тяжелые данные (товары, галерея) в отдельные коллекции
+                const savePromises = [];
+
+                for (let btn of dataToSave.mainMenu) {
+                    // Убедимся, что у кнопки есть ID
+                    if (!btn.id) btn.id = 'menu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                    
+                    if (['gallery', 'products'].includes(btn.mode)) {
+                        const items = btn.items || [];
+                        const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
+
+                        // Сохраняем каждый элемент отдельно
+                        for (let item of items) {
+                            if (!item.id) item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                            
+                            // Добавляем ссылку на родителя
+                            item.parentId = btn.id;
+
+                            // Добавляем в промисы сохранение отдельного документа
+                            savePromises.push(
+                                db.collection(colName).doc(item.id).set(item, { merge: true })
+                            );
+                        }
+
+                        // ОЧИЩАЕМ массив items в основном конфиге, чтобы он весил мало
+                        btn.items = []; 
+                    }
+                }
+
+                // 2. Ждем сохранения всех мелких документов
+                if (savePromises.length > 0) {
+                    await Promise.all(savePromises);
+                    console.log(`Saved ${savePromises.length} items to separate collections`);
+                }
+
+                // 3. Сохраняем "легкий" конфиг
                 const secureData = {
                     admin_id: ADMIN_ID, 
-                    ...tempAppData,
+                    ...dataToSave,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                // ПРАВКА: Убрал проверку размера, которая вас бесила.
-                // Firebase сам выкинет ошибку, если будет реально больше 1МБ.
-                console.log("Отправляю данные:", secureData); 
-                const savePromise = db.collection('configs').doc(configDocId).set(secureData, { merge: true });
+                console.log("Сохраняю очищенный конфиг:", secureData); 
+                await db.collection('configs').doc(configDocId).set(secureData, { merge: true });
                 
-                await savePromise;
-                
-                console.log("Сохранено успешно! ✨");
+                console.log("Успешно! ✨");
                 
                 btns.forEach(b => { 
                     b.innerText = "Успешно сохранено! ✅"; 
@@ -1488,8 +1561,8 @@
                 }, 1500);
 
             } catch (error) {
-                console.error("CRITICAL FIREBASE ERROR:", error);
-                tg.showAlert("ОШИБКА БАЗЫ:\n" + error.message + "\nПроверь вкладку Rules в Firebase!");
+                console.error("CRITICAL ERROR:", error);
+                tg.showAlert("ОШИБКА СОХРАНЕНИЯ:\n" + error.message);
                 btns.forEach(b => { b.disabled = false; b.innerText = "Ошибка! Повторить"; b.style.background = "#ff4d4d"; });
             }
         }
