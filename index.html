@@ -283,19 +283,21 @@
             transition: transform 0.2s; background: #111;
         }
         .gallery-item:active { transform: scale(0.96); }
-        .gallery-img { width: 100%; height: 100%; object-fit: cover; object-position: center; will-change: opacity; }
+
+        .gallery-img, .product-image, .list-item-img { 
+            width: 100%; height: 100%; object-fit: cover; will-change: opacity; 
+            object-position: top !important; 
+        }
         
-        /* FIX: GRID OVERLAY (Left align, bottom) */
         .gallery-overlay {
             position: absolute; bottom: 0; left: 0; right: 0; 
             background: linear-gradient(to top, rgba(0,0,0,0.95), transparent);
             padding: 12px; 
             display: flex; 
             flex-direction: column; 
-            justify-content: flex-end; /* Push content to bottom */
+            justify-content: flex-end; 
             height: 60%;
-            align-items: flex-start; /* Left align items */
-            text-align: left; /* Left align text */
+            align-items: flex-start;
         }
 
         #gallery-modal {
@@ -382,11 +384,6 @@
         }
         .product-card:active { transform: scale(0.97); }
 
-        .product-image {
-            width: 100%; aspect-ratio: 1/1; object-fit: cover; object-position: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
         .product-badge {
             position: absolute; top: 8px; right: 8px; padding: 4px 8px;
             border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase;
@@ -408,6 +405,7 @@
             display: flex; 
             flex-direction: column; 
             overflow: hidden; 
+            justify-content: space-between; 
         }
         
         .product-title {
@@ -495,95 +493,59 @@
 
         /* --- NEW UI ELEMENTS --- */
 
-        /* Кнопка "ПОДРОБНЕЕ" */
-        .btn-more-details {
-            margin-top: 4px; /* Space above button in grid */
-            background: rgba(0, 242, 255, 0.05);
-            border: 1px solid rgba(0, 242, 255, 0.5); /* Neon border visible */
-            color: var(--neon-color);
-            font-size: 9px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
-            padding: 6px 10px;
-            border-radius: 8px;
-            width: auto;
-            text-align: center;
-            transition: all 0.2s;
-            backdrop-filter: blur(4px);
-            cursor: pointer;
-            display: inline-block;
-        }
-        .btn-more-details:active {
-            background: rgba(0, 242, 255, 0.15);
-            box-shadow: 0 0 15px rgba(0, 242, 255, 0.4);
-            transform: scale(0.98);
-        }
-
-        /* Стиль для отображения списком (LIST VIEW) */
+        /* LIST VIEW Structure */
         .list-item {
             display: flex;
+            flex-direction: row; 
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             overflow: hidden;
-            height: 130px;
+            height: auto; 
             position: relative;
             transition: transform 0.2s;
-            padding: 0 !important;
+            padding: 8px !important;
+            gap: 12px; 
         }
         .list-item:active { transform: scale(0.98); }
         
+        /* Fixed Square Image Container */
+        .list-img-container {
+            width: 100px;
+            height: 100px; 
+            flex-shrink: 0;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
         .list-item-img {
-            width: 35%;
+            width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: top; /* FIX: Top align heads */
-            border-right: 1px solid rgba(255,255,255,0.05);
-            flex-shrink: 0;
-            display: block; 
-            margin: 0 !important; 
+            object-position: top !important; 
         }
         
+        /* Right Content Column */
         .list-item-content {
-            width: 65%;
-            padding: 12px;
+            flex: 1;
             display: flex;
             flex-direction: column;
             position: relative;
         }
 
         .list-item-title {
-            font-weight: 600; font-size: 13px; color: white; line-height: 1.2;
-            margin-bottom: 4px;
+            font-weight: 700; font-size: 14px; color: white; line-height: 1.2;
+            margin-bottom: 2px;
             display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
         
         .list-item-desc {
-            font-size: 10px; color: #888; line-height: 1.3;
-            display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-            margin-bottom: 8px;
-            padding-right: 10px; /* Space for scrollbar if any */
-        }
-
-        .list-item-footer {
-            margin-top: auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        /* FIX: Button in list view at bottom right */
-        .list-item-content .btn-more-details {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: auto;
-            margin: 0;
-            padding: 6px 12px;
-            font-size: 10px;
+            font-size: 10px; color: #9ca3af; line-height: 1.3;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+            margin-top: 2px;
         }
 
     </style>
@@ -757,6 +719,7 @@
         let tg;
         let availableCategories = new Set();
         const ADMIN_ID = 758556732;
+        const BTN_DETAILS_CLASS = "bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[10px] uppercase px-3 py-1 rounded shadow-[0_0_10px_rgba(0,242,255,0.2)] hover:bg-[rgba(0,242,255,0.2)] transition-all";
 
         document.addEventListener('contextmenu', event => event.preventDefault());
 
@@ -1060,33 +1023,37 @@
                 const imgUrl = (item.images && item.images.length > 0) ? item.images[0] : item.imageUrl;
                 
                 if (viewType === 'list') {
-                     // LIST VIEW FOR GALLERY
+                     // LIST VIEW
                      const itemEl = document.createElement('div');
                      itemEl.className = 'list-item cursor-pointer';
                      itemEl.onclick = () => openGalleryModal(imgUrl, item.prompt);
                      
                      itemEl.innerHTML = `
-                        <img src="${imgUrl}" class="list-item-img" loading="lazy">
+                        <div class="list-img-container">
+                             <img src="${imgUrl}" class="list-item-img" loading="lazy">
+                        </div>
                         <div class="list-item-content">
                             <div class="list-item-title">${escapeHtml(item.title || 'Без названия')}</div>
                             <div class="list-item-desc">${escapeHtml(item.prompt || 'Нет описания')}</div>
-                            <button class="btn-more-details absolute bottom-3 right-3 w-auto px-3 py-1 text-[10px]">ПОДРОБНЕЕ</button>
+                            <div class="mt-auto flex justify-end">
+                                <button class="${BTN_DETAILS_CLASS}">ПОДРОБНЕЕ</button>
+                            </div>
                         </div>
                      `;
                      container.appendChild(itemEl);
                 } else {
-                     // GRID VIEW FOR GALLERY
+                     // GRID VIEW
                     const itemEl = document.createElement('div');
                     itemEl.className = 'gallery-item cursor-pointer';
                     itemEl.onclick = () => openGalleryModal(imgUrl, item.prompt);
                     
-                    const titleText = item.title ? `<div class="text-white text-xs font-semibold truncate mb-1 text-left w-full">${escapeHtml(item.title)}</div>` : '';
-                    
                     itemEl.innerHTML = `
                         <img src="${imgUrl}" data-tg-link="${item.tgLink || ''}" class="gallery-img" referrerpolicy="no-referrer" loading="lazy" decoding="async" onerror="tryRepairImage(this)">
                         <div class="gallery-overlay pointer-events-none">
-                            ${titleText}
-                            <div class="btn-more-details mt-1">ПОДРОБНЕЕ</div>
+                            <div class="text-white text-xs font-semibold text-left w-full mb-2">${escapeHtml(item.title || '')}</div>
+                            <div class="w-full flex justify-end">
+                                <button class="${BTN_DETAILS_CLASS}">ПОДРОБНЕЕ</button>
+                            </div>
                         </div>
                     `;
                     container.appendChild(itemEl);
@@ -1133,23 +1100,35 @@
                 }
 
                 if (viewType === 'list') {
-                    // LIST VIEW (FIXED)
+                    // ПРАВИЛЬНАЯ СТРУКТУРА ДЛЯ СПИСКА (List View)
                     const card = document.createElement('div');
-                    card.className = 'list-item cursor-pointer';
+                    // Flex-row делает фото и текст соседями!
+                    card.className = 'bg-black/40 p-3 rounded-lg border border-gray-800 flex flex-row gap-3 relative cursor-pointer'; 
                     card.onclick = () => openProductModal(item);
                     
-                    const listBadge = badgeHtml ? badgeHtml.replace('product-badge', 'product-badge scale-75 origin-top-right') : '';
+                    // Сохраняем бейдж, но позиционируем его абсолютно внутри relative контейнера
+                    const listBadge = badgeHtml ? badgeHtml.replace('product-badge', 'product-badge scale-75 origin-top-right absolute top-2 right-2') : '';
 
+                    // 1. Фото (Слева) - Обязательно фиксированные размеры и object-top!
                     card.innerHTML = `
-                        <div class="relative w-[35%] flex-shrink-0 h-full">
-                             ${listBadge}
-                             <img src="${mainImg || 'https://placehold.co/400'}" class="list-item-img w-full h-full" loading="lazy">
+                        ${listBadge}
+                        <div class="w-24 h-24 flex-shrink-0">
+                            <img src="${mainImg || 'https://via.placeholder.com/150'}" 
+                                 class="w-full h-full object-cover object-top rounded-md">
                         </div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">${escapeHtml(item.title)}</div>
-                            ${item.price ? `<div class="text-[#00f2ff] font-bold text-xs mb-1">${item.price}</div>` : ''}
-                            <div class="list-item-desc">${escapeHtml(item.description)}</div>
-                            <button class="btn-more-details absolute bottom-3 right-3 w-auto px-3 py-1 text-[10px]">ПОДРОБНЕЕ</button>
+                        
+                        <div class="flex-1 flex flex-col justify-between">
+                            <div>
+                                <div class="text-white font-bold text-sm leading-tight mb-1">${escapeHtml(item.title)}</div>
+                                <div class="text-[var(--neon-color)] font-mono text-xs mb-1">${escapeHtml(item.price || '')}</div>
+                                <div class="text-gray-400 text-[10px] leading-snug line-clamp-2">${escapeHtml(item.description || '')}</div>
+                            </div>
+                            
+                            <div class="flex justify-end mt-2">
+                                <button class="bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[10px] uppercase px-3 py-1 rounded shadow-[0_0_5px_rgba(0,242,255,0.2)]">
+                                    ПОДРОБНЕЕ
+                                </button>
+                            </div>
                         </div>
                     `;
                     container.appendChild(card);
@@ -1167,10 +1146,14 @@
                         ${badgeHtml}
                         <img src="${mainImg || 'https://placehold.co/400'}" class="product-image" loading="lazy">
                         <div class="product-info">
-                            <div class="product-title">${escapeHtml(item.title)}</div>
-                            ${priceHtml}
-                            <div class="product-desc-short">${escapeHtml(item.description)}</div>
-                            <button class="btn-more-details w-full mt-2">ПОДРОБНЕЕ</button>
+                            <div>
+                                <div class="product-title text-left mb-1">${escapeHtml(item.title)}</div>
+                                ${priceHtml}
+                                <div class="product-desc-short">${escapeHtml(item.description)}</div>
+                            </div>
+                            <div class="flex justify-end mt-2">
+                                <button class="${BTN_DETAILS_CLASS}">ПОДРОБНЕЕ</button>
+                            </div>
                         </div>
                     `;
                     container.appendChild(card);
@@ -1499,7 +1482,6 @@
             if(val) { availableCategories.add(val); input.value = ''; renderSubListItems(); }
         }
         
-        // --- NEW DELETE LOGIC (Fixing Persistence Issue) ---
         async function deleteSubItem(idx) {
             if (!confirm("⚠️ Точно удалить? Восстановить нельзя!")) return;
             
@@ -1550,7 +1532,6 @@
 
                 const div = document.createElement('div'); div.className = "guide-item-admin";
                 
-                // USE NEW deleteSubItem FUNCTION
                 const deleteButton = `<button onclick="deleteSubItem(${idx})" class="text-red-500 px-2 font-bold">🗑️</button>`;
 
                 if (isProd) {
@@ -1706,14 +1687,13 @@
                             if (!item.id) item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                             
                             item.parentId = btn.id;
-                            item.admin_id = ADMIN_ID; // CRITICAL FIX: ADMIN_ID
+                            item.admin_id = ADMIN_ID; 
 
                             savePromises.push(
                                 db.collection(colName).doc(item.id).set(item, { merge: true })
                             );
                         }
                         
-                        // CRITICAL: Force empty array in config to prevent duplication/persistence of old items in main file
                         btn.items = []; 
                     }
                 }
@@ -1724,7 +1704,7 @@
                 }
 
                 const secureData = {
-                    admin_id: ADMIN_ID, // CRITICAL FIX: ADMIN_ID
+                    admin_id: ADMIN_ID, 
                     ...dataToSave,
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
