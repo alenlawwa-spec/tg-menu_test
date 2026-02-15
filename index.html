@@ -551,6 +551,24 @@
             margin-top: 2px;
         }
 
+        /* ADMIN STICKY BAR CSS */
+        #admin-sticky-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 9999;
+            background: rgba(10, 10, 10, 0.85); /* Темный фон */
+            backdrop-filter: blur(15px); /* Эффект матового стекла */
+            -webkit-backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(0, 242, 255, 0.3); /* Тонкая неоновая линия сверху */
+            padding: 12px 16px;
+            padding-bottom: calc(12px + env(safe-area-inset-bottom)); /* Учет челки снизу на iPhone */
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+        }
+
     </style>
 </head>
 <body>
@@ -654,7 +672,7 @@
         <button onclick="closeReviewModal()" class="text-gray-500 text-sm mt-4">Отмена</button>
     </div>
 
-    <div id="admin-page" class="page hidden-bottom" style="background: rgba(5,5,8,0.98); z-index: 50; padding-bottom: 100px;">
+    <div id="admin-page" class="page hidden-bottom" style="background: rgba(5,5,8,0.98); z-index: 50; padding-bottom: 0;">
         <header class="mb-8 flex justify-between items-center sticky top-0 bg-[#050508] py-4 z-20 border-b border-white/5">
             <div>
                 <h2 class="text-2xl font-bold text-white tracking-tight">
@@ -669,7 +687,7 @@
             </div>
         </header>
 
-        <div id="admin-content-main" class="z-10">
+        <div id="admin-content-main" class="z-10 pb-24">
             <div class="admin-card">
                 <div class="admin-section-title">Заголовки Главной</div>
                 <div class="mb-2">
@@ -685,12 +703,7 @@
             <div class="admin-card">
                 <div class="admin-section-title">Структура меню</div>
                 <div id="admin-main-menu-list" class="space-y-4"></div>
-                <button onclick="addNewMainMenuButton()" class="btn-add-cyber mt-4">
-                    <span>⚡</span> Добавить кнопку
-                </button>
             </div>
-            
-            <button onclick="saveAdminData()" id="btn-save-global" class="btn-save-cyber mt-4 mb-8" style="box-shadow: 0 4px 20px rgba(0, 242, 255, 0.2);">💾 Сохранить изменения</button>
         </div>
 
         <div id="admin-content-sublist" class="hidden z-10 pb-24">
@@ -698,10 +711,6 @@
             
             <div class="admin-card">
                 <div class="admin-section-title text-pink-500" id="admin-sublist-title">Редактор списка</div>
-                
-                <button onclick="addNewSubItem()" class="btn-add-cyber mb-2"><span>+</span> Добавить блок</button>
-                <button onclick="saveAdminData()" id="btn-save-sub" class="btn-save-cyber mb-6" style="margin-top: 0; box-shadow: 0 4px 20px rgba(0, 242, 255, 0.2);">💾 Сохранить изменения</button>
-                
                 <div id="admin-sublist-items" class="space-y-4"></div>
             </div>
         </div>
@@ -709,10 +718,13 @@
         <div id="admin-content-moderation" class="hidden z-10">
              <button onclick="backToMainAdmin()" class="text-gray-400 text-xs mb-4 flex items-center gap-2">‹ Назад к меню</button>
              <div class="admin-section-title text-yellow-400">Модерация отзывов</div>
-             <div id="moderation-list" class="space-y-4 pb-20"></div>
+             <div id="moderation-list" class="space-y-4 pb-32"></div>
         </div>
 
-        <div id="save-status" class="text-center text-xs text-cyan-400 mt-4 opacity-0 transition-opacity font-mono">DB_SYNC_COMPLETE</div>
+        <!-- NEW STICKY BAR -->
+        <div id="admin-sticky-bar" class="hidden"></div>
+        
+        <div id="save-status" class="text-center text-xs text-cyan-400 mt-4 opacity-0 transition-opacity font-mono absolute bottom-20 left-0 right-0 pointer-events-none">DB_SYNC_COMPLETE</div>
     </div>
 
     <canvas id="compress-canvas" style="display: none;"></canvas>
@@ -1321,6 +1333,14 @@
             document.getElementById('admin-page').classList.replace('hidden-bottom', 'active-modal');
             document.getElementById('admin-content-main').classList.remove('hidden');
             document.getElementById('admin-content-sublist').classList.add('hidden');
+            
+            // INIT STICKY BAR FOR MAIN MENU
+            const bar = document.getElementById('admin-sticky-bar');
+            bar.classList.remove('hidden');
+            bar.innerHTML = `
+                <button onclick="addNewMainMenuButton()" class="btn-add-cyber" style="flex:1; margin-top:0;"><span>⚡</span> Блок</button>
+                <button onclick="saveAdminData()" id="btn-save-global" class="btn-save-cyber" style="flex:2; margin-top:0;">💾 Сохранить</button>
+            `;
         }
 
         function renderAdminMainMenu() {
@@ -1414,6 +1434,14 @@
             document.getElementById('admin-content-main').classList.add('hidden');
             document.getElementById('admin-content-sublist').classList.remove('hidden');
             document.getElementById('admin-sublist-title').textContent = tempAppData.mainMenu[idx].title;
+            
+            // UPDATE STICKY BAR FOR SUBLIST
+            const bar = document.getElementById('admin-sticky-bar');
+            bar.innerHTML = `
+                <button onclick="addNewSubItem()" class="btn-add-cyber" style="flex:1; margin-top:0;"><span>+</span> Элемент</button>
+                <button onclick="saveAdminData()" id="btn-save-sub" class="btn-save-cyber" style="flex:2; margin-top:0;">💾 Сохранить</button>
+            `;
+            
             availableCategories.clear();
             (tempAppData.mainMenu[idx].items || []).forEach(item => { if(item.category) availableCategories.add(item.category.trim()); });
             renderSubListItems();
@@ -1484,8 +1512,8 @@
                 input.parentElement.style.backgroundImage = `url('${base64}')`;
 
                 setTimeout(() => {
-                    if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить изменения"; }
-                    if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; renderSubListItems(); }
+                    if(btnGlobal) { btnGlobal.disabled = false; btnGlobal.innerText = "💾 Сохранить"; }
+                    if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить"; renderSubListItems(); }
                 }, 1000);
             });
         }
@@ -1528,11 +1556,11 @@
                  } catch (e) {
                      console.error("Delete failed:", e);
                      alert("Ошибка удаления из БД: " + e.message);
-                     if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
+                     if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить"; }
                      return;
                  }
                  
-                 if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить изменения"; }
+                 if(btnSub) { btnSub.disabled = false; btnSub.innerText = "💾 Сохранить"; }
             }
             
             // Remove from local array
@@ -1684,9 +1712,21 @@
             document.getElementById('admin-content-sublist').classList.add('hidden');
             document.getElementById('admin-content-moderation').classList.add('hidden');
             document.getElementById('admin-content-main').classList.remove('hidden');
+            
+            // RESET STICKY BAR TO MAIN MENU
+            const bar = document.getElementById('admin-sticky-bar');
+            bar.classList.remove('hidden'); // Show bar
+            bar.innerHTML = `
+                <button onclick="addNewMainMenuButton()" class="btn-add-cyber" style="flex:1; margin-top:0;"><span>⚡</span> Блок</button>
+                <button onclick="saveAdminData()" id="btn-save-global" class="btn-save-cyber" style="flex:2; margin-top:0;">💾 Сохранить</button>
+            `;
+            
             renderAdminMainMenu();
         }
-        function closeAdmin() { document.getElementById('admin-page').classList.replace('active-modal', 'hidden-bottom'); }
+        function closeAdmin() { 
+            document.getElementById('admin-page').classList.replace('active-modal', 'hidden-bottom'); 
+            document.getElementById('admin-sticky-bar').classList.add('hidden');
+        }
 
         async function saveAdminData() {
             if (tg.initDataUnsafe?.user?.id !== ADMIN_ID) return;
@@ -1750,7 +1790,7 @@
                 document.getElementById('save-status').style.opacity = '1';
                 setTimeout(() => { 
                     document.getElementById('save-status').style.opacity = '0'; 
-                    btns.forEach(b => { b.disabled = false; b.innerText = "💾 Сохранить изменения"; b.style.background = ""; });
+                    btns.forEach(b => { b.disabled = false; b.innerText = "💾 Сохранить"; b.style.background = ""; });
                 }, 1500);
 
             } catch (error) {
@@ -1763,6 +1803,8 @@
         function openModeration() {
             document.getElementById('admin-content-main').classList.add('hidden');
             document.getElementById('admin-content-moderation').classList.remove('hidden');
+            // Hide sticky bar in moderation mode
+            document.getElementById('admin-sticky-bar').classList.add('hidden');
             loadModerationList();
         }
 
