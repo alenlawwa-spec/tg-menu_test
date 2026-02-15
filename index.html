@@ -1227,7 +1227,7 @@
                     const canvas = document.getElementById('compress-canvas');
                     const ctx = canvas.getContext('2d');
                     let w = img.width, h = img.height;
-                    const MAX_SIDE = 600; 
+                    const MAX_SIDE = 500; // ПРАВКА: Уменьшил до 500px, чтобы точно влезало
                     if (w > h) {
                         if (w > MAX_SIDE) { h = Math.round(h * (MAX_SIDE / w)); w = MAX_SIDE; }
                     } else {
@@ -1236,7 +1236,8 @@
                     canvas.width = w; canvas.height = h;
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    const dataUrl = canvas.toDataURL('image/jpeg', 0.5);
+                    // ПРАВКА: Качество 0.4 для максимальной совместимости с лимитом
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.4);
                     callback(dataUrl);
                 };
             };
@@ -1256,7 +1257,7 @@
                 const slot = input.dataset.slot;
 
                 if (mode === 'products' || mode === 'gallery') {
-                    // ПРАВКА 2: Корректная инициализация массива фото для галереи
+                    // Корректная инициализация массива
                     if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) {
                         const existingUrl = tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl || '';
                         tempAppData.mainMenu[currentEditingIndex].items[idx].images = [existingUrl];
@@ -1466,17 +1467,8 @@
                     updatedAt: firebase.firestore.FieldValue.serverTimestamp()
                 };
 
-                const dataString = JSON.stringify(secureData);
-                if (dataString.length > 1048000) { 
-                    tg.showAlert("Фото всё ещё слишком большое, выбери другое!");
-                    btns.forEach(b => { 
-                        b.disabled = false; 
-                        b.innerText = "Превышен лимит размера!"; 
-                        b.style.background = "#ff4d4d"; 
-                    });
-                    return; 
-                }
-
+                // ПРАВКА: Убрал проверку размера, которая вас бесила.
+                // Firebase сам выкинет ошибку, если будет реально больше 1МБ.
                 console.log("Отправляю данные:", secureData); 
                 const savePromise = db.collection('configs').doc(configDocId).set(secureData, { merge: true });
                 
