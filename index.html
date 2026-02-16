@@ -24,6 +24,7 @@
             --neon-yellow: #ffea00;
         }
 
+        /* --- VISUAL CLEANUP (Task 3) --- */
         html, body {
             overscroll-behavior: none !important;
             touch-action: pan-y !important;
@@ -31,7 +32,12 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
+            -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight */
         }
+
+        /* Remove scrollbars globally */
+        ::-webkit-scrollbar { display: none; }
+        * { -ms-overflow-style: none; scrollbar-width: none; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -150,8 +156,6 @@
             content-visibility: auto;
             touch-action: pan-y; 
         }
-
-        .page::-webkit-scrollbar { width: 0px; }
 
         .hidden-left { transform: translateX(-100%); opacity: 0; pointer-events: none; }
         .hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
@@ -278,8 +282,12 @@
         
         .list-view-container { display: flex; flex-direction: column; gap: 16px; padding-bottom: 80px; }
 
+        /* MODIFIED GALLERY CARD STYLE (Task 1) */
         .gallery-item {
-            aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative;
+            display: flex; /* Flex layout */
+            flex-direction: column; /* Vertical stack */
+            height: 100%; /* Fill grid cell */
+            border-radius: 16px; overflow: hidden; position: relative;
             border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             transition: transform 0.2s; background: #111;
         }
@@ -1090,18 +1098,52 @@
                 if (categories.length > 1) {
                     const filterContainer = document.createElement('div');
                     filterContainer.className = 'category-scroll-container';
-                    categories.forEach(cat => {
-                        const chip = document.createElement('div');
-                        chip.className = `category-chip ${cat === 'Все' ? 'active' : ''}`;
-                        chip.textContent = cat;
-                        chip.onclick = (e) => {
-                            document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
-                            e.target.classList.add('active');
-                            renderGalleryItems(cat === 'Все' ? allItems : allItems.filter(i => i.category === cat), gridContainer, viewType);
-                            tg.HapticFeedback.selectionChanged();
-                        };
-                        filterContainer.appendChild(chip);
-                    });
+                    
+                    // Task 2: Multi-select Logic
+                    let activeCategories = new Set(['Все']);
+
+                    const renderChips = () => {
+                        filterContainer.innerHTML = '';
+                        categories.forEach(cat => {
+                            const chip = document.createElement('div');
+                            // Highlight if "Все" is active AND cat is "Все", OR if cat is in Set
+                            const isActive = (activeCategories.has('Все') && cat === 'Все') || (!activeCategories.has('Все') && activeCategories.has(cat));
+                            
+                            chip.className = `category-chip ${isActive ? 'active' : ''}`;
+                            chip.textContent = cat;
+                            chip.onclick = () => {
+                                tg.HapticFeedback.selectionChanged();
+                                
+                                if (cat === 'Все') {
+                                    activeCategories.clear();
+                                    activeCategories.add('Все');
+                                } else {
+                                    if (activeCategories.has('Все')) activeCategories.delete('Все');
+                                    
+                                    if (activeCategories.has(cat)) {
+                                        activeCategories.delete(cat);
+                                        // If nothing selected, revert to 'Все'
+                                        if (activeCategories.size === 0) activeCategories.add('Все');
+                                    } else {
+                                        activeCategories.add(cat);
+                                    }
+                                }
+                                
+                                renderChips();
+                                
+                                // Filter Items (OR Logic)
+                                let filteredItems;
+                                if (activeCategories.has('Все')) {
+                                    filteredItems = allItems;
+                                } else {
+                                    filteredItems = allItems.filter(i => activeCategories.has(i.category));
+                                }
+                                renderGalleryItems(filteredItems, gridContainer, viewType);
+                            };
+                            filterContainer.appendChild(chip);
+                        });
+                    };
+                    renderChips();
                     container.appendChild(filterContainer);
                 }
                 container.appendChild(gridContainer);
@@ -1167,15 +1209,18 @@
                         </div>
                     `;
                 } else {
-                    div.className = 'relative aspect-[3/4] overflow-hidden rounded-xl group cursor-pointer border border-white/10';
+                    // Task 1: Fixed Grid Layout (Equal heights)
+                    div.className = 'gallery-item group cursor-pointer border border-white/10'; // Uses CSS defined above
                     div.innerHTML = `
-                        <img src="${item.image || ''}" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-3">
-                            <div class="text-white font-bold text-[10px] leading-tight mb-2 text-left line-clamp-2">${item.title || ''}</div>
-                            <div class="flex justify-start">
-                                <button class="bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[8px] uppercase px-2 py-1 rounded">
-                                    ПОДРОБНЕЕ
-                                </button>
+                        <div class="relative w-full aspect-[3/4] overflow-hidden flex-shrink-0">
+                            <img src="${item.image || ''}" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-3">
+                                <div class="text-white font-bold text-[10px] leading-tight mb-2 text-left line-clamp-2">${item.title || ''}</div>
+                                <div class="flex justify-start">
+                                    <button class="bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[8px] uppercase px-2 py-1 rounded">
+                                        ПОДРОБНЕЕ
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
