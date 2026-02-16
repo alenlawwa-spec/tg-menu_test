@@ -1177,9 +1177,9 @@
                         
                         <div class="flex-1 flex flex-col justify-between">
                             <div>
-                                <div class="text-white font-bold text-sm leading-tight mb-1">${escapeHtml(item.title)}</div>
+                                <div class="text-white font-bold text-sm leading-tight mb-0">${escapeHtml(item.title)}</div>
                                 <div class="mb-1">${priceHtmlList}</div>
-                                <div class="text-gray-400 text-[10px] leading-snug line-clamp-2">${escapeHtml(item.description || '')}</div>
+                                <div class="text-gray-400 text-[10px] leading-snug line-clamp-3">${escapeHtml(item.description || '')}</div>
                             </div>
                             
                             <div class="flex justify-end mt-2">
@@ -1210,11 +1210,11 @@
                         
                         <div class="p-3 flex flex-col flex-1">
                             <div class="mb-1">
-                                <div class="text-white font-bold text-xs leading-tight text-left line-clamp-2 h-8 mb-0.5">${escapeHtml(item.title)}</div>
-                                <div class="text-left -mt-0.5">${priceHtml}</div>
+                                <div class="text-white font-bold text-xs leading-tight text-left line-clamp-2 h-8 mb-0">${escapeHtml(item.title)}</div>
+                                <div class="text-left -mt-1">${priceHtml}</div>
                             </div>
                             
-                            <div class="text-gray-400 text-[10px] line-clamp-2 leading-snug mb-3 text-left flex-1">
+                            <div class="text-gray-400 text-[10px] line-clamp-3 leading-snug mb-3 text-left flex-1">
                                 ${escapeHtml(item.description)}
                             </div>
                             <div class="mt-auto pt-1 flex justify-start">
@@ -1373,10 +1373,10 @@
             // INIT STICKY BAR FOR MAIN MENU
             const bar = document.getElementById('admin-sticky-bar');
             bar.style.display = 'flex'; // Force show
-            // REPLACED: New minimalist buttons
+            // REPLACED: New minimalist buttons with SWAPPED order (MOD is first)
             bar.innerHTML = `
-                <button onclick="addNewMainMenuButton()" class="admin-bar-btn"><span>+</span> Блок</button>
                 <button onclick="openModeration()" class="admin-bar-btn accent">🛡️ Мод</button>
+                <button onclick="addNewMainMenuButton()" class="admin-bar-btn"><span>+</span> Блок</button>
                 <button onclick="saveAdminData()" id="btn-save-global" class="admin-bar-btn primary">💾 Сохранить</button>
                 <button onclick="closeAdmin()" class="admin-bar-btn close">✕</button>
             `;
@@ -1476,10 +1476,10 @@
             
             // UPDATE STICKY BAR FOR SUBLIST
             const bar = document.getElementById('admin-sticky-bar');
-            // REPLACED: New minimalist buttons
+            // REPLACED: New minimalist buttons with SWAPPED order (BACK is first)
             bar.innerHTML = `
-                <button onclick="addNewSubItem()" class="admin-bar-btn"><span>+</span> Элемент</button>
                 <button onclick="backToMainAdmin()" class="admin-bar-btn">‹ Назад</button>
+                <button onclick="addNewSubItem()" class="admin-bar-btn"><span>+</span> Элемент</button>
                 <button onclick="saveAdminData()" id="btn-save-sub" class="admin-bar-btn primary">💾 Сохранить</button>
             `;
             
@@ -1757,10 +1757,10 @@
             // RESET STICKY BAR TO MAIN MENU
             const bar = document.getElementById('admin-sticky-bar');
             bar.style.display = 'flex'; // Ensure visible
-            // REPLACED: New minimalist buttons
+            // REPLACED: New minimalist buttons with SWAPPED order (MOD is first)
             bar.innerHTML = `
-                <button onclick="addNewMainMenuButton()" class="admin-bar-btn"><span>+</span> Блок</button>
                 <button onclick="openModeration()" class="admin-bar-btn accent">🛡️ Мод</button>
+                <button onclick="addNewMainMenuButton()" class="admin-bar-btn"><span>+</span> Блок</button>
                 <button onclick="saveAdminData()" id="btn-save-global" class="admin-bar-btn primary">💾 Сохранить</button>
                 <button onclick="closeAdmin()" class="admin-bar-btn close">✕</button>
             `;
@@ -1779,7 +1779,7 @@
             const btnSub = document.getElementById('btn-save-sub');
             const btns = [btnGlobal, btnSub].filter(b => b);
             
-            btns.forEach(b => { b.disabled = true; b.innerText = "РАЗДЕЛЕНИЕ ДАННЫХ..."; b.style.background = "#555"; });
+            btns.forEach(b => { b.disabled = true; b.innerText = "СОХРАНЕНИЕ ДАННЫХ..."; b.style.background = "#555"; });
 
             const dataToSave = JSON.parse(JSON.stringify(tempAppData));
             dataToSave.headerTitle = document.getElementById('admin-header-title').value;
