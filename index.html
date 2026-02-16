@@ -24,7 +24,6 @@
             --neon-yellow: #ffea00;
         }
 
-        /* --- VISUAL CLEANUP (Task 3) --- */
         html, body {
             overscroll-behavior: none !important;
             touch-action: pan-y !important;
@@ -32,12 +31,7 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-            -webkit-tap-highlight-color: transparent; /* Remove blue tap highlight */
         }
-
-        /* Remove scrollbars globally */
-        ::-webkit-scrollbar { display: none; }
-        * { -ms-overflow-style: none; scrollbar-width: none; }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -58,6 +52,10 @@
             -ms-user-select: text;
             user-select: text;
         }
+        
+        /* --- UI BUG FIXES --- */
+        ::-webkit-scrollbar { display: none; }
+        * { -webkit-tap-highlight-color: transparent; }
 
         .upload-progress { display: none; }
 
@@ -156,6 +154,8 @@
             content-visibility: auto;
             touch-action: pan-y; 
         }
+
+        .page::-webkit-scrollbar { width: 0px; }
 
         .hidden-left { transform: translateX(-100%); opacity: 0; pointer-events: none; }
         .hidden-right { transform: translateX(100%); opacity: 0; pointer-events: none; }
@@ -282,12 +282,8 @@
         
         .list-view-container { display: flex; flex-direction: column; gap: 16px; padding-bottom: 80px; }
 
-        /* MODIFIED GALLERY CARD STYLE (Task 1) */
         .gallery-item {
-            display: flex; /* Flex layout */
-            flex-direction: column; /* Vertical stack */
-            height: 100%; /* Fill grid cell */
-            border-radius: 16px; overflow: hidden; position: relative;
+            aspect-ratio: 3/4; border-radius: 16px; overflow: hidden; position: relative;
             border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 4px 15px rgba(0,0,0,0.5);
             transition: transform 0.2s; background: #111;
         }
@@ -1090,7 +1086,12 @@
 
             if (btnData.mode === 'gallery') {
                 const allItems = btnData.items || [];
-                const categories = ['Все', ...new Set(allItems.map(i => i.category).filter(Boolean))];
+                // Collect all unique categories (handle both string and array)
+                const rawCats = allItems.flatMap(i => {
+                    if (Array.isArray(i.category)) return i.category;
+                    return i.category ? [i.category] : [];
+                });
+                const categories = ['Все', ...new Set(rawCats)];
                 
                 const gridContainer = document.createElement('div');
                 gridContainer.className = viewType === 'list' ? 'gallery-list animate-pulse-enter' : 'gallery-grid animate-pulse-enter';
@@ -1098,52 +1099,27 @@
                 if (categories.length > 1) {
                     const filterContainer = document.createElement('div');
                     filterContainer.className = 'category-scroll-container';
-                    
-                    // Task 2: Multi-select Logic
-                    let activeCategories = new Set(['Все']);
-
-                    const renderChips = () => {
-                        filterContainer.innerHTML = '';
-                        categories.forEach(cat => {
-                            const chip = document.createElement('div');
-                            // Highlight if "Все" is active AND cat is "Все", OR if cat is in Set
-                            const isActive = (activeCategories.has('Все') && cat === 'Все') || (!activeCategories.has('Все') && activeCategories.has(cat));
+                    categories.forEach(cat => {
+                        const chip = document.createElement('div');
+                        chip.className = `category-chip ${cat === 'Все' ? 'active' : ''}`;
+                        chip.textContent = cat;
+                        chip.onclick = (e) => {
+                            document.querySelectorAll('.category-chip').forEach(c => c.classList.remove('active'));
+                            e.target.classList.add('active');
                             
-                            chip.className = `category-chip ${isActive ? 'active' : ''}`;
-                            chip.textContent = cat;
-                            chip.onclick = () => {
-                                tg.HapticFeedback.selectionChanged();
+                            // Updated Filter Logic
+                            const filtered = cat === 'Все'
+                                ? allItems
+                                : allItems.filter(i => {
+                                    if (Array.isArray(i.category)) return i.category.includes(cat);
+                                    return i.category === cat;
+                                });
                                 
-                                if (cat === 'Все') {
-                                    activeCategories.clear();
-                                    activeCategories.add('Все');
-                                } else {
-                                    if (activeCategories.has('Все')) activeCategories.delete('Все');
-                                    
-                                    if (activeCategories.has(cat)) {
-                                        activeCategories.delete(cat);
-                                        // If nothing selected, revert to 'Все'
-                                        if (activeCategories.size === 0) activeCategories.add('Все');
-                                    } else {
-                                        activeCategories.add(cat);
-                                    }
-                                }
-                                
-                                renderChips();
-                                
-                                // Filter Items (OR Logic)
-                                let filteredItems;
-                                if (activeCategories.has('Все')) {
-                                    filteredItems = allItems;
-                                } else {
-                                    filteredItems = allItems.filter(i => activeCategories.has(i.category));
-                                }
-                                renderGalleryItems(filteredItems, gridContainer, viewType);
-                            };
-                            filterContainer.appendChild(chip);
-                        });
-                    };
-                    renderChips();
+                            renderGalleryItems(filtered, gridContainer, viewType);
+                            tg.HapticFeedback.selectionChanged();
+                        };
+                        filterContainer.appendChild(chip);
+                    });
                     container.appendChild(filterContainer);
                 }
                 container.appendChild(gridContainer);
@@ -1209,18 +1185,15 @@
                         </div>
                     `;
                 } else {
-                    // Task 1: Fixed Grid Layout (Equal heights)
-                    div.className = 'gallery-item group cursor-pointer border border-white/10'; // Uses CSS defined above
+                    div.className = 'relative aspect-[3/4] overflow-hidden rounded-xl group cursor-pointer border border-white/10';
                     div.innerHTML = `
-                        <div class="relative w-full aspect-[3/4] overflow-hidden flex-shrink-0">
-                            <img src="${item.image || ''}" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-3">
-                                <div class="text-white font-bold text-[10px] leading-tight mb-2 text-left line-clamp-2">${item.title || ''}</div>
-                                <div class="flex justify-start">
-                                    <button class="bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[8px] uppercase px-2 py-1 rounded">
-                                        ПОДРОБНЕЕ
-                                    </button>
-                                </div>
+                        <img src="${item.image || ''}" class="w-full h-full object-cover object-top transition-transform duration-500 group-hover:scale-110">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-3">
+                            <div class="text-white font-bold text-[10px] leading-tight mb-2 text-left line-clamp-2">${item.title || ''}</div>
+                            <div class="flex justify-start">
+                                <button class="bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[8px] uppercase px-2 py-1 rounded">
+                                    ПОДРОБНЕЕ
+                                </button>
                             </div>
                         </div>
                     `;
@@ -1301,6 +1274,7 @@
                     container.appendChild(card);
 
                 } else {
+                    // ANDROID GRID FIX APPLIED HERE
                     const card = document.createElement('div');
                     card.className = 'product-card cursor-pointer flex flex-col h-full relative overflow-hidden bg-[#111] rounded-xl border border-white/10'; 
                     card.onclick = () => openProductModal(item);
@@ -1309,21 +1283,18 @@
                     
                     card.innerHTML = `
                         ${badgeHtml}
-                        <div class="relative w-full aspect-square">
+                        <div class="relative w-full aspect-square flex-shrink-0">
                             <img src="${mainImg || 'https://via.placeholder.com/400'}" class="w-full h-full object-cover object-top">
                         </div>
                         
                         <div class="p-3 flex flex-col flex-1">
-                            <div class="mb-1">
-                                <div class="text-white font-bold text-xs leading-tight text-left line-clamp-2 h-8 mb-0">${escapeHtml(item.title)}</div>
-                                <div class="text-left -mt-1">${priceHtml}</div>
+                            <div class="mb-2">
+                                <div class="text-white font-bold text-xs leading-tight text-left line-clamp-2 min-h-[2.5rem] mb-0">${escapeHtml(item.title)}</div>
+                                <div class="text-left mt-1">${priceHtml}</div>
                             </div>
                             
-                            <div class="text-gray-400 text-[10px] line-clamp-3 leading-snug mb-3 text-left flex-1">
-                                ${escapeHtml(item.description)}
-                            </div>
                             <div class="mt-auto pt-1 flex justify-start">
-                                <button class="bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[9px] uppercase px-3 py-1 rounded hover:bg-[rgba(0,242,255,0.2)] transition">
+                                <button class="bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[9px] uppercase px-3 py-1 rounded hover:bg-[rgba(0,242,255,0.2)] transition w-full">
                                     ПОДРОБНЕЕ
                                 </button>
                             </div>
@@ -1706,7 +1677,13 @@
             `;
             
             availableCategories.clear();
-            (tempAppData.mainMenu[idx].items || []).forEach(item => { if(item.category) availableCategories.add(item.category.trim()); });
+            (tempAppData.mainMenu[idx].items || []).forEach(item => { 
+                if(item.category) {
+                   // Handle array or string
+                   if(Array.isArray(item.category)) item.category.forEach(c => availableCategories.add(c.trim()));
+                   else availableCategories.add(item.category.trim());
+                } 
+            });
             renderSubListItems();
         }
 
@@ -1828,6 +1805,25 @@
             btn.items.splice(idx, 1);
             renderSubListItems();
         }
+        
+        function toggleCategory(itemIdx, catName) {
+            const item = tempAppData.mainMenu[currentEditingIndex].items[itemIdx];
+            let current = item.category;
+            
+            // Normalize current to array
+            if (!Array.isArray(current)) {
+                current = current ? [current] : [];
+            }
+            
+            if (current.includes(catName)) {
+                current = current.filter(c => c !== catName);
+            } else {
+                current.push(catName);
+            }
+            
+            tempAppData.mainMenu[currentEditingIndex].items[itemIdx].category = current;
+            renderSubListItems();
+        }
 
         function renderSubListItems() {
             const list = document.getElementById('admin-sublist-items'); list.innerHTML = '';
@@ -1906,9 +1902,24 @@
                         <input type="text" class="admin-input" value="${item.buttonLink||''}" placeholder="TG Username" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].buttonLink=this.value">
                     `;
                 } else if (parentBtn.mode === 'gallery') {
-                     let opts = '<option value="">Без категории</option>';
-                     Array.from(availableCategories).sort().forEach(cat => opts += `<option value="${cat}" ${item.category===cat?'selected':''}>${cat}</option>`);
+                     // MULTI-CATEGORY CHECKBOX RENDER
+                     let currentCats = item.category;
+                     if (!Array.isArray(currentCats)) currentCats = currentCats ? [currentCats] : [];
                      
+                     let catCheckboxes = '<div class="flex flex-wrap gap-2 mb-2 bg-black/20 p-2 rounded max-h-32 overflow-y-auto">';
+                     Array.from(availableCategories).sort().forEach(cat => {
+                        const isChecked = currentCats.includes(cat);
+                        catCheckboxes += `
+                            <div class="flex items-center gap-2 bg-white/5 px-2 py-1 rounded cursor-pointer" onclick="toggleCategory(${idx}, '${cat}')">
+                                <div class="w-4 h-4 rounded border ${isChecked ? 'bg-[var(--neon-color)] border-[var(--neon-color)]' : 'border-gray-500'} flex items-center justify-center">
+                                    ${isChecked ? '<span class="text-black text-[10px]">✔</span>' : ''}
+                                </div>
+                                <span class="text-xs text-gray-300 select-none">${cat}</span>
+                            </div>
+                        `;
+                     });
+                     catCheckboxes += '</div>';
+
                      const images = item.images || (item.imageUrl ? [item.imageUrl] : []);
                      let previews = '';
                      for(let i=0; i<3; i++) {
@@ -1932,7 +1943,10 @@
                         </div>
 
                         <input type="text" class="admin-input" value="${item.title||''}" placeholder="Заголовок (необязательно)" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].title=this.value">
-                        <select class="admin-select" onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].category=this.value">${opts}</select>
+                        
+                        <label class="admin-label">Категории</label>
+                        ${catCheckboxes}
+                        
                         <textarea id="prompt-area-${idx}" class="admin-textarea" placeholder="Промпт..." onchange="tempAppData.mainMenu[${currentEditingIndex}].items[${idx}].prompt=this.value">${item.prompt||''}</textarea>
                      `;
                 } else {
