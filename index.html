@@ -897,7 +897,8 @@
                 if (['gallery', 'products'].includes(btn.mode) && btn.id) {
                     const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
                     try {
-                        const snap = await db.collection(colName).where('parentId', '==', btn.id).get();
+                        // ADDED: orderBy createdAt desc
+                        const snap = await db.collection(colName).where('parentId', '==', btn.id).orderBy('createdAt', 'desc').get();
                         const items = [];
                         snap.forEach(d => {
                             let item = d.data();
@@ -984,7 +985,8 @@
             const reviewsList = document.createElement('div');
             reviewsList.innerHTML = '<div class="text-center mt-10"><div class="spinner relative left-1/2 -ml-5"></div></div>';
             container.appendChild(reviewsList);
-            db.collection('reviews').where('approved', '==', true).get().then(snap => {
+            // ADDED: orderBy date desc
+            db.collection('reviews').where('approved', '==', true).orderBy('date', 'desc').get().then(snap => {
                 reviewsList.innerHTML = '';
                 const docs = [];
                 snap.forEach(d => docs.push(d.data()));
@@ -1750,7 +1752,10 @@
         function addNewSubItem() {
             const mode = tempAppData.mainMenu[currentEditingIndex].mode;
             const newId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            const newItem = mode === 'products' ? { id: newId, title: 'Товар', price: '', status: '', images: [] } : { id: newId, title: 'Новый', link: '' };
+            // ADDED: createdAt field
+            const newItem = mode === 'products' 
+                ? { id: newId, title: 'Товар', price: '', status: '', images: [], createdAt: new Date().toISOString() } 
+                : { id: newId, title: 'Новый', link: '', createdAt: new Date().toISOString() };
             tempAppData.mainMenu[currentEditingIndex].items.unshift(newItem);
             renderSubListItems();
         }
