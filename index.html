@@ -448,63 +448,80 @@
         }
         .product-slider::-webkit-scrollbar { display: none; }
 
-        /* --- UPDATED PRODUCT MODAL CSS --- */
+        /* --- UPDATED PRODUCT MODAL CSS (SHEET MODE) --- */
         #product-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000;
-            z-index: 250; display: flex; flex-direction: column; transform: translateY(100%);
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); /* Dimmed background */
+            z-index: 250; 
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s;
+            overflow: hidden;
         }
-        #product-modal.active-modal { transform: translateY(0); }
+        #product-modal.active-modal { opacity: 1; pointer-events: all; }
 
         .product-modal-image-area {
             width: 100%;
-            height: 55vh; /* Large screens */
-            position: relative;
-            background: #000;
-            flex-shrink: 0;
-        }
-
-        @media (max-height: 700px) {
-            .product-modal-image-area {
-                height: 45vh; /* Small screens */
-            }
+            height: 60vh; /* Space for image behind sheet */
+            position: absolute;
+            top: 0;
+            left: 0;
+            transition: transform 0.3s;
         }
 
         .product-modal-panel {
-            flex: 1;
-            margin-top: -40px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 50vh; /* Initial state (Half) */
+            max-height: 95vh;
+            background: rgba(10, 10, 15, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             border-top-left-radius: 30px;
             border-top-right-radius: 30px;
-            padding: 12px 24px 30px 24px;
             display: flex;
             flex-direction: column;
-            position: relative;
             z-index: 20;
-            overflow: hidden; 
+            transition: height 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+            padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
+        }
+
+        .product-modal-panel.expanded {
+            height: 92vh; /* Full State */
         }
 
         .ios-handle {
-            width: 40px;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
+            width: 40px; height: 5px;
+            background: rgba(255, 255, 255, 0.3);
             border-radius: 10px;
-            margin: 8px auto 20px auto;
+            margin: 12px auto;
+            flex-shrink: 0;
+            cursor: pointer;
+        }
+        
+        .product-header-area {
+            padding: 0 24px 10px 24px;
             flex-shrink: 0;
         }
 
         .product-scroll-content {
+            flex: 1;
             overflow-y: auto;
-            flex-grow: 1;
-            padding-right: 4px; 
-            margin-bottom: 16px;
+            padding: 0 24px;
             -webkit-overflow-scrolling: touch;
+            overscroll-behavior: contain;
         }
         .product-scroll-content::-webkit-scrollbar { width: 4px; }
         .product-scroll-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
+
+        .product-footer-area {
+            padding: 12px 24px;
+            flex-shrink: 0;
+            background: linear-gradient(to top, rgba(10,10,15,1) 20%, transparent);
+            z-index: 25;
+            margin-top: auto;
+        }
 
         #product-modal-slider {
             height: 100%;
@@ -715,30 +732,29 @@
             <div id="product-modal-hint" class="absolute bottom-12 left-0 right-0 text-center text-[10px] text-white/70 z-10 pointer-events-none drop-shadow-md">Листай фото →</div>
         </div>
 
-        <!-- Overlay Panel -->
-        <div class="product-modal-panel">
-            <div class="ios-handle"></div>
+        <!-- Overlay Panel (Sheet) -->
+        <div class="product-modal-panel" id="product-sheet-panel">
+            <div class="ios-handle" id="product-sheet-handle"></div>
             
-            <div class="flex flex-col h-full">
-                <!-- Header -->
-                <div class="mb-4 flex-shrink-0">
-                    <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1 leading-tight"></h2>
-                    <div class="flex items-baseline gap-3">
-                        <span id="product-modal-price" class="text-3xl text-[#00f2ff] font-bold tracking-tight"></span>
-                        <span id="product-modal-old-price" class="text-sm text-gray-500 line-through"></span>
-                    </div>
+            <!-- Header (Fixed inside panel) -->
+            <div class="product-header-area">
+                <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1 leading-tight"></h2>
+                <div class="flex items-baseline gap-3">
+                    <span id="product-modal-price" class="text-3xl text-[#00f2ff] font-bold tracking-tight"></span>
+                    <span id="product-modal-old-price" class="text-sm text-gray-500 line-through"></span>
                 </div>
+            </div>
 
-                <!-- Scrollable Desc -->
-                <div class="product-scroll-content">
-                    <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-light"></p>
-                </div>
+            <!-- Scrollable Desc -->
+            <div class="product-scroll-content" id="product-sheet-content">
+                <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-light pb-4"></p>
+            </div>
 
-                <!-- Footer Button -->
-                <div class="mt-auto pt-2 flex-shrink-0">
-                    <button id="product-buy-btn" class="btn-save-cyber w-full shadow-[0_0_20px_rgba(0,242,255,0.15)] active:scale-[0.98]">
-                    </button>
-                </div>
+            <!-- Sticky Footer Button -->
+            <div class="product-footer-area">
+                <button id="product-buy-btn" class="btn-save-cyber w-full shadow-[0_0_20px_rgba(0,242,255,0.15)] active:scale-[0.98]">
+                    Купить
+                </button>
             </div>
         </div>
     </div>
@@ -1380,6 +1396,30 @@
                     tg.openTelegramLink(`https://t.me/${cleanLink}?text=${encodeURIComponent(text)}`);
                 } else tg.showAlert("Связь с продавцом не настроена");
             };
+
+            // RESET SHEET STATE
+            const panel = document.getElementById('product-sheet-panel');
+            panel.classList.remove('expanded');
+            
+            // SETUP EXPAND HANDLERS
+            const handle = document.getElementById('product-sheet-handle');
+            const content = document.getElementById('product-sheet-content');
+
+            const toggleExpand = () => {
+                panel.classList.toggle('expanded');
+                tg.HapticFeedback.selectionChanged();
+            };
+
+            handle.onclick = toggleExpand;
+            
+            // Expand on content scroll if at top
+            content.onscroll = () => {
+                if(content.scrollTop > 5 && !panel.classList.contains('expanded')) {
+                    panel.classList.add('expanded');
+                    tg.HapticFeedback.selectionChanged();
+                }
+            };
+
             document.getElementById('product-modal').classList.add('active-modal');
         }
         function closeProductModal() { document.getElementById('product-modal').classList.remove('active-modal'); }
