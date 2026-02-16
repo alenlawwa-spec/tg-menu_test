@@ -563,8 +563,8 @@
             -webkit-backdrop-filter: blur(15px);
             border-top: 1px solid rgba(0, 242, 255, 0.2); /* Subtle border */
             box-shadow: 0 -5px 20px rgba(0, 242, 255, 0.05); /* Light neon glow top */
-            padding: 8px 12px; /* User request: 8px 12px */
-            padding-bottom: calc(8px + env(safe-area-inset-bottom));
+            padding: 12px 16px; /* User request: 12px 16px */
+            padding-bottom: calc(12px + env(safe-area-inset-bottom));
             display: none;
             gap: 8px;
             align-items: center;
@@ -575,7 +575,7 @@
             background: rgba(255, 255, 255, 0.03);
             border: 0.5px solid rgba(255, 255, 255, 0.2); /* User request: 0.5px solid */
             color: #ccc;
-            font-size: 10px; /* User request: 9-10px */
+            font-size: 11px; /* User request: 11px */
             font-weight: 600;
             text-transform: uppercase; /* User request: uppercase */
             letter-spacing: 0.05em; /* User request: 0.05em */
@@ -783,7 +783,6 @@
             { id: 'telegram', svg: '<path d="M21.198 2.433a2.242 2.242 0 0 0-1.022.215l-16.5 6.75c-.92.376-.91 1.055-.16 1.43l4.33 1.353 10.033-6.326c.475-.29.911-.134.555.182l-8.13 7.34-.316 4.478c.438 0 .633-.2.88-.44l2.12-2.058 4.408 3.254c.438-.448 1.4.217 1.6-.758l2.9-13.68c.273-1.08-.41-1.574-1.108-1.23z"></path>' },
             { id: 'globe', svg: '<circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>' },
             { id: 'gift', svg: '<polyline points="20 12 20 22 4 22 4 12"></polyline><rect x="2" y="7" width="20" height="5"></rect><line x1="12" y1="22" x2="12" y2="7"></line><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"></path>' },
-            { id: 'award', svg: '<circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>' },
             { id: 'shopping-bag', svg: '<path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path>' } 
         ];
 
@@ -1164,6 +1163,10 @@
                     // Сохраняем бейдж, но позиционируем его абсолютно внутри relative контейнера
                     const listBadge = badgeHtml ? badgeHtml.replace('product-badge', 'product-badge scale-75 origin-top-right absolute top-2 right-2') : '';
 
+                    // Логика отображения цены в списке
+                    let priceHtmlList = `<span class="text-[var(--neon-color)] font-mono text-xs">${escapeHtml(item.price || '')}</span>`;
+                    if(item.oldPrice) priceHtmlList += ` <span class="text-gray-500 text-[10px] line-through ml-2">${escapeHtml(item.oldPrice)}</span>`;
+
                     // 1. Фото (Слева) - Обязательно фиксированные размеры и object-top!
                     card.innerHTML = `
                         ${listBadge}
@@ -1175,7 +1178,7 @@
                         <div class="flex-1 flex flex-col justify-between">
                             <div>
                                 <div class="text-white font-bold text-sm leading-tight mb-1">${escapeHtml(item.title)}</div>
-                                <div class="text-[var(--neon-color)] font-mono text-xs mb-1">${escapeHtml(item.price || '')}</div>
+                                <div class="mb-1">${priceHtmlList}</div>
                                 <div class="text-gray-400 text-[10px] leading-snug line-clamp-2">${escapeHtml(item.description || '')}</div>
                             </div>
                             
@@ -1198,7 +1201,7 @@
                     let priceHtml = `<span class="text-[var(--neon-color)] font-bold text-sm">${item.price || ''}</span>`;
                     if(item.oldPrice) priceHtml += ` <span class="text-gray-500 text-[10px] line-through ml-1">${item.oldPrice}</span>`;
                     
-                    // CHANGED: mb-1 -> mb-0 in title to raise price higher
+                    // CHANGED: tighter gap between title and price
                     card.innerHTML = `
                         ${badgeHtml}
                         <div class="relative w-full aspect-square">
@@ -1206,9 +1209,9 @@
                         </div>
                         
                         <div class="p-3 flex flex-col flex-1">
-                            <div class="mb-2">
-                                <div class="text-white font-bold text-xs leading-tight mb-0 text-left line-clamp-2 h-8">${escapeHtml(item.title)}</div>
-                                <div class="text-left">${priceHtml}</div>
+                            <div class="mb-1">
+                                <div class="text-white font-bold text-xs leading-tight text-left line-clamp-2 h-8 mb-0.5">${escapeHtml(item.title)}</div>
+                                <div class="text-left -mt-0.5">${priceHtml}</div>
                             </div>
                             
                             <div class="text-gray-400 text-[10px] line-clamp-2 leading-snug mb-3 text-left flex-1">
