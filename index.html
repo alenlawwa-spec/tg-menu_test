@@ -563,8 +563,8 @@
             -webkit-backdrop-filter: blur(15px);
             border-top: 1px solid rgba(0, 242, 255, 0.2); /* Subtle border */
             box-shadow: 0 -5px 20px rgba(0, 242, 255, 0.05); /* Light neon glow top */
-            padding: 12px 16px; /* User request: 12px 16px */
-            padding-bottom: calc(12px + env(safe-area-inset-bottom));
+            padding: 14px 18px; /* UPDATED */
+            padding-bottom: calc(14px + env(safe-area-inset-bottom));
             display: none;
             gap: 8px;
             align-items: center;
@@ -575,7 +575,7 @@
             background: rgba(255, 255, 255, 0.03);
             border: 0.5px solid rgba(255, 255, 255, 0.2); /* User request: 0.5px solid */
             color: #ccc;
-            font-size: 11px; /* User request: 11px */
+            font-size: 12px; /* UPDATED */
             font-weight: 600;
             text-transform: uppercase; /* User request: uppercase */
             letter-spacing: 0.05em; /* User request: 0.05em */
@@ -603,6 +603,12 @@
             background: rgba(255, 0, 122, 0.08);
             border-color: rgba(255, 0, 122, 0.4);
             color: var(--neon-pink);
+        }
+
+        .admin-bar-btn.back {
+            background: rgba(255, 0, 122, 0.15);
+            border-color: rgba(255, 0, 122, 0.5);
+            color: #ff007a;
         }
 
         .admin-bar-btn.close {
@@ -1478,7 +1484,7 @@
             const bar = document.getElementById('admin-sticky-bar');
             // REPLACED: New minimalist buttons with SWAPPED order (BACK is first)
             bar.innerHTML = `
-                <button onclick="backToMainAdmin()" class="admin-bar-btn">‹ Назад</button>
+                <button onclick="backToMainAdmin()" class="admin-bar-btn back">‹ Назад</button>
                 <button onclick="addNewSubItem()" class="admin-bar-btn"><span>+</span> Элемент</button>
                 <button onclick="saveAdminData()" id="btn-save-sub" class="admin-bar-btn primary">💾 Сохранить</button>
             `;
@@ -1853,7 +1859,7 @@
             bar.style.display = 'flex';
             // REPLACED: New minimalist buttons
             bar.innerHTML = `
-                <button onclick="backToMainAdmin()" class="admin-bar-btn">‹ Назад</button>
+                <button onclick="backToMainAdmin()" class="admin-bar-btn back">‹ Назад</button>
                 <button onclick="approveAll()" class="admin-bar-btn primary">✅ Одобрить всё</button>
                 <button onclick="closeAdmin()" class="admin-bar-btn close">✕</button>
             `;
