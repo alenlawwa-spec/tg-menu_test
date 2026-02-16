@@ -448,7 +448,7 @@
         }
         .product-slider::-webkit-scrollbar { display: none; }
 
-        /* --- UPDATED PRODUCT MODAL CSS (SHEET MODE) --- */
+        /* --- UPDATED PRODUCT MODAL CSS (SHEET MODE WITH PHYSICS) --- */
         #product-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.6); /* Dimmed background */
@@ -465,14 +465,14 @@
             position: absolute;
             top: 0;
             left: 0;
-            transition: transform 0.3s;
+            transform-origin: center top; /* For scale effect */
+            will-change: transform;
         }
 
         .product-modal-panel {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            height: 50vh; /* Initial state (Half) */
-            max-height: 95vh;
+            height: 95vh; /* Fixed tall height for sheet */
             background: rgba(10, 10, 15, 0.85);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
@@ -482,13 +482,12 @@
             display: flex;
             flex-direction: column;
             z-index: 20;
-            transition: height 0.4s cubic-bezier(0.32, 0.72, 0, 1);
             padding-bottom: calc(10px + env(safe-area-inset-bottom));
             box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
-        }
-
-        .product-modal-panel.expanded {
-            height: 92vh; /* Full State */
+            /* New Physics Props */
+            transform: translateY(100%); /* Start hidden */
+            will-change: transform;
+            touch-action: none; /* Important for custom drag */
         }
 
         .ios-handle {
@@ -497,7 +496,7 @@
             border-radius: 10px;
             margin: 12px auto;
             flex-shrink: 0;
-            cursor: pointer;
+            cursor: grab;
         }
         
         .product-header-area {
@@ -1361,6 +1360,8 @@
 
         function openProductModal(item) {
             tg.HapticFeedback.impactOccurred('medium');
+            
+            // Set data
             document.getElementById('product-modal-title').textContent = item.title;
             document.getElementById('product-modal-desc').textContent = item.fullDescription || item.description;
             document.getElementById('product-modal-price').textContent = item.price;
@@ -1368,6 +1369,7 @@
             if (item.oldPrice) { oldPriceEl.textContent = item.oldPrice; oldPriceEl.style.display = 'inline'; }
             else oldPriceEl.style.display = 'none';
 
+            // Setup Slider
             const slider = document.getElementById('product-modal-slider');
             slider.innerHTML = '';
             const images = (item.images && item.images.length > 0) ? item.images : [item.imageUrl];
@@ -1378,14 +1380,10 @@
                 slide.innerHTML = `<img src="${imgUrl}" loading="lazy">`;
                 slider.appendChild(slide);
             });
-
             const hintText = document.getElementById('product-modal-hint');
-            if (images.length > 1) {
-                hintText.style.display = 'block';
-            } else {
-                hintText.style.display = 'none';
-            }
+            hintText.style.display = images.length > 1 ? 'block' : 'none';
 
+            // Setup Buy Button
             const btn = document.getElementById('product-buy-btn');
             btn.textContent = item.buttonText || "Купить";
             btn.onclick = () => {
@@ -1397,28 +1395,127 @@
                 } else tg.showAlert("Связь с продавцом не настроена");
             };
 
-            // RESET SHEET STATE
+            // --- PHYSICS LOGIC START ---
             const panel = document.getElementById('product-sheet-panel');
-            panel.classList.remove('expanded');
-            
-            // SETUP EXPAND HANDLERS
-            const handle = document.getElementById('product-sheet-handle');
             const content = document.getElementById('product-sheet-content');
+            const imageArea = document.querySelector('.product-modal-image-area');
 
-            const toggleExpand = () => {
-                panel.classList.toggle('expanded');
+            // Constants
+            const SHEET_HEIGHT_VH = 95; 
+            const COLLAPSED_VISIBLE_VH = 50; 
+            const screenH = window.innerHeight;
+            const maxH = screenH * (SHEET_HEIGHT_VH / 100);
+            const minH = screenH * (COLLAPSED_VISIBLE_VH / 100);
+            const hiddenTranslate = maxH - minH; // Pixel value to shift down
+            
+            // Initial State (Collapsed)
+            let currentTranslate = hiddenTranslate;
+            panel.style.transition = 'none';
+            panel.style.transform = `translateY(${currentTranslate}px)`;
+            
+            imageArea.style.transition = 'none';
+            imageArea.style.transform = 'scale(1)';
+
+            // Touch State
+            let startY = 0;
+            let startTranslate = 0;
+            let isDragging = false;
+            let startTime = 0;
+
+            const onTouchStart = (e) => {
+                const touch = e.changedTouches[0];
+                // Allow scrolling content if not at top
+                if (content.contains(e.target)) {
+                    if (content.scrollTop > 0) return;
+                }
+                
+                isDragging = true;
+                startY = touch.clientY;
+                startTranslate = currentTranslate;
+                startTime = Date.now();
+                
+                panel.style.transition = 'none';
+                imageArea.style.transition = 'none';
+            };
+
+            const onTouchMove = (e) => {
+                if (!isDragging) return;
+                const touch = e.changedTouches[0];
+                const delta = touch.clientY - startY;
+
+                // If user swipes down while inside content at top -> trigger drag
+                if (content.contains(e.target) && content.scrollTop > 0) {
+                    isDragging = false;
+                    return;
+                }
+                // Prevent overscroll of body
+                if (e.cancelable) e.preventDefault();
+
+                let newTranslate = startTranslate + delta;
+
+                // Resistance/Constraint at top (0)
+                if (newTranslate < 0) newTranslate = newTranslate * 0.4;
+                
+                // Apply Transform
+                panel.style.transform = `translateY(${newTranslate}px)`;
+
+                // Image Effect: Scale down when sheet goes up (translate -> 0)
+                // 0 translate = 0.95 scale, hiddenTranslate = 1 scale
+                const progress = 1 - Math.min(Math.max(newTranslate / hiddenTranslate, 0), 1);
+                const scale = 1 - (progress * 0.05);
+                const brightness = 1 - (progress * 0.2); // Darken slightly
+                
+                imageArea.style.transform = `scale(${scale})`;
+                imageArea.style.filter = `brightness(${brightness})`;
+            };
+
+            const onTouchEnd = (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                
+                // Physics / Snapping
+                const touch = e.changedTouches[0];
+                const delta = touch.clientY - startY;
+                const time = Date.now() - startTime;
+                const velocity = Math.abs(delta) / time;
+                
+                let targetTranslate = currentTranslate;
+                
+                // Determine direction
+                // If velocity high -> snap to direction
+                if (velocity > 0.5) {
+                    if (delta > 0) targetTranslate = hiddenTranslate; // Down -> Collapse
+                    else targetTranslate = 0; // Up -> Expand
+                } else {
+                    // Snap to closest
+                    const currentPos = startTranslate + delta;
+                    const midPoint = hiddenTranslate / 2;
+                    if (currentPos > midPoint) targetTranslate = hiddenTranslate;
+                    else targetTranslate = 0;
+                }
+                
+                // Apply Final with Smooth Transition
+                panel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
+                panel.style.transform = `translateY(${targetTranslate}px)`;
+                
+                imageArea.style.transition = 'transform 0.4s ease, filter 0.4s ease';
+                
+                const finalScale = targetTranslate === 0 ? 0.95 : 1;
+                const finalBright = targetTranslate === 0 ? 0.8 : 1;
+                imageArea.style.transform = `scale(${finalScale})`;
+                imageArea.style.filter = `brightness(${finalBright})`;
+                
+                currentTranslate = targetTranslate;
+                
+                // Haptic on snap
                 tg.HapticFeedback.selectionChanged();
             };
 
-            handle.onclick = toggleExpand;
-            
-            // Expand on content scroll if at top
-            content.onscroll = () => {
-                if(content.scrollTop > 5 && !panel.classList.contains('expanded')) {
-                    panel.classList.add('expanded');
-                    tg.HapticFeedback.selectionChanged();
-                }
-            };
+            // Bind Events (Overwrite previous to avoid stacking)
+            panel.ontouchstart = onTouchStart;
+            panel.ontouchmove = onTouchMove;
+            panel.ontouchend = onTouchEnd;
+            // --- PHYSICS LOGIC END ---
 
             document.getElementById('product-modal').classList.add('active-modal');
         }
