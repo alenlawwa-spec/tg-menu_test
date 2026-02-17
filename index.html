@@ -322,24 +322,25 @@
         }
         .btn-glass-more:disabled { opacity: 0.5; }
         
-        /* UPDATED: BLACK GLASS STYLE (For "DETAILS") - MADE MORE TRANSPARENT */
+        /* UPDATED: BLACK GLASS STYLE (For "DETAILS") - MADE MORE TRANSPARENT + GLOW */
         .btn-glass-card {
-            background: rgba(0, 0, 0, 0.25); /* Less opacity */
-            backdrop-filter: blur(8px); /* slightly less blur */
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1); /* border-white/10 */
-            color: white; /* text-white */
-            border-radius: 12px; /* rounded-xl */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 12px;
             padding: 8px 16px;
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0,242,255,0.3); /* TASK 3: GLOW */
         }
         .btn-glass-card:active, .btn-glass-card:hover {
             background: rgba(20, 20, 20, 0.8);
             border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* White glow */
+            box-shadow: 0 0 20px rgba(0,242,255,0.6); /* TASK 3: HOVER GLOW */
         }
 
         .icon-box {
@@ -575,10 +576,10 @@
         }
         .product-slider::-webkit-scrollbar { display: none; }
 
-        /* --- UPDATED PRODUCT MODAL CSS (SHEET MODE WITH FLEX FIXED FOOTER) --- */
+        /* --- UPDATED PRODUCT MODAL CSS (TASK 1: FLEX COL + STICKY) --- */
         #product-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); /* Dimmed background */
+            background: rgba(0,0,0,0.6);
             z-index: 250; 
             opacity: 0; pointer-events: none;
             transition: opacity 0.3s;
@@ -588,18 +589,18 @@
 
         .product-modal-image-area {
             width: 100%;
-            height: 60vh; /* Space for image behind sheet */
+            height: 60vh;
             position: absolute;
             top: 0;
             left: 0;
-            transform-origin: center top; /* For scale effect */
+            transform-origin: center top; 
             will-change: transform;
         }
 
         .product-modal-panel {
             position: absolute; 
             bottom: 0; left: 0; right: 0;
-            height: 95vh; /* Fixed tall height for sheet */
+            height: 95vh; 
             background: rgba(10, 10, 15, 0.85);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
@@ -607,13 +608,12 @@
             border-top-left-radius: 30px;
             border-top-right-radius: 30px;
             display: flex;
-            flex-direction: column; /* FLEX COLUMN IS KEY */
+            flex-direction: column; /* TASK 1: FLEX COLUMN */
             z-index: 20;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
-            /* New Physics Props */
-            transform: translateY(100%); /* Start hidden */
+            transform: translateY(100%);
             will-change: transform;
-            touch-action: none; /* Important for custom drag */
+            touch-action: none; 
         }
 
         .ios-handle {
@@ -623,35 +623,6 @@
             margin: 12px auto;
             flex-shrink: 0;
             cursor: grab;
-        }
-        
-        .product-header-area {
-            padding: 0 24px 10px 24px;
-            flex-shrink: 0;
-        }
-
-        .product-scroll-content {
-            flex: 1; 
-            display: flex; 
-            flex-direction: column;
-            padding: 0 24px;
-            padding-bottom: 20px; 
-            overflow: hidden;
-        }
-
-        /* UPDATED: FIXED FOOTER STYLE (FLEX CHILD AT BOTTOM) */
-        .product-footer-area {
-            position: relative; /* RELATIVE TO FLEX CONTAINER */
-            margin-top: auto; /* PUSHES TO BOTTOM */
-            width: 100%;
-            z-index: 50;
-            background: rgba(0, 0, 0, 0.9); /* bg-black/90 */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1); /* border-white/10 */
-            padding: 16px; /* p-4 */
-            padding-bottom: calc(16px + env(safe-area-inset-bottom)); /* Safe area support */
-            flex-shrink: 0; /* DON'T SHRINK */
         }
 
         #product-modal-slider {
@@ -852,7 +823,7 @@
         </div>
     </div>
 
-    <!-- UPDATED PRODUCT MODAL HTML (FLEX STRUCTURE) -->
+    <!-- UPDATED PRODUCT MODAL HTML (TASK 1: Structure) -->
     <div id="product-modal">
         <!-- Close Button -->
         <button onclick="closeProductModal()" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/40 rounded-full text-white flex items-center justify-center backdrop-blur-md border border-white/10 active:scale-90 transition-transform">✕</button>
@@ -867,24 +838,21 @@
         <div class="product-modal-panel" id="product-sheet-panel">
             <div class="ios-handle" id="product-sheet-handle"></div>
             
-            <!-- DIV 1: Scrollable Content (Header + Desc) -->
-            <div class="product-scroll-content flex-1 flex flex-col" id="product-sheet-content">
-                <div class="product-header-area">
-                    <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1 leading-tight"></h2>
-                    <div class="flex items-baseline gap-3">
+            <!-- DIV 1: Scrollable Content (Header + Desc) TASK 1 -->
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar" id="product-sheet-content">
+                <div class="product-header-area p-0 pb-4"> <!-- Reset padding as parent has p-6 -->
+                    <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1 leading-tight text-left"></h2> <!-- TASK 2: text-left -->
+                    <div class="flex items-baseline gap-3 text-left"> <!-- TASK 2: text-left -->
                         <span id="product-modal-price" class="text-3xl text-[#00f2ff] font-bold tracking-tight"></span>
                         <span id="product-modal-old-price" class="text-sm text-gray-500 line-through"></span>
                     </div>
                 </div>
                 
-                <!-- NEW WRAPPER FOR SCROLL -->
-                <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                     <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-light pb-4"></p>
-                </div>
+                 <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-light pb-4 text-left"></p> <!-- TASK 2: text-left -->
             </div>
 
-            <!-- DIV 2: Footer (Classes requested by user) -->
-            <div class="product-footer-area w-full pt-4 mt-auto border-t border-white/10 bg-black/50 sticky bottom-0">
+            <!-- DIV 2: Footer (Classes requested by user) TASK 1 -->
+            <div class="w-full p-4 sticky bottom-0 bg-black/95 backdrop-blur-md border-t border-white/10 z-50">
                 <button id="product-buy-btn" class="btn-save-cyber w-full shadow-[0_0_20px_rgba(0,242,255,0.15)] active:scale-[0.98]">
                     Купить
                 </button>
@@ -1633,7 +1601,7 @@
         function openProductModal(item) {
             tg.HapticFeedback.impactOccurred('medium');
             
-            // Set data
+            // Set data (TASK 2: Alignment forced in HTML, just setting text here)
             document.getElementById('product-modal-title').textContent = item.title;
             document.getElementById('product-modal-desc').textContent = item.fullDescription || item.description;
             document.getElementById('product-modal-price').textContent = item.price;
@@ -1669,7 +1637,7 @@
 
             // --- PHYSICS LOGIC START ---
             const panel = document.getElementById('product-sheet-panel');
-            const content = document.getElementById('product-sheet-content');
+            const content = document.getElementById('product-sheet-content'); // Scroll content is now just this div (TASK 1)
             const imageArea = document.querySelector('.product-modal-image-area');
 
             // Constants
@@ -2501,12 +2469,14 @@
              });
         }
         
+        // TASK 4: HARD DELETE
         function deleteReview(id) { 
             if(confirm('Удалить?')) {
-                db.collection('reviews').doc(id).update({ 
-                    deleted: true, 
-                    admin_id: ADMIN_ID 
-                }).then(loadModerationList); 
+                db.collection('reviews').doc(id).delete()
+                .then(() => {
+                    tg.showAlert("Удалено навсегда");
+                    loadModerationList(); 
+                }); 
             }
         }
 
