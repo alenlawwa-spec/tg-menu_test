@@ -278,7 +278,7 @@
             padding: 14px; 
             border-radius: 16px; /* rounded-2xl */
             width: 100%; 
-            margin-top: 10px; 
+            margin-top: 0; /* REMOVED MARGIN TOP */
             text-transform: uppercase; 
             transition: all 0.2s;
             box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
@@ -322,24 +322,25 @@
         }
         .btn-glass-more:disabled { opacity: 0.5; }
         
-        /* UPDATED: BLACK GLASS STYLE (For "DETAILS") - MADE MORE TRANSPARENT */
+        /* UPDATED: BLACK GLASS STYLE (For "DETAILS") - MADE MORE TRANSPARENT + GLOW */
         .btn-glass-card {
-            background: rgba(0, 0, 0, 0.25); /* Less opacity */
-            backdrop-filter: blur(8px); /* slightly less blur */
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1); /* border-white/10 */
-            color: white; /* text-white */
-            border-radius: 12px; /* rounded-xl */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 12px;
             padding: 8px 16px;
             font-size: 10px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             transition: all 0.3s;
+            box-shadow: 0 0 15px rgba(0,242,255,0.3); /* TASK 3: GLOW */
         }
         .btn-glass-card:active, .btn-glass-card:hover {
             background: rgba(20, 20, 20, 0.8);
             border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2); /* White glow */
+            box-shadow: 0 0 20px rgba(0,242,255,0.6); /* TASK 3: HOVER GLOW */
         }
 
         .icon-box {
@@ -575,10 +576,10 @@
         }
         .product-slider::-webkit-scrollbar { display: none; }
 
-        /* --- UPDATED PRODUCT MODAL CSS (SHEET MODE WITH FLEX FIXED FOOTER) --- */
+        /* --- UPDATED PRODUCT MODAL CSS (TASK 1: FLEX COL + STICKY) --- */
         #product-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6); /* Dimmed background */
+            background: rgba(0,0,0,0.6);
             z-index: 250; 
             opacity: 0; pointer-events: none;
             transition: opacity 0.3s;
@@ -587,33 +588,34 @@
         #product-modal.active-modal { opacity: 1; pointer-events: all; }
 
         .product-modal-image-area {
+            /* HIDDEN: Moving images inside content */
+            display: none; 
             width: 100%;
-            height: 60vh; /* Space for image behind sheet */
+            height: 60vh;
             position: absolute;
             top: 0;
             left: 0;
-            transform-origin: center top; /* For scale effect */
+            transform-origin: center top; 
             will-change: transform;
         }
 
         .product-modal-panel {
             position: absolute; 
             bottom: 0; left: 0; right: 0;
-            height: 95vh; /* Fixed tall height for sheet */
-            background: rgba(10, 10, 15, 0.85);
+            height: 90vh; /* TASK 1: Fixed height 90% */
+            background: rgba(10, 10, 15, 0.92);
             backdrop-filter: blur(25px);
             -webkit-backdrop-filter: blur(25px);
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             border-top-left-radius: 30px;
             border-top-right-radius: 30px;
             display: flex;
-            flex-direction: column; /* FLEX COLUMN IS KEY */
+            flex-direction: column; /* TASK 1: FLEX COLUMN */
             z-index: 20;
             box-shadow: 0 -10px 40px rgba(0,0,0,0.6);
-            /* New Physics Props */
-            transform: translateY(100%); /* Start hidden */
+            transform: translateY(100%);
             will-change: transform;
-            touch-action: none; /* Important for custom drag */
+            touch-action: none; 
         }
 
         .ios-handle {
@@ -624,41 +626,21 @@
             flex-shrink: 0;
             cursor: grab;
         }
-        
-        .product-header-area {
-            padding: 0 24px 10px 24px;
-            flex-shrink: 0;
-        }
 
-        .product-scroll-content {
-            flex: 1; 
-            display: flex; 
-            flex-direction: column;
-            padding: 0 24px;
-            padding-bottom: 20px; 
-            overflow: hidden;
-        }
-
-        /* UPDATED: FIXED FOOTER STYLE (FLEX CHILD AT BOTTOM) */
-        .product-footer-area {
-            position: relative; /* RELATIVE TO FLEX CONTAINER */
-            margin-top: auto; /* PUSHES TO BOTTOM */
+        /* NEW INLINE SLIDER */
+        #product-inline-slider {
             width: 100%;
-            z-index: 50;
-            background: rgba(0, 0, 0, 0.9); /* bg-black/90 */
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-top: 1px solid rgba(255, 255, 255, 0.1); /* border-white/10 */
-            padding: 16px; /* p-4 */
-            padding-bottom: calc(16px + env(safe-area-inset-bottom)); /* Safe area support */
-            flex-shrink: 0; /* DON'T SHRINK */
+            aspect-ratio: 1/1;
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            scrollbar-width: none;
+            border-radius: 16px;
+            margin-bottom: 20px;
+            background: #000;
         }
-
-        #product-modal-slider {
-            height: 100%;
-            gap: 0;
-            padding-bottom: 0;
-        }
+        #product-inline-slider::-webkit-scrollbar { display: none; }
+        
         .product-slide { 
             flex: 0 0 100%; 
             scroll-snap-align: center; 
@@ -667,9 +649,16 @@
             border: none;
             border-radius: 0;
             height: 100%;
+            position: relative;
         }
         .product-slide img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
 
+        .line-clamp-strict {
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
 
         .admin-status-indicator {
             width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-left: 8px;
@@ -852,39 +841,37 @@
         </div>
     </div>
 
-    <!-- UPDATED PRODUCT MODAL HTML (FLEX STRUCTURE) -->
+    <!-- UPDATED PRODUCT MODAL HTML (TASK 1: Structure) -->
     <div id="product-modal">
         <!-- Close Button -->
         <button onclick="closeProductModal()" class="absolute top-4 right-4 z-50 w-10 h-10 bg-black/40 rounded-full text-white flex items-center justify-center backdrop-blur-md border border-white/10 active:scale-90 transition-transform">✕</button>
 
-        <!-- Image Area -->
-        <div class="product-modal-image-area">
-            <div class="product-slider" id="product-modal-slider"></div>
-            <div id="product-modal-hint" class="absolute bottom-12 left-0 right-0 text-center text-[10px] text-white/70 z-10 pointer-events-none drop-shadow-md">Листай фото →</div>
-        </div>
+        <!-- Hidden old image area -->
+        <div class="product-modal-image-area"></div>
 
         <!-- Overlay Panel (Sheet) -->
         <div class="product-modal-panel" id="product-sheet-panel">
             <div class="ios-handle" id="product-sheet-handle"></div>
             
-            <!-- DIV 1: Scrollable Content (Header + Desc) -->
-            <div class="product-scroll-content flex-1 flex flex-col" id="product-sheet-content">
-                <div class="product-header-area">
-                    <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1 leading-tight"></h2>
-                    <div class="flex items-baseline gap-3">
+            <!-- DIV 1: Scrollable Content (Header + Desc + Images) TASK 1 & 2 -->
+            <div class="flex-1 overflow-y-auto p-6 custom-scrollbar text-left" id="product-sheet-content">
+                
+                <!-- NEW LOCATION FOR IMAGES (TASK 2) -->
+                <div id="product-inline-slider"></div>
+
+                <div class="product-header-area p-0 pb-4 text-left">
+                    <h2 id="product-modal-title" class="text-2xl font-bold text-white mb-1 leading-tight text-left"></h2> 
+                    <div class="flex items-baseline gap-3 text-left"> 
                         <span id="product-modal-price" class="text-3xl text-[#00f2ff] font-bold tracking-tight"></span>
                         <span id="product-modal-old-price" class="text-sm text-gray-500 line-through"></span>
                     </div>
                 </div>
                 
-                <!-- NEW WRAPPER FOR SCROLL -->
-                <div class="max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
-                     <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-light pb-4"></p>
-                </div>
+                 <p id="product-modal-desc" class="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap font-light pb-4 text-left"></p>
             </div>
 
-            <!-- DIV 2: Footer (Classes requested by user) -->
-            <div class="product-footer-area w-full pt-4 mt-auto border-t border-white/10 bg-black/50 sticky bottom-0">
+            <!-- DIV 2: Footer (Static, Not Sticky) TASK 1 -->
+            <div class="w-full p-4 bg-black/95 border-t border-white/10 z-50">
                 <button id="product-buy-btn" class="btn-save-cyber w-full shadow-[0_0_20px_rgba(0,242,255,0.15)] active:scale-[0.98]">
                     Купить
                 </button>
@@ -1404,7 +1391,7 @@
                             <div class="flex-1 flex flex-col justify-between">
                                 <div>
                                     <div class="text-white font-bold text-sm leading-tight mb-1 text-left">${item.title || ''}</div>
-                                    <div class="text-gray-400 text-[10px] leading-snug line-clamp-3 text-left">${item.description || ''}</div>
+                                    <div class="text-gray-400 text-[10px] leading-snug line-clamp-strict text-left">${item.description || ''}</div>
                                 </div>
                                 <div class="flex justify-end mt-2">
                                     <button class="btn-glass-card">
@@ -1507,7 +1494,7 @@
                                 <div>
                                     <div class="text-white font-bold text-sm leading-tight mb-0">${escapeHtml(item.title)}</div>
                                     <div class="mb-1">${priceHtmlList}</div>
-                                    <div class="text-gray-400 text-[10px] leading-snug line-clamp-3">${escapeHtml(item.description || '')}</div>
+                                    <div class="text-gray-400 text-[10px] leading-snug line-clamp-strict">${escapeHtml(item.description || '')}</div>
                                 </div>
                                 
                                 <div class="flex justify-end mt-2">
@@ -1539,7 +1526,7 @@
                                     <div class="text-left -mt-1">${priceHtml}</div>
                                 </div>
                                 
-                                <div class="text-gray-400 text-[10px] line-clamp-3 leading-snug mb-3 text-left flex-1">
+                                <div class="text-gray-400 text-[10px] line-clamp-strict leading-snug mb-3 text-left flex-1">
                                     ${escapeHtml(item.description)}
                                 </div>
                                 <div class="mt-auto pt-1 flex justify-start">
@@ -1633,7 +1620,7 @@
         function openProductModal(item) {
             tg.HapticFeedback.impactOccurred('medium');
             
-            // Set data
+            // Set data (TASK 2: Alignment forced in HTML, just setting text here)
             document.getElementById('product-modal-title').textContent = item.title;
             document.getElementById('product-modal-desc').textContent = item.fullDescription || item.description;
             document.getElementById('product-modal-price').textContent = item.price;
@@ -1641,8 +1628,8 @@
             if (item.oldPrice) { oldPriceEl.textContent = item.oldPrice; oldPriceEl.style.display = 'inline'; }
             else oldPriceEl.style.display = 'none';
 
-            // Setup Slider
-            const slider = document.getElementById('product-modal-slider');
+            // Setup Slider (TASK 2: Now inside the scroll content)
+            const slider = document.getElementById('product-inline-slider');
             slider.innerHTML = '';
             const images = (item.images && item.images.length > 0) ? item.images : [item.imageUrl];
             images.forEach(imgUrl => {
@@ -1652,8 +1639,7 @@
                 slide.innerHTML = `<img src="${imgUrl}" loading="lazy">`;
                 slider.appendChild(slide);
             });
-            const hintText = document.getElementById('product-modal-hint');
-            hintText.style.display = images.length > 1 ? 'block' : 'none';
+            // Hint removed as scroll is obvious with inline slider or can be added back if needed
 
             // Setup Buy Button
             const btn = document.getElementById('product-buy-btn');
@@ -1669,11 +1655,11 @@
 
             // --- PHYSICS LOGIC START ---
             const panel = document.getElementById('product-sheet-panel');
-            const content = document.getElementById('product-sheet-content');
-            const imageArea = document.querySelector('.product-modal-image-area');
+            const content = document.getElementById('product-sheet-content'); // Scroll content is now just this div (TASK 1)
+            const imageArea = document.querySelector('.product-modal-image-area'); // Still here for reference but hidden
 
             // Constants
-            const SHEET_HEIGHT_VH = 95; 
+            const SHEET_HEIGHT_VH = 90; // UPDATED to 90
             const COLLAPSED_VISIBLE_VH = 50; 
             const screenH = window.innerHeight;
             const maxH = screenH * (SHEET_HEIGHT_VH / 100);
@@ -1685,8 +1671,7 @@
             panel.style.transition = 'none';
             panel.style.transform = `translateY(${currentTranslate}px)`;
             
-            imageArea.style.transition = 'none';
-            imageArea.style.transform = 'scale(1)';
+            // imageArea.style.transition = 'none'; // HIDDEN
 
             // Touch State
             let startY = 0;
@@ -1707,7 +1692,7 @@
                 startTime = Date.now();
                 
                 panel.style.transition = 'none';
-                imageArea.style.transition = 'none';
+                // imageArea.style.transition = 'none';
             };
 
             const onTouchMove = (e) => {
@@ -1733,12 +1718,12 @@
 
                 // Image Effect: Scale down when sheet goes up (translate -> 0)
                 // 0 translate = 0.95 scale, hiddenTranslate = 1 scale
-                const progress = 1 - Math.min(Math.max(newTranslate / hiddenTranslate, 0), 1);
-                const scale = 1 - (progress * 0.05);
-                const brightness = 1 - (progress * 0.2); // Darken slightly
+                // const progress = 1 - Math.min(Math.max(newTranslate / hiddenTranslate, 0), 1);
+                // const scale = 1 - (progress * 0.05);
+                // const brightness = 1 - (progress * 0.2); // Darken slightly
                 
-                imageArea.style.transform = `scale(${scale})`;
-                imageArea.style.filter = `brightness(${brightness})`;
+                // imageArea.style.transform = `scale(${scale})`;
+                // imageArea.style.filter = `brightness(${brightness})`;
             };
 
             const onTouchEnd = (e) => {
@@ -1770,12 +1755,12 @@
                 panel.style.transition = 'transform 0.4s cubic-bezier(0.25, 0.1, 0.25, 1)';
                 panel.style.transform = `translateY(${targetTranslate}px)`;
                 
-                imageArea.style.transition = 'transform 0.4s ease, filter 0.4s ease';
+                // imageArea.style.transition = 'transform 0.4s ease, filter 0.4s ease';
                 
-                const finalScale = targetTranslate === 0 ? 0.95 : 1;
-                const finalBright = targetTranslate === 0 ? 0.8 : 1;
-                imageArea.style.transform = `scale(${finalScale})`;
-                imageArea.style.filter = `brightness(${finalBright})`;
+                // const finalScale = targetTranslate === 0 ? 0.95 : 1;
+                // const finalBright = targetTranslate === 0 ? 0.8 : 1;
+                // imageArea.style.transform = `scale(${finalScale})`;
+                // imageArea.style.filter = `brightness(${finalBright})`;
                 
                 currentTranslate = targetTranslate;
                 
@@ -2501,12 +2486,14 @@
              });
         }
         
+        // TASK 4: HARD DELETE
         function deleteReview(id) { 
             if(confirm('Удалить?')) {
-                db.collection('reviews').doc(id).update({ 
-                    deleted: true, 
-                    admin_id: ADMIN_ID 
-                }).then(loadModerationList); 
+                db.collection('reviews').doc(id).delete()
+                .then(() => {
+                    tg.showAlert("Удалено навсегда");
+                    loadModerationList(); 
+                }); 
             }
         }
 
