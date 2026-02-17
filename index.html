@@ -966,7 +966,7 @@
                             snap = await db.collection(colName)
                                 .where('parentId', '==', btn.id)
                                 .orderBy('createdAt', 'desc')
-                                .limit(20)
+                                .limit(10)
                                 .get();
                         } catch (e) {
                              console.log("Sort query failed, retrying without sort", e);
@@ -975,7 +975,7 @@
                         if (!snap || snap.empty) {
                              snap = await db.collection(colName)
                                 .where('parentId', '==', btn.id)
-                                .limit(20)
+                                .limit(10)
                                 .get();
                         }
 
@@ -988,7 +988,7 @@
                         
                         btn.items = items;
                         btn.lastVisible = snap.docs[snap.docs.length - 1];
-                        btn.hasMore = snap.docs.length === 20;
+                        btn.hasMore = snap.docs.length === 10;
 
                     } catch (e) {
                         console.error(`Error loading ${colName} for ${btn.id}`, e);
@@ -1018,13 +1018,13 @@
                         .where('parentId', '==', btn.id)
                         .orderBy('createdAt', 'desc')
                         .startAfter(btn.lastVisible)
-                        .limit(20)
+                        .limit(10)
                         .get();
                 } catch(e) {
                     snap = await db.collection(colName)
                         .where('parentId', '==', btn.id)
                         .startAfter(btn.lastVisible)
-                        .limit(20)
+                        .limit(10)
                         .get();
                 }
 
@@ -1038,7 +1038,7 @@
                 if (newItems.length > 0) {
                     btn.items = [...btn.items, ...newItems];
                     btn.lastVisible = snap.docs[snap.docs.length - 1];
-                    btn.hasMore = snap.docs.length === 20;
+                    btn.hasMore = snap.docs.length === 10;
                     
                     const container = document.querySelector(btn.viewType === 'list' ? '.list-view-container' : '.gallery-grid');
                     
@@ -1832,7 +1832,7 @@
                     const ctx = canvas.getContext('2d');
                     
                     // БЫЛО 800, ДЕЛАЕМ 600 (Для телефона за глаза!)
-                    const MAX_SIDE = 600;
+                    const MAX_SIDE = 400;
                     
                     let w = img.width, h = img.height;
                     if (w > h) {
@@ -1848,7 +1848,7 @@
                     let dataUrl = canvas.toDataURL('image/jpeg', quality);
                     
                     // БЫЛО 900000, ДЕЛАЕМ 150000 (150 Кб - это в 6 раз легче!)
-                    while (dataUrl.length > 150000 && quality > 0.1) {
+                    while (dataUrl.length > 50000 && quality > 0.1) {
                         quality -= 0.1;
                         dataUrl = canvas.toDataURL('image/jpeg', quality);
                     }
