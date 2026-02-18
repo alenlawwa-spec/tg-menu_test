@@ -267,11 +267,23 @@
 
         /* ИСПРАВЛЕНИЕ: Центрирование иконок в админке (Task 2) */
         .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 12px; }
-        .icon-picker-btn {
-            aspect-ratio: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s;
-            position: relative; overflow: hidden;
-        }
+.icon-picker-btn {
+    aspect-ratio: 1;
+    background: rgba(255,255,255,0.05); 
+    border: 1px solid rgba(255,255,255,0.1); 
+    border-radius: 8px;
+    
+    /* Центровка */
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    padding: 0;
+    margin: 0;
+    
+    transition: all 0.2s;
+    position: relative; 
+    overflow: hidden;
+}
         .icon-picker-btn.active { 
             border-color: var(--neon-color); 
             background: rgba(0, 242, 255, 0.2); 
@@ -377,17 +389,25 @@
         .title-gradient { background: linear-gradient(135deg, #ffffff 0%, #a1a1a1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
         /* ИСПРАВЛЕНИЕ: КАТЕГОРИИ (Task 1: padding-left: 16px) */
-        .category-scroll-container { 
-            display: flex; 
-            gap: 10px; /* Равномерный отступ */
-            overflow-x: auto; 
-            padding-bottom: 8px; 
-            margin-bottom: 12px; 
-            scrollbar-width: none;
-            width: 100%;
-            padding-left: 16px; /* ИЗМЕНЕНО с 0 на 16px */
-            -webkit-overflow-scrolling: touch;
-        }
+.category-scroll-container { 
+    display: flex;
+    gap: 10px; 
+    overflow-x: auto; 
+    padding-bottom: 8px; 
+    margin-bottom: 12px; 
+    scrollbar-width: none;
+    
+    /* Делаем скролл от края до края экрана */
+    margin-left: -20px; 
+    margin-right: -20px;
+    width: calc(100% + 40px);
+    
+    /* Внутренний отступ, чтобы кнопка "Все" стояла ровно по линии контента */
+    padding-left: 75px;
+    padding-right: 75px;
+    
+    -webkit-overflow-scrolling: touch;
+}
         .category-scroll-container::-webkit-scrollbar { display: none; }
         
         .category-chip {
