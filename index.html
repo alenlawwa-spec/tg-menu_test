@@ -166,8 +166,18 @@
         .hidden-left { transform: translateX(-150%); opacity: 0; pointer-events: none; }
         .hidden-right { transform: translateX(50%); opacity: 0; pointer-events: none; }
         .hidden-bottom { transform: translateY(100%); opacity: 0; pointer-events: none; }
+        
         .active { transform: translateX(-50%); opacity: 1; pointer-events: all; }
         .active-modal { transform: translateY(0); opacity: 1; pointer-events: all; }
+
+        /* --- FIX FOR ADMIN PAGE CENTERING --- */
+        /* Принудительно возвращаем центрирование по X для админки, так как класс .active-modal перебивает transform */
+        #admin-page.active-modal {
+            transform: translate(-50%, 0);
+        }
+        #admin-page.hidden-bottom {
+            transform: translate(-50%, 100%);
+        }
 
         .glass-card {
             background: rgba(255, 255, 255, 0.04);
@@ -372,11 +382,8 @@
             padding-bottom: 8px; 
             margin-bottom: 12px; 
             scrollbar-width: none;
-            /* Added fixes */
-            margin-left: -20px;
-            margin-right: -20px;
-            padding-left: 20px;
-            padding-right: 20px;
+            /* Исправленные отступы (убраны отрицательные значения) */
+            width: 100%;
             -webkit-overflow-scrolling: touch;
         }
         .category-scroll-container::-webkit-scrollbar { display: none; }
