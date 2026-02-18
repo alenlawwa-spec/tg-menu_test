@@ -265,11 +265,11 @@
         .admin-textarea { resize: vertical; min-height: 60px; }
         .admin-label { font-size: 10px; color: #777; margin-bottom: 4px; margin-left: 4px; display: block; text-transform: uppercase; }
 
-        /* ИСПРАВЛЕНИЕ: Центрирование иконок в админке */
+        /* ИСПРАВЛЕНИЕ: Центрирование иконок в админке (Task 2) */
         .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 12px; }
         .icon-picker-btn {
             aspect-ratio: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
-            display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; transition: all 0.2s;
             position: relative; overflow: hidden;
         }
         .icon-picker-btn.active { 
@@ -376,7 +376,7 @@
 
         .title-gradient { background: linear-gradient(135deg, #ffffff 0%, #a1a1a1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* ИСПРАВЛЕНИЕ: КАТЕГОРИИ (Убраны отрицательные отступы, добавлен gap) */
+        /* ИСПРАВЛЕНИЕ: КАТЕГОРИИ (Task 1: padding-left: 16px) */
         .category-scroll-container { 
             display: flex; 
             gap: 10px; /* Равномерный отступ */
@@ -385,7 +385,7 @@
             margin-bottom: 12px; 
             scrollbar-width: none;
             width: 100%;
-            padding-left: 0; /* Выравнивание по левому краю */
+            padding-left: 16px; /* ИЗМЕНЕНО с 0 на 16px */
             -webkit-overflow-scrolling: touch;
         }
         .category-scroll-container::-webkit-scrollbar { display: none; }
@@ -1101,8 +1101,9 @@
             if (!appData.mainMenu) return;
             
             const promises = appData.mainMenu.map(async (btn) => {
-                if (['gallery', 'products'].includes(btn.mode) && btn.id) {
-                    const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
+                // TASK 3: ADD 'services' TO LOADING LOGIC
+                if (['gallery', 'products', 'services'].includes(btn.mode) && btn.id) {
+                    const colName = btn.mode === 'gallery' ? 'prompts' : (btn.mode === 'services' ? 'services' : 'products');
                     try {
                         let snap;
                         try {
@@ -1152,7 +1153,8 @@
                 loadBtn.textContent = 'Загрузка...';
             }
 
-            const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
+            // TASK 3: ADD 'services' TO LOAD MORE LOGIC
+            const colName = btn.mode === 'gallery' ? 'prompts' : (btn.mode === 'services' ? 'services' : 'products');
             
             try {
                 let snap;
@@ -1187,7 +1189,7 @@
                     
                     if (btn.mode === 'gallery') {
                         renderGalleryItems(newItems, container, btn.viewType, true);
-                    } else if (btn.mode === 'products') {
+                    } else if (btn.mode === 'products' || btn.mode === 'services') {
                         renderProductItems(newItems, container, btn.viewType, true);
                     }
                 } else {
@@ -1239,7 +1241,7 @@
             if (!appData.mainMenu) return; 
 
             appData.mainMenu.forEach((btn) => {
-                const isComplexMode = ['list','gallery','reviews','products'].includes(btn.mode);
+                const isComplexMode = ['list','gallery','reviews','products','services'].includes(btn.mode);
                 const btnEl = document.createElement('div');
                 btnEl.className = 'glass-card p-4 flex items-center cursor-pointer';
                 btnEl.onclick = () => isComplexMode ? openSubPage(btn) : handleLink(btn.directLink);
@@ -1328,7 +1330,8 @@
             
             const viewType = btnData.viewType || 'grid';
 
-            if (btnData.mode === 'gallery' || btnData.mode === 'products') {
+            // TASK 3: Added 'services' check
+            if (btnData.mode === 'gallery' || btnData.mode === 'products' || btnData.mode === 'services') {
                 const allItems = btnData.items || [];
                 const categories = ['Все', ...new Set(allItems.flatMap(i => i.categories || (i.category ? [i.category] : [])).filter(Boolean))];
                 
@@ -1799,10 +1802,11 @@
                         <option value="list" ${btn.mode==='list'?'selected':''}>Список</option>
                         <option value="gallery" ${btn.mode==='gallery'?'selected':''}>Галерея</option>
                         <option value="products" ${btn.mode==='products'?'selected':''}>Витрина Товаров</option>
+                        <option value="services" ${btn.mode==='services'?'selected':''}>Услуги (Services)</option>
                         <option value="reviews" ${btn.mode==='reviews'?'selected':''}>Отзывы</option>
                     </select>
 
-                    ${ ['gallery', 'products'].includes(btn.mode) ? `
+                    ${ ['gallery', 'products', 'services'].includes(btn.mode) ? `
                     <label class="admin-label mt-2">Вид отображения</label>
                     <div class="flex gap-2 mb-2">
                         <button onclick="tempAppData.mainMenu[${idx}].viewType='grid'; renderAdminMainMenu();" class="flex-1 py-2 rounded border ${!btn.viewType || btn.viewType==='grid' ? 'border-cyan-400 bg-cyan-400/10 text-cyan-400' : 'border-white/10 text-gray-500'}">⊞ Сетка</button>
@@ -1880,11 +1884,12 @@
                 <button onclick="saveAdminData()" id="btn-save-sub" class="admin-bar-btn primary">💾 Сохранить</button>
             `;
             
-            if (['gallery', 'products'].includes(btn.mode) && btn.id) {
+            // TASK 3: ADD 'services' TO SUB-LIST LOADING
+            if (['gallery', 'products', 'services'].includes(btn.mode) && btn.id) {
                 const listContainer = document.getElementById('admin-sublist-items');
                 listContainer.innerHTML = '<div class="spinner relative left-1/2 -ml-5 mt-10"></div><div class="text-center mt-16 text-xs text-gray-500">Загрузка полного списка...</div>';
                 
-                const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
+                const colName = btn.mode === 'gallery' ? 'prompts' : (btn.mode === 'services' ? 'services' : 'products');
                 try {
                     let snap;
                     try {
@@ -1982,7 +1987,7 @@
                 const mode = tempAppData.mainMenu[currentEditingIndex].mode;
                 const slot = input.dataset.slot;
 
-                if (mode === 'products' || mode === 'gallery') {
+                if (mode === 'products' || mode === 'gallery' || mode === 'services') {
                     if (!tempAppData.mainMenu[currentEditingIndex].items[idx].images) {
                         const existingUrl = tempAppData.mainMenu[currentEditingIndex].items[idx].imageUrl || '';
                         tempAppData.mainMenu[currentEditingIndex].items[idx].images = [existingUrl];
@@ -2034,8 +2039,9 @@
             const btn = tempAppData.mainMenu[currentEditingIndex];
             const item = btn.items[idx];
             
-            if (item.id && ['gallery', 'products'].includes(btn.mode)) {
-                 const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
+            // TASK 3: ADD 'services' TO DELETE LOGIC
+            if (item.id && ['gallery', 'products', 'services'].includes(btn.mode)) {
+                 const colName = btn.mode === 'gallery' ? 'prompts' : (btn.mode === 'services' ? 'services' : 'products');
                  const btnSub = document.getElementById('btn-save-sub');
                  if(btnSub) { btnSub.disabled = true; btnSub.innerText = "⏳ Удаление из БД..."; }
                  
@@ -2079,7 +2085,7 @@
         function renderSubListItems() {
             const list = document.getElementById('admin-sublist-items'); list.innerHTML = '';
             const parentBtn = tempAppData.mainMenu[currentEditingIndex];
-            const isProd = parentBtn.mode === 'products';
+            const isProd = parentBtn.mode === 'products' || parentBtn.mode === 'services'; // Modified to include services
             const isGallery = parentBtn.mode === 'gallery';
             const items = parentBtn.items || [];
             
@@ -2230,7 +2236,7 @@
         function addNewSubItem() {
             const mode = tempAppData.mainMenu[currentEditingIndex].mode;
             const newId = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-            const newItem = mode === 'products' 
+            const newItem = (mode === 'products' || mode === 'services')
                 ? { id: newId, title: 'Товар', price: '', status: '', images: [], categories: [], createdAt: new Date().toISOString() } 
                 : { id: newId, title: 'Новый', link: '', createdAt: new Date().toISOString() };
             tempAppData.mainMenu[currentEditingIndex].items.unshift(newItem);
@@ -2281,9 +2287,10 @@
                 for (let btn of dataToSave.mainMenu) {
                     if (!btn.id) btn.id = 'menu_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                     
-                    if (['gallery', 'products'].includes(btn.mode)) {
+                    // TASK 3: ADD 'services' TO SAVE LOGIC
+                    if (['gallery', 'products', 'services'].includes(btn.mode)) {
                         const items = btn.items || [];
-                        const colName = btn.mode === 'gallery' ? 'prompts' : 'products';
+                        const colName = btn.mode === 'gallery' ? 'prompts' : (btn.mode === 'services' ? 'services' : 'products');
 
                         for (let item of items) {
                             if (!item.id) item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
