@@ -17,6 +17,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
+/* Глобальное исправление для всех кликабельных элементов */
+.category-scroll-container > div, 
+.icon-picker-btn, 
+.nav-item {
+    box-sizing: border-box !important; /* Чтобы рамка не раздувала элемент */
+    border: 2px solid transparent !important; /* Резервируем место под рамку заранее */
+    transition: all 0.2s ease;
+}
+
+/* Исправляем состояние при нажатии */
+.category-scroll-container > div.active,
+.icon-picker-btn.active,
+.icon-picker-btn.ring-2 {
+    border-color: var(--neon-color) !important; /* Просто красим уже существующую рамку */
+    background: rgba(0, 242, 255, 0.1) !important;
+}
         :root {
             --neon-color: #00f2ff;
             --neon-pink: #ff007a;
@@ -268,20 +284,22 @@
         /* ИСПРАВЛЕНИЕ: Центрирование иконок в админке (Task 2) */
         .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 12px; }
 .icon-picker-btn {
-    aspect-ratio: 1;
-    background: rgba(255,255,255,0.05); 
-    border: 2px solid transparent; 
+    width: 44px !important;
+    height: 44px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important; /* Это критично, чтобы иконка не съезжала */
+    background: rgba(255,255,255,0.05);
     border-radius: 8px;
-    
-    /* Центровка */
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    transition: all 0.2s;
-    position: relative; 
-    overflow: hidden;
-    padding: 0;
-    margin: 0;
+    position: relative;
+    flex-shrink: 0; /* Чтобы кнопка не сплющивалась */
+}
+
+.icon-picker-btn svg {
+    width: 24px !important;
+    height: 24px !important;
+    display: block;
 }
         .icon-picker-btn.active { 
             border-color: var(--neon-color); 
@@ -392,19 +410,10 @@
     display: flex;
     gap: 10px; 
     overflow-x: auto; 
-    padding-bottom: 8px; 
-    margin-bottom: 12px; 
+    width: 100%; /* Сделать ровно по ширине */
+    padding: 0 20px 8px 20px; /* Равномерные отступы */
+    margin: 0; 
     scrollbar-width: none;
-    
-    /* Делаем скролл от края до края экрана */
-    margin-left: 0; 
-    margin-right: 0 !important;
-    width: calc(100% + 40px);
-    
-    /* Внутренний отступ, чтобы кнопка "Все" стояла ровно по линии контента */
-    padding-left: 30px;
-    padding-right: 30px;
-    
     -webkit-overflow-scrolling: touch;
 }
         .category-scroll-container::-webkit-scrollbar { display: none; }
@@ -416,7 +425,8 @@
         }
         .category-chip.active {
             background: rgba(0, 242, 255, 0.15); color: var(--neon-color);
-            border-color: rgba(0, 242, 255, 0.4); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2);
+            box-shadow: inset 0 0 0 1px rgba(0, 242, 255, 0.4), 0 0 15px rgba(0, 242, 255, 0.2);
+    border-color: transparent;
         }
 
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; padding-bottom: 80px; }
