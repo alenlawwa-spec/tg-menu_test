@@ -155,7 +155,6 @@
             content-visibility: auto;
             touch-action: pan-y;
             
-            /* TASK 2: DESKTOP STYLING */
             box-shadow: 0 0 40px rgba(0,0,0,0.6);
             border-left: 1px solid rgba(255,255,255,0.1);
             border-right: 1px solid rgba(255,255,255,0.1);
@@ -171,7 +170,6 @@
         .active-modal { transform: translateY(0); opacity: 1; pointer-events: all; }
 
         /* --- FIX FOR ADMIN PAGE CENTERING --- */
-        /* Принудительно возвращаем центрирование по X для админки, так как класс .active-modal перебивает transform */
         #admin-page.active-modal {
             transform: translate(-50%, 0);
         }
@@ -267,13 +265,19 @@
         .admin-textarea { resize: vertical; min-height: 60px; }
         .admin-label { font-size: 10px; color: #777; margin-bottom: 4px; margin-left: 4px; display: block; text-transform: uppercase; }
 
+        /* ИСПРАВЛЕНИЕ: Центрирование иконок в админке */
         .icon-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 12px; }
         .icon-picker-btn {
             aspect-ratio: 1; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
             display: flex; align-items: center; justify-content: center; transition: all 0.2s;
+            position: relative; overflow: hidden;
         }
-        .icon-picker-btn.active { border-color: var(--neon-color); background: rgba(0, 242, 255, 0.2); box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
-        .icon-picker-btn svg { width: 18px; height: 18px; }
+        .icon-picker-btn.active { 
+            border-color: var(--neon-color); 
+            background: rgba(0, 242, 255, 0.2); 
+            box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); 
+        }
+        .icon-picker-btn svg { width: 18px; height: 18px; position: relative; z-index: 2; display: block; margin: 0 auto; }
 
         .color-row { display: flex; gap: 10px; margin-bottom: 12px; }
         .color-picker-btn { width: 24px; height: 24px; border-radius: 50%; border: 2px solid transparent; transition: transform 0.2s; }
@@ -286,7 +290,6 @@
             display: flex; align-items: center; justify-content: center; gap: 8px;
         }
 
-        /* TASK 3: GLOW & BUTTON FIXES */
         .btn-save-cyber {
             background: rgba(6, 182, 212, 0.2);
             backdrop-filter: blur(12px);
@@ -300,7 +303,7 @@
             text-transform: uppercase; 
             transition: all 0.2s;
             box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
-            margin: 0; /* Reset margin for footer */
+            margin: 0; 
         }
         .btn-save-cyber:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
         .btn-save-cyber:active {
@@ -311,7 +314,6 @@
             box-shadow: none;
         }
 
-        /* TASK 3: SPECIAL RULE FOR REVIEW CARD BUTTONS */
         .review-card .btn-save-cyber { 
             margin-top: 12px !important; 
         }
@@ -374,16 +376,16 @@
 
         .title-gradient { background: linear-gradient(135deg, #ffffff 0%, #a1a1a1 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 
-        /* TASK 1: CATEGORY SCROLL FIXES */
+        /* ИСПРАВЛЕНИЕ: КАТЕГОРИИ (Убраны отрицательные отступы, добавлен gap) */
         .category-scroll-container { 
             display: flex; 
-            gap: 8px; 
+            gap: 10px; /* Равномерный отступ */
             overflow-x: auto; 
             padding-bottom: 8px; 
             margin-bottom: 12px; 
             scrollbar-width: none;
-            /* Исправленные отступы (убраны отрицательные значения) */
             width: 100%;
+            padding-left: 0; /* Выравнивание по левому краю */
             -webkit-overflow-scrolling: touch;
         }
         .category-scroll-container::-webkit-scrollbar { display: none; }
@@ -1260,11 +1262,25 @@
             });
         }
 
+        // TASK 4 FIX: IMPROVED SWIPE LOGIC TO PREVENT SCROLL CONFLICTS
         let touchStartX = 0;
+        let touchStartY = 0; // Capture Y to detect scrolling
         const subPage = document.getElementById('sub-page');
-        subPage.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
+        
+        subPage.addEventListener('touchstart', e => { 
+            touchStartX = e.changedTouches[0].screenX; 
+            touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+        
         subPage.addEventListener('touchend', e => {
-            if (e.changedTouches[0].screenX - touchStartX > 50) hideSubPage();
+            const deltaX = e.changedTouches[0].screenX - touchStartX;
+            const deltaY = e.changedTouches[0].screenY - touchStartY;
+            
+            // Only trigger back if horizontal swipe is significant AND vertical movement is small
+            // This prevents triggering "back" when scrolling down quickly
+            if (deltaX > 50 && Math.abs(deltaY) < 50) { 
+                hideSubPage();
+            }
         }, { passive: true });
 
         function escapeHtml(text) {
@@ -1904,6 +1920,10 @@
                     console.error("Admin load error", e);
                 }
             } else {
+                 // TASK 3 FIX: Ensure items array exists for simple lists like "My Services"
+                 if (!tempAppData.mainMenu[idx].items) {
+                     tempAppData.mainMenu[idx].items = [];
+                 }
                  availableCategories.clear();
                 (btn.items || []).forEach(item => {
                     const cats = item.categories || (item.category ? [item.category] : []);
@@ -2020,6 +2040,7 @@
                  if(btnSub) { btnSub.disabled = true; btnSub.innerText = "⏳ Удаление из БД..."; }
                  
                  try {
+                     // TASK 5 FIX: STICK TO HARD DELETE
                      await db.collection(colName).doc(item.id).delete();
                      console.log(`Deleted doc ${item.id} from ${colName}`);
                  } catch (e) {
