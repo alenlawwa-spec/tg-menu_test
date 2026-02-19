@@ -2064,6 +2064,17 @@
             if(val) { availableCategories.add(val); input.value = ''; renderSubListItems(); }
         }
         
+function deleteGlobalCategory(cat) {
+            if(confirm(`Удалить категорию "${cat}"?`)) {
+                availableCategories.delete(cat);
+                tempAppData.mainMenu[currentEditingIndex].items.forEach(item => {
+                    if (item.categories) {
+                        item.categories = item.categories.filter(c => c !== cat);
+                    }
+                });
+                renderSubListItems();
+            }
+        }
         async function deleteSubItem(idx) {
             if (!confirm("⚠️ Точно удалить? Восстановить нельзя!")) return;
             
@@ -2123,12 +2134,17 @@
             const items = parentBtn.items || [];
             
             if(isGallery || isProd) {
+                let catListHtml = '<div class="flex flex-wrap gap-2 mt-3">';
+                availableCategories.forEach(cat => {
+                    catListHtml += `<div class="category-chip flex items-center gap-1" style="margin:0 !important; padding: 4px 10px;">${cat} <button onclick="deleteGlobalCategory('${cat}')" class="text-red-500 font-bold ml-1 text-lg leading-none hover:text-red-400">×</button></div>`;
+                });
+                catListHtml += '</div>';
+
                 const catCreator = document.createElement('div');
                 catCreator.className = 'admin-card mb-4';
-                catCreator.innerHTML = `<div class="admin-section-title text-green-400">Категории</div><div class="flex gap-2"><input type="text" id="new-cat-input" class="admin-input" placeholder="Новая категория..."><button onclick="addNewGlobalCategory()" class="btn-add-cyber" style="width: auto;">+</button></div>`;
+                catCreator.innerHTML = `<div class="admin-section-title text-green-400">Управление категориями</div><div class="flex gap-2"><input type="text" id="new-cat-input" class="admin-input" placeholder="Новая категория..."><button onclick="addNewGlobalCategory()" class="btn-add-cyber" style="width: auto;">+</button></div>${catListHtml}`;
                 list.appendChild(catCreator);
             }
-
             items.forEach((item, idx) => {
                 const total = items.length;
                 const upBtn = idx > 0 ? `<button onclick="moveSubListItem(${idx}, -1)" class="text-xs text-gray-500 hover:text-white p-1">▲</button>` : `<span class="p-1 w-4 block"></span>`;
