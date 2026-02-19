@@ -2087,17 +2087,19 @@
             renderSubListItems();
         }
 
-        function toggleCategory(itemIdx, cat) {
+        function toggleCategory(itemIdx, cat, el) {
             const item = tempAppData.mainMenu[currentEditingIndex].items[itemIdx];
             if (!item.categories) item.categories = [];
             
             if (item.categories.includes(cat)) {
                 item.categories = item.categories.filter(c => c !== cat);
+                el.classList.remove('active');
             } else {
                 item.categories.push(cat);
+                el.classList.add('active');
             }
             const btn = document.getElementById(`cat-btn-${itemIdx}`);
-            if(btn) btn.innerText = `Выбрано: ${item.categories.length}`;
+            if(btn) btn.innerHTML = `<span>Выбрано: ${item.categories.length}</span><span class="text-xs">▼</span>`;
         }
         
         function toggleCatDropdown(id) {
@@ -2140,10 +2142,11 @@
 
                     const currentCats = item.categories || (item.category ? [item.category] : []);
                     
-                    let catCheckboxes = '<div class="p-2 space-y-1">'; 
+                    let catCheckboxes = '<div class="p-3 flex flex-wrap gap-2">'; 
                     availableCategories.forEach(cat => {
-                        const checked = currentCats.includes(cat) ? 'checked' : '';
-                        catCheckboxes += `<label class="flex items-center gap-3 text-xs text-white p-2 hover:bg-white/10 rounded cursor-pointer select-none transition-colors"><input type="checkbox" value="${cat}" ${checked} onchange="toggleCategory(${idx}, '${cat}')" class="accent-[var(--neon-color)]"> ${cat}</label>`;
+                        const isActive = currentCats.includes(cat);
+                        const activeClass = isActive ? 'active' : '';
+                        catCheckboxes += `<div onclick="toggleCategory(${idx}, '${cat}', this)" class="category-chip ${activeClass} select-none" style="margin:0 !important;">${cat}</div>`;
                     });
                     catCheckboxes += '</div>';
                     
@@ -2154,7 +2157,7 @@
                                 <span>Выбрано: ${currentCats.length}</span>
                                 <span class="text-xs">▼</span>
                             </button>
-                            <div id="cat-drop-${idx}" class="hidden absolute left-0 right-0 mt-1 p-2 z-50 overflow-y-auto max-h-[300px]" style="background: rgba(0, 0, 0, 0.95) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; border-radius: 10px !important; backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
+                            <div id="cat-drop-${idx}" class="hidden absolute left-0 right-0 mt-1 p-2 z-50 overflow-y-auto max-h-[300px]" style="background: rgba(20, 20, 20, 0.8) !important; border: 1px solid rgba(255, 255, 255, 0.15) !important; border-radius: 10px !important; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 10px 30px rgba(0,0,0,0.8);">
                                 ${catCheckboxes}
                             </div>
                         </div>
