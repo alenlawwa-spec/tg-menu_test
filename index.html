@@ -1120,7 +1120,7 @@
                         try {
                             snap = await db.collection(colName)
                                 .where('parentId', '==', btn.id)
-                                .orderBy('createdAt', 'desc')
+                                .orderBy('order', 'asc')
                                 .limit(10)
                                 .get();
                         } catch (e) {
@@ -1172,7 +1172,7 @@
                 try {
                     snap = await db.collection(colName)
                         .where('parentId', '==', btn.id)
-                        .orderBy('createdAt', 'desc')
+                        .orderBy('order', 'asc')
                         .startAfter(btn.lastVisible)
                         .limit(10)
                         .get();
@@ -1911,14 +1911,14 @@
                     if (colName === 'services') {
                          // TASK 1: GLOBAL FIX - LOAD ALL SERVICES
                          snap = await db.collection('services')
-                            .orderBy('createdAt', 'desc')
+                            .orderBy('order', 'asc') // CHANGED FROM createdAt to order
                             .limit(100)
                             .get();
                     } else {
                         try {
                             snap = await db.collection(colName)
                                 .where('parentId', '==', btn.id)
-                                .orderBy('createdAt', 'desc')
+                                .orderBy('order', 'asc') // CHANGED FROM createdAt to order
                                 .limit(100)
                                 .get();
                         } catch (e) {
@@ -2256,6 +2256,8 @@
             const newIndex = index + direction;
             if (newIndex >= 0 && newIndex < list.length) {
                 [list[index], list[newIndex]] = [list[newIndex], list[index]];
+                // FIX: Update order property immediately in memory
+                list.forEach((item, i) => item.order = i);
                 renderSubListItems();
             }
         }
@@ -2320,15 +2322,17 @@
                         const items = btn.items || [];
                         const colName = btn.mode === 'gallery' ? 'prompts' : (btn.mode === 'services' ? 'services' : 'products');
 
-                        for (let item of items) {
+                        // FIX: Iterate with index to save ORDER
+                        items.forEach((item, i) => {
                             if (!item.id) item.id = 'item_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                             
                             item.parentId = btn.id;
                             item.admin_id = ADMIN_ID; 
+                            item.order = i; // SAVE ACTUAL ORDER
 
                             const ref = db.collection(colName).doc(item.id);
                             batch.set(ref, item, { merge: true });
-                        }
+                        });
                         
                         btn.items = []; 
                     }
