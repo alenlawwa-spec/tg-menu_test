@@ -989,7 +989,7 @@
     <script>
         let isParsing = false;
         let tg;
-        let availableCategories = new Set();
+        let availableCategories = [];
         const ADMIN_ID = 758556732;
         const BTN_DETAILS_CLASS = "bg-[rgba(0,242,255,0.1)] border border-[#00f2ff] text-[#00f2ff] text-[10px] uppercase px-3 py-1 rounded shadow-[0_0_10px_rgba(0,242,255,0.2)] hover:bg-[rgba(0,242,255,0.2)] transition-all";
 
@@ -2059,19 +2059,35 @@
             }
         }
 
-        function addNewGlobalCategory() {
-            const input = document.getElementById('new-cat-input'); const val = input.value.trim();
-            if(val) { availableCategories.add(val); input.value = ''; renderSubListItems(); }
+function addNewGlobalCategory() {
+            const input = document.getElementById('new-cat-input');
+            const val = input.value.trim();
+            // Проверяем, чтобы не было дубликатов
+            if(val && !availableCategories.includes(val)) { 
+                availableCategories.push(val); 
+                input.value = ''; 
+                renderSubListItems(); 
+            }
         }
-        
-function deleteGlobalCategory(cat) {
+
+        function deleteGlobalCategory(cat) {
             if(confirm(`Удалить категорию "${cat}"?`)) {
-                availableCategories.delete(cat);
+                availableCategories = availableCategories.filter(c => c !== cat);
                 tempAppData.mainMenu[currentEditingIndex].items.forEach(item => {
                     if (item.categories) {
                         item.categories = item.categories.filter(c => c !== cat);
                     }
                 });
+                renderSubListItems();
+            }
+        }
+
+        function moveCategory(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex >= 0 && newIndex < availableCategories.length) {
+                const temp = availableCategories[index];
+                availableCategories[index] = availableCategories[newIndex];
+                availableCategories[newIndex] = temp;
                 renderSubListItems();
             }
         }
@@ -2135,14 +2151,20 @@ function deleteGlobalCategory(cat) {
             
             if(isGallery || isProd) {
                 let catListHtml = '<div class="flex flex-wrap gap-2 mt-3">';
-                availableCategories.forEach(cat => {
-                    catListHtml += `<div class="category-chip flex items-center gap-1" style="margin:0 !important; padding: 4px 10px;">${cat} <button onclick="deleteGlobalCategory('${cat}')" class="text-red-500 font-bold ml-1 text-lg leading-none hover:text-red-400">×</button></div>`;
+                availableCategories.forEach((cat, idx) => {
+                    catListHtml += `
+                        <div class="category-chip flex items-center gap-2" style="margin:0 !important; padding: 6px 12px; background: rgba(0,242,255,0.1); border: 1px solid var(--neon-color); border-radius: 8px;">
+                            <button onclick="moveCategory(${idx}, -1)" class="text-neon hover:text-white ${idx === 0 ? 'opacity-30' : ''}">‹</button>
+                            <span class="text-xs uppercase tracking-wider">${cat}</span>
+                            <button onclick="moveCategory(${idx}, 1)" class="text-neon hover:text-white ${idx === availableCategories.length - 1 ? 'opacity-30' : ''}">›</button>
+                            <button onclick="deleteGlobalCategory('${cat}')" class="text-red-500 font-bold ml-1 hover:text-red-400">×</button>
+                        </div>`;
                 });
                 catListHtml += '</div>';
 
                 const catCreator = document.createElement('div');
                 catCreator.className = 'admin-card mb-4';
-                catCreator.innerHTML = `<div class="admin-section-title text-green-400">Управление категориями</div><div class="flex gap-2"><input type="text" id="new-cat-input" class="admin-input" placeholder="Новая категория..."><button onclick="addNewGlobalCategory()" class="btn-add-cyber" style="width: auto;">+</button></div>${catListHtml}`;
+                catCreator.innerHTML = `<div class="admin-section-title text-green-400">Порядок и удаление категорий</div><div class="flex gap-2"><input type="text" id="new-cat-input" class="admin-input" placeholder="Новая категория..."><button onclick="addNewGlobalCategory()" class="btn-add-cyber" style="width: auto;">+</button></div>${catListHtml}`;
                 list.appendChild(catCreator);
             }
             items.forEach((item, idx) => {
